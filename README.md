@@ -128,21 +128,13 @@ Users can quickly sign up and set their location details. They can then browse a
 
 ---
 
-## Contributing
-
-Contributions, feedback, and suggestions are welcome! Please open issues or pull requests on GitHub.
-
----
 
 ## Contact
 
-For queries or support, reach out at: [Insert your contact email or link]
+For queries or support, reach out at: sdsdmyself@gmail.com 
 
 ---
 
 Thank you for exploring MH26Services — working together to make Nanded’s everyday life easier and better!
 
----
-
-*This README file provides a complete view of what MH26Services is and how it will benefit users and providers in Nanded. It is meant for anyone visiting the project on GitHub to understand its purpose, features, and technical details clearly.*
 
