@@ -1,12 +1,10 @@
 # MH26Services: Local Survival & Service Platform for Nanded
 
----
 
 ## Introduction
 
 MH26Services is a digital platform designed specifically for the city of Nanded to help residents and newcomers easily find and access essential local services all in one place. Many people in Nanded—students, bank employees, freelancers, and new residents—face difficulty discovering reliable food options, rental houses, repair services, water delivery, part-time jobs, and city guides through a single trustworthy source. MH26Services aims to solve this problem by providing a simple, mobile-friendly app and website that uses GPS-based location to display nearby services within a specific radius of the user’s home or current position.
 
----
 
 ## Vision and Goals
 
@@ -17,7 +15,6 @@ MH26Services is a digital platform designed specifically for the city of Nanded 
 - To encourage community building through community boards, lost & found help, and local announcements.  
 - To empower users with easy digital payments and notifications while keeping their data safe.
 
----
 
 ## Features Overview
 
@@ -71,7 +68,6 @@ MH26Services is a digital platform designed specifically for the city of Nanded 
 ### 13. Admin Dashboard  
 - Admins can manage service providers, verify new listings, monitor bookings, and handle disputes to maintain platform quality.
 
----
 
 ## Technology Stack
 
@@ -88,7 +84,6 @@ MH26Services is a digital platform designed specifically for the city of Nanded 
 | Offline Support   | Progressive Web App (PWA)     | Offline access and app-like usability                          |
 | Localization      | react-i18next                 | Support Marathi, Hindi, and English languages                  |
 
----
 
 ## How MH26Services Improves Quality of Life
 
@@ -98,8 +93,6 @@ MH26Services is a digital platform designed specifically for the city of Nanded 
 - **Community-Focused:** Helps residents connect with each other and local organizations.  
 - **Empowering:** Freelancers and local workers can find jobs easily through the platform.  
 - **Safe:** Secure login, safe payments, and emergency SOS features protect users.
-
----
 
 ## Monetization & Sustainability
 
@@ -111,13 +104,11 @@ The platform will generate revenue through:
 - **Job Posting Fees:** Employers can pay to post priority or highlighted job ads.  
 - **Data Insights:** (Future) Offer anonymized usage data reports to local businesses or authorities for planning improvements.
 
----
 
 ## How to Get Started with MH26Services
 
 Users can quickly sign up and set their location details. They can then browse available services nearby, filter by category or price, and book with a few taps. Providers register and create profiles to offer their services, respond to bookings, and manage their availability.
 
----
 
 ## Future Plans
 
@@ -126,14 +117,12 @@ Users can quickly sign up and set their location details. They can then browse a
 - Partner with municipal bodies for integration with official services.  
 - Add multilingual voice assistance for even easier navigation.
 
----
 
 
 ## Contact
 
 For queries or support, reach out at: sdsdmyself@gmail.com 
 
----
 
 Thank you for exploring MH26Services — working together to make Nanded’s everyday life easier and better!
 
