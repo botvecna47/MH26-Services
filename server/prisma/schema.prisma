@@ -1,0 +1,456 @@
+// MH26 Services Marketplace Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  phone             String?   @unique
+  passwordHash      String
+  avatarUrl         String?
+  role              UserRole  @default(CUSTOMER)
+  emailVerified     Boolean   @default(false)
+  phoneVerified     Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  bookings          Booking[]
+  transactions      Transaction[]
+  messagesSent      Message[] @relation("messages_sent")
+  messagesReceived  Message[] @relation("messages_received")
+  refreshTokens     RefreshToken[]
+  savedProviders    SavedProvider[]
+  reviews           Review[]
+  auditLogs         AuditLog[] @relation("userAudit")
+  notifications     Notification[]
+  reports           Report[]
+  provider          Provider?
+  emailVerificationToken EmailVerificationToken?
+  passwordResetTokens PasswordResetToken[]
+  phoneOTPs           PhoneOTP[]
+  reviewedAppeals     ProviderAppeal[] @relation("AppealReviewer")
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+model Provider {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  businessName       String
+  description        String?
+  primaryCategory    String
+  secondaryCategory  String?
+  address            String
+  city               String
+  state              String    @default("Maharashtra")
+  pincode            String
+  lat                Float?
+  lng                Float?
+  averageRating      Float?    @default(0)
+  totalRatings       Int       @default(0)
+  status             ProviderStatus @default(PENDING)
+  phoneVisible       Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents          ProviderDocument[]
+  services           Service[]
+  bookings           Booking[]
+  payouts            Payout[]
+  reviews            Review[]
+  savedBy            SavedProvider[]
+  reports            Report[]
+  appeals            ProviderAppeal[]
+
+  @@index([city, primaryCategory])
+  @@index([status])
+  @@index([userId])
+  @@index([lat, lng])
+}
+
+enum ProviderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model ProviderDocument {
+  id          String   @id @default(uuid())
+  providerId  String
+  type        String   // 'aadhar', 'trade_license', 'gst', 'shop_photo', etc.
+  url         String
+  filename    String
+  uploadedAt  DateTime @default(now())
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  providerId  String
+  title       String
+  description String?
+  price       Decimal
+  durationMin Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+
+  @@index([providerId])
+}
+
+model Booking {
+  id             String   @id @default(uuid())
+  userId         String
+  providerId     String
+  serviceId      String
+  scheduledAt    DateTime
+  status         BookingStatus @default(PENDING)
+  totalAmount    Decimal
+  platformFee    Decimal
+  providerEarnings Decimal
+  address        String?
+  requirements   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service        Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  cancellation   BookingCancellation?
+  transaction    Transaction?
+  review         Review?
+
+  @@index([userId, status])
+  @@index([providerId, scheduledAt])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+model BookingCancellation {
+  id           String   @id @default(uuid())
+  bookingId    String   @unique
+  cancelledBy  String   // userId
+  reason       String?
+  createdAt    DateTime @default(now())
+  booking      Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  bookingId   String?  @unique
+  amount      Decimal
+  currency    String   @default("INR")
+  gateway     String   @default("razorpay")
+  gatewayOrderId String?
+  gatewayPaymentId String?
+  status      TransactionStatus @default(PENDING)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking     Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([gatewayOrderId])
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Message {
+  id            String   @id @default(uuid())
+  conversationId String
+  senderId      String
+  receiverId    String
+  text          String?
+  attachments   Json?
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  sender        User     @relation("messages_sent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver      User     @relation("messages_received", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([read])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  payload   Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+  @@index([type])
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  bookingId   String?  @unique
+  providerId  String
+  userId      String
+  rating      Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking     Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([providerId])
+  @@index([userId])
+  @@index([rating])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reporterId String
+  providerId String
+  reason     String
+  details    String?
+  attachments Json?
+  status     ReportStatus @default(OPEN)
+  adminNotes String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  resolvedAt DateTime?
+
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([status])
+  @@index([reporterId])
+}
+
+enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  revokedAt  DateTime?
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  userId     String
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  used       Boolean  @default(false)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+model PhoneOTP {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  userId    String?
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([phone])
+  @@index([code])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  tableName  String
+  recordId   String?
+  oldData    Json?
+  newData    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation("userAudit", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([tableName, recordId])
+  @@index([createdAt])
+}
+
+model Payout {
+  id         String   @id @default(uuid())
+  providerId String
+  amount     Decimal
+  status     PayoutStatus @default(PENDING)
+  gatewayRef String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([status])
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model SavedProvider {
+  id         String   @id @default(uuid())
+  userId     String
+  providerId String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, providerId])
+  @@index([userId])
+}
+
+model PhoneRevealLog {
+  id         String   @id @default(uuid())
+  providerId String
+  userId     String
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([providerId])
+  @@index([userId])
+}
+
+model ServiceCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model ProviderAppeal {
+  id          String   @id @default(uuid())
+  providerId  String
+  type        AppealType
+  reason      String
+  details     String?
+  status      AppealStatus @default(PENDING)
+  adminNotes  String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  reviewer    User?    @relation("AppealReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([providerId])
+  @@index([status])
+  @@index([type])
+}
+
+enum AppealType {
+  UNBAN_REQUEST
+  REJECTION_APPEAL
+  SUSPENSION_APPEAL
+  OTHER
+}
+
+enum AppealStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  UNDER_REVIEW
+}
+
