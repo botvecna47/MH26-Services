@@ -103,6 +103,21 @@ export function useBooking(id: string) {
     queryKey: ['booking', id],
     queryFn: () => bookingsApi.getBooking(id),
     enabled: !!id,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 403 (Forbidden) or 404 (Not Found) errors
+      if (error?.response?.status === 403 || error?.response?.status === 404) {
+        return false;
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    onError: (error: any) => {
+      // Suppress console errors for expected 403/404 errors
+      if (error?.response?.status === 403 || error?.response?.status === 404) {
+        return;
+      }
+      console.error('Error fetching booking:', error);
+    },
   });
 }
 

@@ -15,33 +15,59 @@ export interface Notification {
 
 export const notificationsApi = {
   getNotifications: async (params?: { read?: boolean; page?: number; limit?: number }) => {
-    const response = await axiosClient.get('/notifications', { params });
-    return response.data;
+    try {
+      const response = await axiosClient.get('/notifications', { params });
+      return response.data;
+    } catch (error: any) {
+      // Suppress 401 errors silently (expected when not authenticated)
+      if (error?.response?.status === 401) {
+        // Return empty array instead of throwing
+        return { data: [], total: 0 };
+      }
+      throw error;
+    }
   },
 
   markAsRead: async (id: string) => {
-    const response = await axiosClient.patch(`/notifications/${id}/read`);
-    return response.data;
+    try {
+      const response = await axiosClient.patch(`/notifications/${id}/read`);
+      return response.data;
+    } catch (error: any) {
+      // Suppress 401 errors silently
+      if (error?.response?.status === 401) {
+        return { success: false };
+      }
+      throw error;
+    }
   },
 
   markAllAsRead: async () => {
-    const response = await axiosClient.patch('/notifications/read-all');
-    return response.data;
+    try {
+      const response = await axiosClient.patch('/notifications/read-all');
+      return response.data;
+    } catch (error: any) {
+      // Suppress 401 errors silently
+      if (error?.response?.status === 401) {
+        return { success: false };
+      }
+      throw error;
+    }
   },
 };
 
 // React Query hooks
-export function useNotifications(params?: { read?: boolean; page?: number; limit?: number }) {
+export function useNotifications(params?: { read?: boolean; page?: number; limit?: number }, enabled: boolean = true) {
   return useQuery({
     queryKey: ['notifications', params],
     queryFn: () => notificationsApi.getNotifications(params),
+    enabled: enabled, // Only fetch when enabled (user is authenticated)
     staleTime: 60 * 1000, // Consider data fresh for 1 minute
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't refetch on mount if data is fresh
     refetchOnReconnect: false, // Don't refetch on reconnect
     retry: (failureCount, error: any) => {
-      // Don't retry on 429 (Too Many Requests) errors
-      if (error?.response?.status === 429) {
+      // Don't retry on 401 (Unauthorized) or 429 (Too Many Requests) errors
+      if (error?.response?.status === 401 || error?.response?.status === 429) {
         return false;
       }
       // Only retry once for other errors
@@ -53,6 +79,13 @@ export function useNotifications(params?: { read?: boolean; page?: number; limit
         return 30000; // Wait 30 seconds for rate limit
       }
       return 5000; // Wait 5 seconds for other errors
+    },
+    // Suppress errors for unauthenticated users
+    onError: (error: any) => {
+      // Only log non-401 errors
+      if (error?.response?.status !== 401) {
+        console.error('Error fetching notifications:', error);
+      }
     },
   });
 }

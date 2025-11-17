@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Menu, User, LogOut, Settings } from 'lucide-react';
 import { Button } from './ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useUser } from '../context/UserContext';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../context/NotificationContext';
@@ -129,15 +130,30 @@ export default function UnifiedNavigation() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
-                      <User className="h-5 w-5" />
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.avatarUrl} />
+                        <AvatarFallback>
+                          {user?.name?.charAt(0)?.toUpperCase() || <User className="h-4 w-4" />}
+                        </AvatarFallback>
+                      </Avatar>
                       <span className="hidden sm:inline">{user?.name}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
                     <div className="px-2 py-2 bg-gray-50 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
-                      <p className="text-xs text-primary-600 mt-1 font-medium">Role: {user?.role || 'N/A'}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={user?.avatarUrl} />
+                          <AvatarFallback>
+                            {user?.name?.charAt(0)?.toUpperCase() || <User className="h-5 w-5" />}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-primary-600 font-medium">Role: {user?.role || 'N/A'}</p>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer">

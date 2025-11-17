@@ -8,21 +8,34 @@ let redisClient: Redis | null = null;
 
 export function getRedisClient(): Redis {
   if (!redisClient) {
-    redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    
+    redisClient = new Redis(redisUrl, {
       password: process.env.REDIS_PASSWORD || undefined,
       retryStrategy: (times) => {
+        // Don't retry if Redis is not available
+        if (times > 3) {
+          return null; // Stop retrying
+        }
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: 1, // Reduce retries to fail fast
+      lazyConnect: true, // Don't connect immediately
+      enableOfflineQueue: false, // Don't queue commands when offline
     });
 
     redisClient.on('error', (err) => {
-      console.error('Redis Client Error:', err);
+      console.warn('Redis Client Error (will use in-memory fallback):', err.message);
     });
 
     redisClient.on('connect', () => {
       console.log('Redis Client Connected');
+    });
+
+    // Try to connect, but don't throw if it fails
+    redisClient.connect().catch((err) => {
+      console.warn('Redis connection failed (will use in-memory fallback):', err.message);
     });
   }
 

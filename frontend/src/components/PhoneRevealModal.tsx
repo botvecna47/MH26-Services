@@ -1,6 +1,5 @@
 import { X, UserPlus, Star, Shield } from 'lucide-react';
 import { Button } from './ui/button';
-import { useUser } from '../context/UserContext';
 
 interface PhoneRevealModalProps {
   providerName: string;
@@ -8,18 +7,13 @@ interface PhoneRevealModalProps {
 }
 
 export default function PhoneRevealModal({ providerName, onClose }: PhoneRevealModalProps) {
-  const { setUser } = useUser();
 
   const handleQuickJoin = () => {
-    // Mock quick sign up
-    setUser({
-      id: '1',
-      name: 'Rajesh Kumar',
-      email: 'rajesh@example.com',
-      phone: '+91-9876543210',
-      role: 'CUSTOMER'
-    });
+    // This should redirect to sign up page instead of setting mock user
+    // For now, just close the modal - actual signup should be handled by AuthPage
     onClose();
+    // In a real implementation, you would navigate to signup:
+    // navigate('/auth?mode=signup');
   };
 
   return (

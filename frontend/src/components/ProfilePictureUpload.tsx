@@ -6,6 +6,8 @@ import { Upload, X, Loader2, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { useUploadAvatar } from '../api/users';
 import { useUser } from '../context/UserContext';
+import { useAuth } from '../hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { toast } from 'sonner';
 
@@ -20,7 +22,9 @@ export function ProfilePictureUpload({
   size = 'md',
   className = '' 
 }: ProfilePictureUploadProps) {
-  const { user, refreshUser } = useUser();
+  const { user } = useUser();
+  const { refreshUser } = useAuth();
+  const queryClient = useQueryClient();
   const uploadMutation = useUploadAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -56,14 +60,31 @@ export function ProfilePictureUpload({
 
     // Upload file
     uploadMutation.mutate(file, {
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success('Profile picture updated successfully');
         setPreview(null);
-        refreshUser();
+        
+        // Refresh user data from both contexts
+        try {
+          await refreshUser();
+        } catch (error) {
+          // Ignore errors - user might not be authenticated
+        }
+        
+        // Also invalidate React Query cache
+        queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+        
+        // Trigger UserContext sync
+        window.dispatchEvent(new Event('userUpdated'));
+        
         onUploadComplete?.(data.url);
       },
       onError: (error: any) => {
-        toast.error(error.response?.data?.error || 'Failed to upload profile picture');
+        // Handle CORS and other upload errors
+        const errorMessage = error?.message || error?.response?.data?.error || 'Failed to upload profile picture';
+        toast.error(errorMessage, {
+          duration: errorMessage.includes('CORS') ? 8000 : 4000, // Show CORS errors longer
+        });
         setPreview(null);
       },
     });

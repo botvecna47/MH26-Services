@@ -36,11 +36,26 @@ export async function authenticate(
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, email: true, role: true },
+      select: { 
+        id: true, 
+        email: true, 
+        role: true,
+        provider: {
+          select: {
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       res.status(401).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if provider is suspended (for provider users)
+    if (user.role === 'PROVIDER' && user.provider?.status === 'SUSPENDED') {
+      res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
       return;
     }
 

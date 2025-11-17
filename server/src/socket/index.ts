@@ -30,14 +30,28 @@ export function setupSocketIO(httpServer: HTTPServer): void {
 
       const payload = verifyAccessToken(token);
       
-      // Verify user exists
+      // Verify user exists and is active
       const user = await prisma.user.findUnique({
         where: { id: payload.userId },
-        select: { id: true, email: true, role: true },
+        select: { 
+          id: true, 
+          email: true, 
+          role: true,
+          provider: {
+            select: {
+              status: true,
+            },
+          },
+        },
       });
 
       if (!user) {
         return next(new Error('Authentication error: User not found'));
+      }
+
+      // Check if provider is suspended (for provider users)
+      if (user.role === 'PROVIDER' && user.provider?.status === 'SUSPENDED') {
+        return next(new Error('Authentication error: Account suspended'));
       }
 
       socket.data.user = {

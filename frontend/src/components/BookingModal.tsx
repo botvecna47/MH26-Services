@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Calendar, Clock, MapPin, DollarSign, User, Phone, Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { useUser } from '../context/UserContext';
 import { useCreateBooking } from '../api/bookings';
 import { toast } from 'sonner';
@@ -86,6 +86,9 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Book Service with {provider.businessName}</DialogTitle>
+          <DialogDescription>
+            Select a service and schedule your appointment
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

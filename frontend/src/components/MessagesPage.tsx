@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 import { ScrollArea } from "./ui/scroll-area";
@@ -59,101 +59,13 @@ export function MessagesPage({ user, userRole }: MessagesPageProps) {
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock conversations data
-  const conversations: Conversation[] = userRole === 'provider' 
-    ? [
-        {
-          id: 'conv-1',
-          participant: { name: 'Priya Sharma', role: 'Customer', avatar: undefined },
-          lastMessage: 'Can you deliver by 7 PM today?',
-          timestamp: '5 min ago',
-          unread: 2,
-          online: true,
-        },
-        {
-          id: 'conv-2',
-          participant: { name: 'Rajesh Patil', role: 'Customer', avatar: undefined },
-          lastMessage: 'Thanks for the quick service!',
-          timestamp: '2 hours ago',
-          unread: 0,
-          online: false,
-        },
-        {
-          id: 'conv-3',
-          participant: { name: 'Anita Desai', role: 'Customer', avatar: undefined },
-          lastMessage: 'Can I change my subscription plan?',
-          timestamp: '1 day ago',
-          unread: 1,
-          online: false,
-        },
-      ]
-    : [
-        {
-          id: 'conv-1',
-          participant: { name: 'Maharashtrian Tiffin Express', role: 'Provider', avatar: undefined },
-          lastMessage: 'Yes, we can deliver by 7 PM. Your order is being prepared.',
-          timestamp: '2 min ago',
-          unread: 1,
-          online: true,
-        },
-        {
-          id: 'conv-2',
-          participant: { name: 'QuickFix Plumbing', role: 'Provider', avatar: undefined },
-          lastMessage: 'I\'ll be there tomorrow at 10 AM.',
-          timestamp: '1 hour ago',
-          unread: 0,
-          online: true,
-        },
-        {
-          id: 'conv-3',
-          participant: { name: 'Nanded Heritage Tours', role: 'Provider', avatar: undefined },
-          lastMessage: 'Your booking is confirmed for Saturday.',
-          timestamp: '2 days ago',
-          unread: 0,
-          online: false,
-        },
-      ];
+  // NOTE: This component appears to be unused (the app uses MessagingPage.tsx instead)
+  // If this component is to be used, it should fetch conversations from the API
+  // instead of using hardcoded test data. For now, using empty array to prevent test data from appearing.
+  const conversations: Conversation[] = [];
 
-  // Mock messages data
-  const mockMessages: { [key: string]: Message[] } = {
-    'conv-1': [
-      {
-        id: 'msg-1',
-        sender: 'them',
-        content: 'Hi! I\'d like to order a tiffin for today.',
-        timestamp: '10:30 AM',
-        type: 'text',
-      },
-      {
-        id: 'msg-2',
-        sender: 'me',
-        content: 'Sure! What would you like to have?',
-        timestamp: '10:32 AM',
-        type: 'text',
-      },
-      {
-        id: 'msg-3',
-        sender: 'them',
-        content: 'Maharashtrian Thali would be great.',
-        timestamp: '10:33 AM',
-        type: 'text',
-      },
-      {
-        id: 'msg-4',
-        sender: 'me',
-        content: 'Perfect! Your order is confirmed. It will be delivered by 7 PM.',
-        timestamp: '10:35 AM',
-        type: 'text',
-      },
-      {
-        id: 'msg-5',
-        sender: 'them',
-        content: 'Can you deliver by 7 PM today?',
-        timestamp: '10:40 AM',
-        type: 'text',
-      },
-    ],
-  };
+  // NOTE: Mock messages removed - should use real API data if this component is used
+  const mockMessages: { [key: string]: Message[] } = {};
 
   const currentMessages = selectedConversation ? mockMessages[selectedConversation] || [] : [];
   const currentConversation = conversations.find(c => c.id === selectedConversation);
@@ -207,6 +119,7 @@ export function MessagesPage({ user, userRole }: MessagesPageProps) {
                       <div className="flex items-start gap-3">
                         <div className="relative">
                           <Avatar>
+                            <AvatarImage src={conv.participant.avatar} />
                             <AvatarFallback>
                               {conv.participant.name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
@@ -242,6 +155,7 @@ export function MessagesPage({ user, userRole }: MessagesPageProps) {
                   <div className="p-4 border-b border-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar>
+                        <AvatarImage src={currentConversation.participant.avatar} />
                         <AvatarFallback>
                           {currentConversation.participant.name.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>

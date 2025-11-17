@@ -8,21 +8,149 @@ import { hashPassword, verifyPassword } from '../utils/security';
 import { generateAccessToken, generateRefreshToken, revokeRefreshToken, isRefreshTokenValid } from '../utils/jwt';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { generateSecureToken } from '../utils/security';
-import { generateOTP, storeOTP, verifyOTP, sendOTP } from '../utils/otp';
+import { generateOTP, storeEmailOTP, verifyEmailOTP, sendEmailOTP } from '../utils/otp';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../config/logger';
 
 export const authController = {
   /**
-   * Register new user
+   * Register new user - Step 1: Send OTP to email
+   * User is NOT created until OTP is verified
    */
   async register(req: Request, res: Response): Promise<void> {
-    const { name, email, phone, password, role, otp } = req.body;
+    try {
+      const { name, email, phone, password, role } = req.body;
 
-    // Check if user exists
+      logger.debug('Registration attempt:', { email, phone: phone?.substring(0, 3) + '***' });
+
+      // Validate required fields
+      if (!name || !email || !phone || !password) {
+        throw new AppError('Name, email, phone, and password are required', 400);
+      }
+
+      // Validate phone format (should be validated by schema, but double-check)
+      if (!/^[6-9]\d{9}$/.test(phone) || phone.length !== 10) {
+        throw new AppError('Phone number must be exactly 10 digits starting with 6-9', 400);
+      }
+
+      // Check if user already exists
+      let existingUser;
+      try {
+        existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [{ email }, { phone }],
+          },
+        });
+      } catch (dbError: any) {
+        logger.error('Database error checking existing user:', dbError);
+        throw new AppError('Database error. Please try again.', 500);
+      }
+
+      if (existingUser) {
+        throw new AppError('User with this email or phone already exists', 409);
+      }
+
+      // Generate OTP
+      const otp = generateOTP();
+      logger.debug(`OTP generated for ${email}`);
+
+      // Store registration data temporarily (Redis or in-memory)
+      // This data will be used to create the user after OTP verification
+      const registrationData = {
+        name,
+        email,
+        phone,
+        password, // Will be hashed when creating user
+        role: role || 'CUSTOMER',
+      };
+
+      try {
+        await storeEmailOTP(email, otp, registrationData);
+        logger.debug(`OTP stored for ${email}`);
+      } catch (error: any) {
+        logger.error('Failed to store email OTP:', {
+          error: error.message,
+          stack: error.stack,
+          email,
+        });
+        throw new AppError('Failed to process registration. Please try again.', 500);
+      }
+
+      // Send OTP to email
+      try {
+        await sendEmailOTP(email, otp);
+        logger.info(`Registration OTP sent to: ${email}`);
+      } catch (error: any) {
+        logger.error('Failed to send registration OTP email:', {
+          email,
+          error: error.message,
+          code: error.code,
+          stack: error.stack,
+        });
+        
+        // Check if SMTP is configured
+        const smtpConfigured = 
+          process.env.SMTP_HOST && 
+          process.env.SMTP_USER && 
+          process.env.SMTP_PASS;
+        
+        if (!smtpConfigured) {
+          // If SMTP not configured, log OTP to console and continue
+          logger.warn('SMTP not configured. OTP logged to console for testing.');
+          console.log(`\n📧 REGISTRATION OTP for ${email}: ${otp}\n`);
+          console.log('⚠️  Configure SMTP settings in .env to send actual emails.');
+        } else {
+          // If SMTP is configured but sending failed, log OTP and continue (don't block registration)
+          logger.error('SMTP configured but email sending failed. OTP logged to console.');
+          console.log(`\n❌ EMAIL SEND FAILED - REGISTRATION OTP for ${email}: ${otp}\n`);
+          console.log('Error:', error.message);
+          // Don't throw error - allow registration to continue, user can check console for OTP
+        }
+      }
+
+      res.status(200).json({
+        message: 'OTP sent to your email address. Please verify to complete registration.',
+        requiresOTP: true,
+        email: email, // Return email for frontend to use in verification
+      });
+    } catch (error: any) {
+      // Re-throw AppError as-is
+      if (error instanceof AppError) {
+        throw error;
+      }
+      // Log unexpected errors with full details
+      logger.error('Unexpected error in register:', {
+        error: error.message,
+        stack: error.stack,
+        name: error.name,
+        body: req.body ? { ...req.body, password: '***', phone: req.body.phone?.substring(0, 3) + '***' } : null,
+      });
+      throw new AppError('Registration failed. Please try again.', 500);
+    }
+  },
+
+  /**
+   * Verify email OTP and complete registration
+   * User is created ONLY after OTP is verified
+   */
+  async verifyRegistrationOTP(req: Request, res: Response): Promise<void> {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      throw new AppError('Email and OTP are required', 400);
+    }
+
+    // Verify OTP and get registration data
+    const registrationData = await verifyEmailOTP(email, otp);
+
+    if (!registrationData) {
+      throw new AppError('Invalid or expired OTP', 400);
+    }
+
+    // Check if user was created in the meantime (race condition protection)
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { phone }],
+        OR: [{ email: registrationData.email }, { phone: registrationData.phone }],
       },
     });
 
@@ -30,37 +158,19 @@ export const authController = {
       throw new AppError('User with this email or phone already exists', 409);
     }
 
-    // If OTP is provided, verify it before creating user
-    if (otp && phone) {
-      const isValidOTP = await verifyOTP(phone, otp);
-      if (!isValidOTP) {
-        throw new AppError('Invalid or expired OTP', 400);
-      }
-    } else if (phone) {
-      // Generate and send OTP
-      const otpCode = generateOTP();
-      await storeOTP(phone, otpCode);
-      await sendOTP(phone, otpCode);
-
-      res.status(200).json({
-        message: 'OTP sent to your phone number',
-        requiresOTP: true,
-      });
-      return;
-    }
-
     // Hash password
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(registrationData.password);
 
-    // Create user
+    // Create user (ONLY after OTP verification)
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
-        phone,
+        name: registrationData.name,
+        email: registrationData.email,
+        phone: registrationData.phone,
         passwordHash,
-        role: role || 'CUSTOMER',
-        phoneVerified: !!otp, // Mark as verified if OTP was provided
+        role: registrationData.role,
+        emailVerified: true, // Mark as verified since OTP was verified
+        phoneVerified: false, // Phone verification can be done separately
       },
       select: {
         id: true,
@@ -82,26 +192,7 @@ export const authController = {
     });
     const refreshToken = await generateRefreshToken(user.id);
 
-    // Generate and store verification token
-    const verificationToken = generateSecureToken();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours expiry
-
-    try {
-      await prisma.emailVerificationToken.create({
-        data: {
-          userId: user.id,
-          token: verificationToken,
-          expiresAt,
-        },
-      });
-
-      // Send verification email
-      await sendVerificationEmail(user.email, verificationToken);
-    } catch (error) {
-      logger.error('Failed to send verification email:', error);
-      // Don't fail registration if email fails
-    }
+    logger.info(`User registered successfully: ${user.id} (${user.email})`);
 
     res.status(201).json({
       user,
@@ -110,6 +201,7 @@ export const authController = {
         refreshToken,
         expiresIn: '15m',
       },
+      message: 'Registration successful!',
     });
   },
 
@@ -119,13 +211,25 @@ export const authController = {
   async login(req: Request, res: Response): Promise<void> {
     const { email, password } = req.body;
 
-    // Find user
+    // Find user with provider status
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        provider: {
+          select: {
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       throw new AppError('Invalid credentials', 401);
+    }
+
+    // Check if provider is suspended
+    if (user.role === 'PROVIDER' && user.provider?.status === 'SUSPENDED') {
+      throw new AppError('Your account has been suspended. Please contact support.', 403);
     }
 
     // Verify password
@@ -359,24 +463,6 @@ export const authController = {
   },
 
   /**
-   * Send OTP for phone verification
-   */
-  async sendPhoneOTP(req: Request, res: Response): Promise<void> {
-    const { phone } = req.body;
-
-    if (!phone) {
-      throw new AppError('Phone number is required', 400);
-    }
-
-    // Generate and send OTP
-    const otp = generateOTP();
-    await storeOTP(phone, otp);
-    await sendOTP(phone, otp);
-
-    res.json({ message: 'OTP sent to your phone number' });
-  },
-
-  /**
    * Change password (for authenticated users)
    */
   async changePassword(req: AuthRequest, res: Response): Promise<void> {
@@ -425,30 +511,6 @@ export const authController = {
     logger.info(`Password changed for user: ${userId}`);
 
     res.json({ message: 'Password changed successfully' });
-  },
-
-  /**
-   * Verify phone (OTP)
-   */
-  async verifyPhone(req: AuthRequest, res: Response): Promise<void> {
-    const { phone, otp } = req.body;
-    const userId = req.user!.id;
-
-    if (!phone || !otp) {
-      throw new AppError('Phone number and OTP are required', 400);
-    }
-
-    const isValid = await verifyOTP(phone, otp);
-    if (!isValid) {
-      throw new AppError('Invalid or expired OTP', 400);
-    }
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: { phoneVerified: true },
-    });
-
-    res.json({ message: 'Phone verified successfully' });
   },
 };
 

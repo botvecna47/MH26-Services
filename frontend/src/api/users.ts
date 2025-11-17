@@ -3,6 +3,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from './axiosClient';
+import { useAuth } from '../hooks/useAuth';
 
 export interface User {
   id: string;
@@ -27,15 +28,24 @@ export interface UpdateUserData {
 }
 
 export interface AvatarUploadResponse {
-  presignedUrl: string;
-  key: string;
   url: string;
+  key: string;
+  message?: string;
 }
 
 const usersApi = {
   getMe: async (): Promise<User> => {
-    const response = await axiosClient.get<User>('/users/me');
-    return response.data;
+    try {
+      const response = await axiosClient.get<User>('/users/me');
+      return response.data;
+    } catch (error: any) {
+      // Suppress 401 errors silently (expected when not authenticated)
+      if (error?.response?.status === 401) {
+        // Re-throw but it will be handled by React Query's enabled flag
+        throw error;
+      }
+      throw error;
+    }
   },
 
   updateMe: async (data: UpdateUserData): Promise<User> => {
@@ -44,34 +54,42 @@ const usersApi = {
   },
 
   uploadAvatar: async (file: File): Promise<AvatarUploadResponse> => {
-    // First, get presigned URL
-    const { data: uploadData } = await axiosClient.post<AvatarUploadResponse>('/users/me/avatar', {
-      filename: file.name,
-      contentType: file.type,
-    });
+    // Upload directly to backend (no CORS issues!)
+    const formData = new FormData();
+    formData.append('avatar', file);
 
-    // Upload file to S3 using presigned URL
-    await fetch(uploadData.presignedUrl, {
-      method: 'PUT',
-      body: file,
+    const response = await axiosClient.post<AvatarUploadResponse>('/users/me/avatar', formData, {
       headers: {
-        'Content-Type': file.type,
+        'Content-Type': 'multipart/form-data',
       },
     });
 
-    // Update user profile with new avatar URL
-    await usersApi.updateMe({ avatarUrl: uploadData.url });
-
-    return uploadData;
+    return response.data;
   },
 };
 
 // React Query hooks
 export function useMe() {
+  const { isAuthenticated } = useAuth();
+  
   return useQuery({
     queryKey: ['user', 'me'],
     queryFn: () => usersApi.getMe(),
+    enabled: isAuthenticated, // Only fetch when authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    onError: (error: any) => {
+      // Suppress 401 errors from console
+      if (error?.response?.status !== 401) {
+        console.error('Error fetching user:', error);
+      }
+    },
   });
 }
 

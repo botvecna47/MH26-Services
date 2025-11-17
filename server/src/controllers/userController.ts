@@ -4,7 +4,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
 import logger from '../config/logger';
-import { generatePresignedUploadUrl, S3_BUCKET } from '../config/s3';
 
 export const userController = {
   /**
@@ -54,14 +53,38 @@ export const userController = {
   async updateMe(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { name, phone, avatarUrl } = req.body;
+      const { name, phone } = req.body;
+
+      // Validate phone number if provided
+      if (phone !== undefined) {
+        // Check phone format (10 digits starting with 6-9)
+        if (!/^[6-9]\d{9}$/.test(phone) || phone.length !== 10) {
+          res.status(400).json({ error: 'Phone number must be 10 digits starting with 6-9' });
+          return;
+        }
+
+        // Check if phone number is already taken by another user
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            phone: phone,
+            NOT: { id: userId },
+          },
+        });
+
+        if (existingUser) {
+          res.status(409).json({ error: 'Phone number is already registered to another account' });
+          return;
+        }
+      }
+
+      const { avatarUrl } = req.body;
 
       const updated = await prisma.user.update({
         where: { id: userId },
         data: {
-          name,
-          phone,
-          avatarUrl,
+          ...(name !== undefined && { name }),
+          ...(phone !== undefined && { phone }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
         },
         select: {
           id: true,
@@ -83,38 +106,101 @@ export const userController = {
   },
 
   /**
-   * Upload profile picture (get presigned URL)
+   * Upload profile picture (direct upload through backend)
+   * This avoids CORS issues by proxying through the backend
    */
   async uploadAvatar(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { filename, contentType } = req.body;
+      const file = req.file;
 
-      if (!filename || !contentType) {
-        res.status(400).json({ error: 'Filename and content type are required' });
+      if (!file) {
+        res.status(400).json({ error: 'No file uploaded' });
         return;
       }
 
       // Validate image type
-      if (!contentType.startsWith('image/')) {
+      if (!file.mimetype.startsWith('image/')) {
         res.status(400).json({ error: 'Only image files are allowed' });
         return;
       }
 
-      const key = `users/${userId}/avatar/${Date.now()}-${filename}`;
-      const presignedUrl = await generatePresignedUploadUrl(key, contentType);
+      const key = `users/${userId}/avatar/${Date.now()}-${file.originalname}`;
 
-      // Generate public URL (or presigned download URL)
-      const publicUrl = `https://${S3_BUCKET}.s3.amazonaws.com/${key}`;
+      // Upload to S3 (if configured) or use local storage
+      let url: string;
+      
+      if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET) {
+        // Upload to S3/MinIO
+        try {
+          const s3Module = await import('../config/s3');
+          const s3 = s3Module.default;
+          const bucketName = s3Module.S3_BUCKET;
+          
+          await s3.putObject({
+            Bucket: bucketName,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+            ACL: 'private',
+          }).promise();
+
+          // Generate URL for access
+          if (process.env.AWS_S3_ENDPOINT) {
+            // MinIO or custom endpoint
+            url = `${process.env.AWS_S3_ENDPOINT}/${bucketName}/${key}`;
+          } else {
+            // AWS S3
+            url = `https://${bucketName}.s3.${process.env.AWS_REGION || 'ap-south-1'}.amazonaws.com/${key}`;
+          }
+        } catch (s3Error) {
+          logger.warn('S3 upload failed, falling back to local storage:', s3Error);
+          // Fall through to local storage
+          const fs = await import('fs');
+          const path = await import('path');
+          const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
+          
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+
+          const fileName = `${userId}-${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const filePath = path.join(uploadsDir, fileName);
+          fs.writeFileSync(filePath, file.buffer);
+          url = `/uploads/avatars/${fileName}`;
+        }
+      } else {
+        // No S3 configured - use local storage (FREE!)
+        const fs = await import('fs');
+        const path = await import('path');
+        const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
+        
+        // Ensure directory exists
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        const filePath = path.join(uploadsDir, `${userId}-${Date.now()}-${file.originalname}`);
+        fs.writeFileSync(filePath, file.buffer);
+        
+        // Return URL relative to backend (will be served by static middleware)
+        url = `/uploads/avatars/${path.basename(filePath)}`;
+      }
+
+      // Update user profile with new avatar URL
+      await prisma.user.update({
+        where: { id: userId },
+        data: { avatarUrl: url },
+      });
 
       res.json({
-        presignedUrl,
+        url,
         key,
-        url: publicUrl,
+        message: 'Avatar uploaded successfully',
       });
     } catch (error) {
       logger.error('Upload avatar error:', error);
-      res.status(500).json({ error: 'Failed to generate upload URL' });
+      res.status(500).json({ error: 'Failed to upload avatar' });
     }
   },
 

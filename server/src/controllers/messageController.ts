@@ -4,6 +4,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
 import { emitNotification } from '../socket';
+import { sanitizeInput } from '../utils/security';
 import logger from '../config/logger';
 
 export const messageController = {
@@ -204,8 +205,8 @@ export const messageController = {
         return;
       }
 
-      // Create conversation ID
-      const conversationId = [userId, receiverId].sort().join('-');
+      // Create conversation ID (use :: separator for UUID compatibility)
+      const conversationId = [userId, receiverId].sort().join('::');
 
       // If text provided, create first message
       let message = null;
@@ -295,15 +296,28 @@ export const messageController = {
         return;
       }
 
-      // Create or use conversation ID
-      const convId = conversationId || [userId, receiverId].sort().join('-');
+      // Prevent self-messaging (optional - remove if you want to allow it)
+      if (userId === receiverId) {
+        res.status(400).json({ error: 'Cannot send message to yourself' });
+        return;
+      }
+
+      // Sanitize message text
+      const sanitizedText = sanitizeInput(text.trim());
+      if (!sanitizedText) {
+        res.status(400).json({ error: 'Message text cannot be empty after sanitization' });
+        return;
+      }
+
+      // Create or use conversation ID (using :: separator for UUID compatibility)
+      const convId = conversationId || [userId, receiverId].sort().join('::');
 
       const message = await prisma.message.create({
         data: {
           conversationId: convId,
           senderId: userId,
           receiverId,
-          text: text.trim(),
+          text: sanitizedText,
           attachments: attachments || null,
         },
         include: {
@@ -317,46 +331,62 @@ export const messageController = {
       });
 
       // Create notification in database
-      const sender = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { name: true, provider: { select: { businessName: true } } },
-      });
+      try {
+        const sender = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true, provider: { select: { businessName: true } } },
+        });
 
-      const senderName = sender?.provider?.businessName || sender?.name || 'Someone';
+        const senderName = sender?.provider?.businessName || sender?.name || 'Someone';
+        const messagePreview = sanitizedText.substring(0, 100) + (sanitizedText.length > 100 ? '...' : '');
 
-      await prisma.notification.create({
-        data: {
-          userId: receiverId,
-          type: 'message',
-          payload: {
-            title: 'New Message',
-            body: `${senderName}: ${text.trim().substring(0, 100)}${text.trim().length > 100 ? '...' : ''}`,
-            messageId: message.id,
-            conversationId: convId,
-            senderId: userId,
+        await prisma.notification.create({
+          data: {
+            userId: receiverId,
+            type: 'message',
+            payload: {
+              title: 'New Message',
+              body: `${senderName}: ${messagePreview}`,
+              messageId: message.id,
+              conversationId: convId,
+              senderId: userId,
+            },
           },
-        },
-      });
+        });
 
-      // Emit notification via Socket.io
-      emitNotification(receiverId, {
-        type: 'message',
-        payload: {
-          title: 'New Message',
-          body: `${senderName}: ${text.trim().substring(0, 100)}${text.trim().length > 100 ? '...' : ''}`,
-          messageId: message.id,
-          conversationId: convId,
-          senderId: userId,
-        },
-      });
+        // Emit notification via Socket.io (non-blocking - don't fail if socket is down)
+        try {
+          emitNotification(receiverId, {
+            type: 'message',
+            payload: {
+              title: 'New Message',
+              body: `${senderName}: ${messagePreview}`,
+              messageId: message.id,
+              conversationId: convId,
+              senderId: userId,
+            },
+          });
+        } catch (socketError) {
+          // Log but don't fail the request if socket emit fails
+          logger.warn('Failed to emit socket notification:', socketError);
+        }
+      } catch (notificationError) {
+        // Log but don't fail the request if notification creation fails
+        logger.warn('Failed to create notification:', notificationError);
+      }
 
       res.status(201).json({
         ...message,
         conversationId: convId, // Include conversationId in response for frontend
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Send message error:', error);
-      res.status(500).json({ error: 'Failed to send message' });
+      // Include more details in error response for debugging
+      const errorMessage = error?.message || 'Failed to send message';
+      res.status(500).json({ 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
+      });
     }
   },
 

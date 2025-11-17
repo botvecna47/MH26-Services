@@ -20,6 +20,7 @@ import {
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
+import { axiosClient } from '../api/axiosClient';
 
 type AuthMode = 'signin' | 'signup' | 'join';
 
@@ -69,8 +70,10 @@ export default function AuthPage() {
       }
       if (!formData.phone) {
         newErrors.phone = 'Phone number is required';
-      } else if (!/^\+91-\d{10}$/.test(formData.phone)) {
-        newErrors.phone = 'Invalid phone format (use +91-XXXXXXXXXX)';
+      } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+        newErrors.phone = 'Phone number must be 10 digits starting with 6-9';
+      } else if (formData.phone.length !== 10) {
+        newErrors.phone = 'Phone number must be exactly 10 digits';
       }
       if (requiresOTP && !formData.otp) {
         newErrors.otp = 'OTP is required';
@@ -108,33 +111,60 @@ export default function AuthPage() {
         await login(formData.email, formData.password);
         // Navigation is handled by useAuth hook
       } else if (mode === 'signup' || mode === 'join') {
-        // Sign Up - use real API with OTP verification
+        // Sign Up - use real API with email OTP verification
         try {
-          // First attempt - will return requiresOTP if phone is provided
-          const result = await register({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            password: formData.password,
-            role: mode === 'join' ? 'PROVIDER' : 'CUSTOMER',
-            otp: formData.otp || undefined,
-          });
-          
-          // If OTP is required, show OTP input
-          if (result?.requiresOTP) {
-            setRequiresOTP(true);
-            setOtpSent(true);
-            toast.success('OTP sent to your phone number');
-            return;
+          if (requiresOTP && otpSent) {
+            // Step 2: Verify OTP and complete registration
+            try {
+              const response = await axiosClient.post('/auth/verify-registration-otp', {
+                email: formData.email,
+                otp: formData.otp,
+              });
+
+              const { user: userData, tokens } = response.data;
+
+              localStorage.setItem('accessToken', tokens.accessToken);
+              localStorage.setItem('refreshToken', tokens.refreshToken);
+              localStorage.setItem('user', JSON.stringify(userData));
+
+              toast.success('Account created successfully!');
+              
+              // Navigate based on role
+              if (userData.role === 'PROVIDER') {
+                navigate('/provider-onboarding');
+              } else {
+                navigate('/dashboard');
+              }
+            } catch (error: any) {
+              toast.error(error.response?.data?.error || 'Invalid OTP. Please try again.');
+              throw error;
+            }
+          } else {
+            // Step 1: Send OTP to email
+            const result = await register({
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              password: formData.password,
+              role: mode === 'join' ? 'PROVIDER' : 'CUSTOMER',
+            });
+            
+            // If OTP is required, show OTP input
+            if (result?.requiresOTP) {
+              setRequiresOTP(true);
+              setOtpSent(true);
+              toast.success('OTP sent to your email address. Please check your inbox.');
+              return;
+            }
+            
+            // If we get here, registration was successful (shouldn't happen with new flow)
+            // Navigation is handled by useAuth hook
           }
-          
-          // If we get here, registration was successful
-          // Navigation is handled by useAuth hook
         } catch (error: any) {
           if (error.response?.data?.requiresOTP) {
             setRequiresOTP(true);
             setOtpSent(true);
-            toast.success('OTP sent to your phone number');
+            toast.success('OTP sent to your email address. Please check your inbox.');
             return;
           }
           throw error;
@@ -152,6 +182,10 @@ export default function AuthPage() {
   };
 
   const handleInputChange = (field: string, value: string) => {
+    // Filter phone number input to only allow digits
+    if (field === 'phone') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -309,125 +343,156 @@ export default function AuthPage() {
 
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-700">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className={`pl-10 h-11 ${errors.email ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                    {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-                  </div>
-
-                  {/* Name (for signup and join) */}
-                  {mode !== 'signin' && (
-                    <div className="space-y-2">
-                      <label className="text-sm text-gray-700">Full Name</label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <Input
-                          type="text"
-                          placeholder="John Doe"
-                          value={formData.name}
-                          onChange={(e) => handleInputChange('name', e.target.value)}
-                          className={`pl-10 h-11 ${errors.name ? 'border-red-500' : ''}`}
-                        />
+                  {!otpSent ? (
+                    <>
+                      {/* Email */}
+                      <div className="space-y-2">
+                        <label className="text-sm text-gray-700">Email Address</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <Input
+                            type="email"
+                            placeholder="you@example.com"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            className={`pl-10 h-11 ${errors.email ? 'border-red-500' : ''}`}
+                            disabled={isLoading}
+                          />
+                        </div>
+                        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                       </div>
-                      {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-                    </div>
-                  )}
 
-                  {/* Phone (for signup and join) */}
-                  {mode !== 'signin' && (
-                    <div className="space-y-2">
-                      <label className="text-sm text-gray-700">Phone Number</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <Input
-                          type="tel"
-                          placeholder="+91-9876543210"
-                          value={formData.phone}
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className={`pl-10 h-11 ${errors.phone ? 'border-red-500' : ''}`}
-                        />
-                      </div>
-                      {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-                    </div>
-                  )}
+                      {/* Name (for signup and join) */}
+                      {mode !== 'signin' && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-700">Full Name</label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Input
+                              type="text"
+                              placeholder="John Doe"
+                              value={formData.name}
+                              onChange={(e) => handleInputChange('name', e.target.value)}
+                              className={`pl-10 h-11 ${errors.name ? 'border-red-500' : ''}`}
+                              disabled={isLoading}
+                            />
+                          </div>
+                          {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                        </div>
+                      )}
 
-                  {/* Business Name (for join only) */}
-                  {mode === 'join' && (
-                    <div className="space-y-2">
-                      <label className="text-sm text-gray-700">Business Name</label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <Input
-                          type="text"
-                          placeholder="Your Business Name"
-                          value={formData.businessName}
-                          onChange={(e) => handleInputChange('businessName', e.target.value)}
-                          className={`pl-10 h-11 ${errors.businessName ? 'border-red-500' : ''}`}
-                        />
-                      </div>
-                      {errors.businessName && <p className="text-sm text-red-500">{errors.businessName}</p>}
-                    </div>
-                  )}
+                      {/* Phone (for signup and join) */}
+                      {mode !== 'signin' && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-700">Phone Number</label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Input
+                              type="tel"
+                              placeholder="9876543210"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              className={`pl-10 h-11 ${errors.phone ? 'border-red-500' : ''}`}
+                              disabled={isLoading}
+                              maxLength={10}
+                            />
+                          </div>
+                          {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                        </div>
+                      )}
+
+                      {/* Business Name (for join only) */}
+                      {mode === 'join' && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-gray-700">Business Name</label>
+                          <div className="relative">
+                            <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Input
+                              type="text"
+                              placeholder="Your Business Name"
+                              value={formData.businessName}
+                              onChange={(e) => handleInputChange('businessName', e.target.value)}
+                              className={`pl-10 h-11 ${errors.businessName ? 'border-red-500' : ''}`}
+                              disabled={isLoading}
+                            />
+                          </div>
+                          {errors.businessName && <p className="text-sm text-red-500">{errors.businessName}</p>}
+                        </div>
+                      )}
+                    </>
+                  ) : null}
 
                   {/* OTP Input (shown when OTP is required) */}
-                  {requiresOTP && (
+                  {requiresOTP && otpSent && (
                     <div className="space-y-2">
-                      <label className="text-sm text-gray-700">Enter OTP</label>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+                        <div className="flex items-start gap-2">
+                          <Mail className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium text-blue-900">Check your email</p>
+                            <p className="text-xs text-blue-700 mt-0.5">
+                              We've sent a 6-digit code to <strong>{formData.email}</strong>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <label className="text-sm text-gray-700">Enter Verification Code</label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <Input
                           type="text"
-                          placeholder="Enter 6-digit OTP"
+                          placeholder="000000"
                           value={formData.otp}
-                          onChange={(e) => handleInputChange('otp', e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            handleInputChange('otp', value);
+                          }}
                           maxLength={6}
-                          className={`pl-10 h-11 ${errors.otp ? 'border-red-500' : ''}`}
+                          className={`text-center text-2xl tracking-widest font-mono h-12 ${errors.otp ? 'border-red-500' : ''}`}
                         />
                       </div>
-                      {otpSent && (
-                        <p className="text-xs text-green-600">
-                          OTP sent to {formData.phone}. Check your phone.
-                        </p>
-                      )}
                       {errors.otp && <p className="text-sm text-red-500">{errors.otp}</p>}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpSent(false);
+                          setRequiresOTP(false);
+                          setFormData(prev => ({ ...prev, otp: '' }));
+                        }}
+                        className="text-xs text-[#ff6b35] hover:text-[#ff5722] w-full text-center"
+                      >
+                        Change email address
+                      </button>
                     </div>
                   )}
 
                   {/* Password */}
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-700">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <Input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        className={`pl-10 pr-10 h-11 ${errors.password ? 'border-red-500' : ''}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
+                  {!otpSent && (
+                    <div className="space-y-2">
+                      <label className="text-sm text-gray-700">Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={formData.password}
+                          onChange={(e) => handleInputChange('password', e.target.value)}
+                          className={`pl-10 pr-10 h-11 ${errors.password ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
                     </div>
-                    {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
-                  </div>
+                  )}
 
                   {/* Confirm Password (for signup and join) */}
-                  {mode !== 'signin' && (
+                  {mode !== 'signin' && !otpSent && (
                     <div className="space-y-2">
                       <label className="text-sm text-gray-700">Confirm Password</label>
                       <div className="relative">
@@ -438,6 +503,7 @@ export default function AuthPage() {
                           value={formData.confirmPassword}
                           onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                           className={`pl-10 h-11 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
                         />
                       </div>
                       {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}

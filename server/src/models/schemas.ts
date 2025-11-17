@@ -9,9 +9,19 @@ export const registerSchema = z.object({
   body: z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
-    phone: z.string().regex(/^\+91-[6-9]\d{9}$/, 'Invalid phone format'),
+    phone: z.string()
+      .regex(/^[6-9]\d{9}$/, 'Phone number must be 10 digits starting with 6-9')
+      .length(10, 'Phone number must be exactly 10 digits'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     role: z.enum(['CUSTOMER', 'PROVIDER', 'ADMIN']).default('CUSTOMER'),
+    // OTP is not required in initial registration - it will be sent via email
+  }),
+});
+
+export const verifyRegistrationOTPSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email address'),
+    otp: z.string().length(6, 'OTP must be 6 digits'),
   }),
 });
 
@@ -144,7 +154,7 @@ export const createReportSchema = z.object({
 export const sendMessageSchema = z.object({
   body: z.object({
     conversationId: z.string().optional(),
-    receiverId: z.string().min(1, 'Receiver ID is required'),
+    receiverId: z.string().uuid('Invalid receiver ID format').min(1, 'Receiver ID is required'),
     text: z.string().min(1, 'Message text is required'),
     attachments: z.any().optional(),
   }),

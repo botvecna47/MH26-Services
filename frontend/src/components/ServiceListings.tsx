@@ -18,98 +18,10 @@ export function ServiceListings({ onPageChange }: ServiceListingsProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRating, setSelectedRating] = useState([]);
 
-  const providers = [
-    {
-      id: 1,
-      name: "Maharashtrian Tiffin Express",
-      service: "Tiffin Service",
-      rating: 4.8,
-      reviews: 156,
-      distance: "0.8 km",
-      price: "₹150-200/day",
-      image: "https://images.unsplash.com/photo-1718114243715-8252d5382319?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBmb29kJTIwdGlmZmluJTIwc2VydmljZXxlbnwxfHx8fDE3NTgwMDQ0NTF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      speciality: "Authentic Maharashtrian meals, fresh daily",
-      phone: "+91 9876543210",
-      verified: true,
-      available: true,
-      location: "Shivaji Nagar, Nanded"
-    },
-    {
-      id: 2,
-      name: "QuickFix Plumbing Services",
-      service: "Plumber",
-      rating: 4.9,
-      reviews: 89,
-      distance: "1.2 km",
-      price: "₹300-500/visit",
-      image: "https://images.unsplash.com/photo-1657558665549-bd7d82afed8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVjdHJpY2lhbiUyMHBsdW1iZXIlMjBzZXJ2aWNlc3xlbnwxfHx8fDE3NTgwMDQ0NTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      speciality: "24/7 Emergency service, pipe repairs, installations",
-      phone: "+91 9876543211",
-      verified: true,
-      available: true,
-      location: "Civil Lines, Nanded"
-    },
-    {
-      id: 3,
-      name: "PowerTech Electricians",
-      service: "Electrician",
-      rating: 4.7,
-      reviews: 124,
-      distance: "2.0 km",
-      price: "₹200-400/hour",
-      image: "https://images.unsplash.com/photo-1657558665549-bd7d82afed8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVjdHJpY2lhbiUyMHBsdW1iZXIlMjBzZXJ2aWNlc3xlbnwxfHx8fDE3NTgwMDQ0NTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      speciality: "Home wiring, appliance repair, LED installations",
-      phone: "+91 9876543212",
-      verified: true,
-      available: false,
-      location: "Vazirabad, Nanded"
-    },
-    {
-      id: 4,
-      name: "Nanded Heritage Tours",
-      service: "Tourism Guide",
-      rating: 4.7,
-      reviews: 234,
-      distance: "2.1 km",
-      price: "₹1000-1500/day",
-      image: "https://images.unsplash.com/photo-1577949619851-db947ef972af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0b3VyaXNtJTIwZ3VpZGUlMjB0cmF2ZWwlMjBuYW5kZWR8ZW58MXx8fHwxNzU4MDA0NDU4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      speciality: "Historical sites, cultural tours, multi-language guide",
-      phone: "+91 9876543213",
-      verified: true,
-      available: true,
-      location: "Near Hazur Sahib, Nanded"
-    },
-    {
-      id: 5,
-      name: "Home Style Tiffin",
-      service: "Tiffin Service",
-      rating: 4.6,
-      reviews: 78,
-      distance: "1.5 km",
-      price: "₹120-180/day",
-      image: "https://images.unsplash.com/photo-1718114243715-8252d5382319?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHhpbmRpYW4lMjBmb29kJTIwdGlmZmluJTIwc2VydmljZXxlbnwxfHx8fDE3NTgwMDQ0NTF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      speciality: "North Indian cuisine, customizable menu",
-      phone: "+91 9876543214",
-      verified: true,
-      available: true,
-      location: "Taroda Road, Nanded"
-    },
-    {
-      id: 6,
-      name: "Reliable Pipe Works",
-      service: "Plumber",
-      rating: 4.5,
-      reviews: 67,
-      distance: "3.2 km",
-      price: "₹250-450/visit",
-      image: "https://images.unsplash.com/photo-1657558665549-bd7d82afed8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVjdHJpY2lhbiUyMHBsdW1iZXIlMjBzZXJ2aWNlc3xlbnwxfHx8fDE3NTgwMDQ0NTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      speciality: "Bathroom fittings, drainage systems, water heaters",
-      phone: "+91 9876543215",
-      verified: true,
-      available: true,
-      location: "Panch Hwd, Nanded"
-    }
-  ];
+  // NOTE: This component appears to be unused in the main app (only used in EnhancedApp.tsx)
+  // If this component is to be used, it should fetch providers from the API using useProviders hook
+  // instead of using hardcoded test data. For now, using empty array to prevent test data from appearing.
+  const providers: any[] = [];
 
   const serviceTypes = [
     { value: "all", label: "All Services" },

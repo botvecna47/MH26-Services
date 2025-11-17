@@ -444,8 +444,6 @@ export const adminController = {
       const { id } = req.params;
       const { reason } = req.body;
 
-      // For now, we'll just mark the user's provider as suspended if they have one
-      // In a full implementation, you'd add a banned field to User model
       const user = await prisma.user.findUnique({
         where: { id },
         include: {
@@ -458,6 +456,13 @@ export const adminController = {
         return;
       }
 
+      // Prevent banning admins
+      if (user.role === 'ADMIN') {
+        res.status(403).json({ error: 'Cannot ban admin users' });
+        return;
+      }
+
+      // Suspend provider if they have one
       if (user.provider) {
         await prisma.provider.update({
           where: { id: user.provider.id },
@@ -465,10 +470,34 @@ export const adminController = {
         });
       }
 
+      // Revoke all refresh tokens (force logout)
+      await prisma.refreshToken.updateMany({
+        where: {
+          userId: id,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      });
+
       // Notify user
       emitNotification(id, {
         type: 'account_suspended',
-        payload: { reason },
+        payload: { reason: reason || 'Your account has been suspended by an administrator' },
+      });
+
+      // Log admin action
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user!.id,
+          action: 'BAN_USER',
+          tableName: 'User',
+          recordId: id,
+          newData: { reason, bannedAt: new Date() },
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
       });
 
       res.json({ message: 'User banned successfully' });

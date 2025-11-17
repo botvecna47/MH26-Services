@@ -4,7 +4,7 @@ import { Input } from "./ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
@@ -122,6 +122,7 @@ export function ProfilePage({ user, userRole }: ProfilePageProps) {
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="relative">
                     <Avatar className="w-24 h-24">
+                      <AvatarImage src={(user as any).avatarUrl} />
                       <AvatarFallback className="text-2xl">
                         {user.firstName[0]}{user.lastName[0]}
                       </AvatarFallback>

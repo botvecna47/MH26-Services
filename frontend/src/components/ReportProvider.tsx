@@ -264,41 +264,45 @@ export default function ReportProvider({ providerId, providerName, trigger }: Re
             </>
           ) : (
             // Success Screen
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="py-8"
-            >
-              <div className="text-center space-y-4">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: 'spring' }}
-                  className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto"
-                >
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
-                </motion.div>
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  Report Submitted
+                </DialogTitle>
+                <DialogDescription>
+                  Thank you for helping us maintain quality standards. Our admin team will review your report.
+                </DialogDescription>
+              </DialogHeader>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="py-4"
+              >
+                <div className="text-center space-y-4">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: 'spring' }}
+                    className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto"
+                  >
+                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  </motion.div>
 
-                <div>
-                  <h3 className="text-gray-900 mb-2">Report Submitted</h3>
-                  <p className="text-sm text-gray-600">
-                    Thank you for helping us maintain quality standards. Our admin team will review your report.
-                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                    <p className="text-sm text-blue-800">
+                      <strong>What happens next?</strong>
+                    </p>
+                    <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+                      <li>Our team will investigate within 24 hours</li>
+                      <li>You'll receive an email update</li>
+                      <li>If needed, we may contact you for more information</li>
+                      <li>Appropriate action will be taken based on findings</li>
+                    </ul>
+                  </div>
                 </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                  <p className="text-sm text-blue-800">
-                    <strong>What happens next?</strong>
-                  </p>
-                  <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
-                    <li>Our team will investigate within 24 hours</li>
-                    <li>You'll receive an email update</li>
-                    <li>If needed, we may contact you for more information</li>
-                    <li>Appropriate action will be taken based on findings</li>
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </DialogContent>
       </Dialog>

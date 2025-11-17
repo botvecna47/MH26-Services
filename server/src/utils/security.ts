@@ -62,11 +62,49 @@ export function decrypt(encryptedText: string): string {
 
 /**
  * Sanitize input to prevent XSS
+ * Removes potentially dangerous characters and HTML tags
  */
 export function sanitizeInput(input: string): string {
+  if (typeof input !== 'string') {
+    return String(input);
+  }
+  
   return input
-    .replace(/[<>]/g, '') // Remove < and >
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+    .replace(/<[^>]+>/g, '') // Remove all HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers (onclick, onerror, etc.)
+    .replace(/[<>'"]/g, '') // Remove potentially dangerous characters
     .trim();
+}
+
+/**
+ * Sanitize object recursively (for nested objects)
+ */
+export function sanitizeObject(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  
+  if (typeof obj === 'string') {
+    return sanitizeInput(obj);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeObject(item));
+  }
+  
+  if (typeof obj === 'object') {
+    const sanitized: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        sanitized[key] = sanitizeObject(obj[key]);
+      }
+    }
+    return sanitized;
+  }
+  
+  return obj;
 }
 
 /**
@@ -88,7 +126,7 @@ export function isValidEmail(email: string): boolean {
  * Validate phone number (Indian format)
  */
 export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^\+91-[6-9]\d{9}$/;
-  return phoneRegex.test(phone);
+  const phoneRegex = /^[6-9]\d{9}$/;
+  return phoneRegex.test(phone) && phone.length === 10;
 }
 

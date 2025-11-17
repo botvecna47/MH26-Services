@@ -88,8 +88,16 @@ export const providersApi = {
   },
 
   revealPhone: async (id: string): Promise<{ phone: string }> => {
-    const response = await axiosClient.post<{ phone: string }>(`/providers/${id}/reveal-phone`);
-    return response.data;
+    try {
+      const response = await axiosClient.post<{ phone: string }>(`/providers/${id}/reveal-phone`);
+      return response.data;
+    } catch (error: any) {
+      // Re-throw 401 errors so components can handle them
+      if (error?.response?.status === 401) {
+        throw error;
+      }
+      throw error;
+    }
   },
 };
 

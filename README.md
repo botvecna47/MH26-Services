@@ -51,9 +51,11 @@
 
 ### 🔐 Authentication & Authorization
 
-- **User Registration**: Separate flows for customers and service providers
-- **Email Verification**: Secure email-based account verification
-- **Phone Verification**: OTP-based phone number verification (backend ready)
+- **User Registration**: Two-step registration with email OTP verification
+  - Step 1: User submits registration form, receives OTP via email
+  - Step 2: User verifies OTP, account is created only after verification
+- **Email Verification**: Secure email-based OTP verification for registration
+- **Phone Number Validation**: 10-digit phone numbers (starting with 6-9) with duplicate checking
 - **Password Management**: 
   - Secure password reset via email
   - Password change with current password verification
@@ -234,20 +236,33 @@
 ### 🔒 Security Features
 
 - **Authentication Security**:
-  - JWT token-based authentication
-  - Refresh token rotation
-  - Token expiration handling
-  - Secure password hashing (bcrypt)
+  - JWT token-based authentication with 15-minute access tokens
+  - Refresh token rotation (7-day expiry)
+  - Token expiration handling with automatic refresh
+  - Secure password hashing (bcrypt, 12 rounds)
+  - Email OTP verification for registration
+  - Suspended provider account blocking
 - **API Security**:
-  - Rate limiting on all endpoints
-  - Input validation with Zod
+  - Rate limiting on all endpoints (Redis-backed with in-memory fallback)
+  - Input validation with Zod schemas
+  - Automatic input sanitization (XSS prevention)
   - SQL injection prevention (Prisma ORM)
-  - XSS protection
-  - CORS configuration
-  - Security headers (Helmet)
+  - CORS configuration with dynamic origins
+  - Security headers (Helmet.js):
+    - Content Security Policy (CSP)
+    - HSTS (HTTP Strict Transport Security)
+    - XSS Filter
+    - Frame Guard
+    - Cross-Origin Resource Policy
+- **Data Security**:
+  - Phone number validation (10 digits, duplicate checking)
+  - Message text sanitization
+  - Review comment sanitization
+  - Audit logging for admin actions
+  - Secure file upload with validation
 - **Data Protection**:
   - Environment variable validation
-  - Secure file uploads
+  - Secure file uploads (local storage with S3 fallback)
   - Audit logging for admin actions
   - Privacy controls (phone visibility)
 
@@ -444,8 +459,8 @@ mh26-services/
 
 - **Node.js** 18.0.0 or higher
 - **npm** or **yarn**
-- **PostgreSQL** 14+ (or Docker)
-- **Redis** 6+ (or Docker)
+- **PostgreSQL** 14+
+- **Redis** 6+
 - **Git**
 
 ### Option 1: Using Batch File (Windows)
@@ -503,11 +518,13 @@ AWS_SECRET_ACCESS_KEY=""
 AWS_REGION="ap-south-1"
 AWS_S3_BUCKET=""
 
-# Email (optional, for email verification)
-SMTP_HOST=""
-SMTP_USER=""
-SMTP_PASS=""
-SMTP_FROM=""
+# Email (required for OTP verification during registration)
+# See docs/EMAIL_SETUP.md or QUICK_EMAIL_SETUP.md for setup instructions
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+SMTP_FROM="your-email@gmail.com"
 ```
 
 4. **Set up the database**
@@ -561,6 +578,10 @@ See `docs/SEEDED_CREDENTIALS.md` for test accounts after running the seed script
 - **[Implementation Status](./docs/IMPLEMENTATION_STATUS.md)** - Current progress tracking
 - **[Completed Tasks](./docs/COMPLETED_TASKS.md)** - Task completion log
 - **[Seeded Credentials](./docs/SEEDED_CREDENTIALS.md)** - Test account information
+- **[Email Setup Guide](./docs/EMAIL_SETUP.md)** - Detailed email configuration instructions
+- **[Quick Email Setup](./QUICK_EMAIL_SETUP.md)** - Quick guide for Gmail SMTP setup
+- **[Security Improvements](./SECURITY_IMPROVEMENTS.md)** - Security enhancements documentation
+- **[Free Storage Setup](./FREE_STORAGE_SETUP.md)** - Local file storage guide (no AWS required)
 
 ### API Documentation
 
@@ -569,7 +590,8 @@ The API follows RESTful conventions. Base URL: `http://localhost:3000/api`
 #### Main Endpoints
 
 - **Authentication**: `/api/auth/*`
-  - `POST /api/auth/register` - User registration
+  - `POST /api/auth/register` - User registration (sends OTP via email)
+  - `POST /api/auth/verify-registration-otp` - Verify email OTP and complete registration
   - `POST /api/auth/login` - User login
   - `POST /api/auth/refresh` - Refresh token
   - `POST /api/auth/logout` - User logout

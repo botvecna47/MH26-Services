@@ -55,6 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     lastRefreshTime = now;
     
+    // Check if we have a token before making the request
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      // No token, user is not authenticated - don't make request
+      setUser(null);
+      return;
+    }
+    
     try {
       const response = await axiosClient.get('/users/me');
       const userData = response.data;
@@ -62,13 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user', JSON.stringify(userData));
       // Dispatch event to sync UserContext
       window.dispatchEvent(new Event('userUpdated'));
-    } catch (error) {
-      // Token invalid, logout silently (don't show error toast)
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      setUser(null);
-      window.dispatchEvent(new Event('userUpdated'));
+    } catch (error: any) {
+      // Only handle 401 errors silently (expected when token is invalid)
+      if (error?.response?.status === 401) {
+        // Token invalid, logout silently (don't show error toast or log)
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        setUser(null);
+        window.dispatchEvent(new Event('userUpdated'));
+      }
+      // For other errors, let them propagate (but don't log expected 401s)
       // Don't navigate here to avoid redirect loops
     }
   };

@@ -3,6 +3,7 @@
  */
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
+import { sanitizeInput } from '../utils/security';
 import logger from '../config/logger';
 
 export const reviewController = {
@@ -55,6 +56,9 @@ export const reviewController = {
         return;
       }
 
+      // Sanitize comment if provided
+      const sanitizedComment = comment ? sanitizeInput(comment) : null;
+
       // Create review
       const review = await prisma.review.create({
         data: {
@@ -62,7 +66,7 @@ export const reviewController = {
           providerId,
           userId,
           rating,
-          comment,
+          comment: sanitizedComment,
         },
         include: {
           user: {

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Calendar, Mail, Phone, Shield, User, MapPin, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,6 +23,9 @@ export default function UserDetailsModal({ isOpen, onClose, user }: UserDetailsM
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
+          <DialogDescription>
+            View detailed information about this user account
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (

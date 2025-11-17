@@ -41,7 +41,14 @@ axiosClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
-          throw new Error('No refresh token');
+          // No refresh token means user is not authenticated
+          // This is expected for public routes, so suppress console error
+          const silentError = new Error('Unauthorized');
+          (silentError as any).response = error.response;
+          (silentError as any).config = error.config;
+          (silentError as any).isAxiosError = true;
+          (silentError as any).toJSON = () => ({ message: 'Unauthorized' });
+          return Promise.reject(silentError);
         }
 
         // Call refresh endpoint
@@ -58,13 +65,24 @@ axiosClient.interceptors.response.use(
         }
         return axiosClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, logout user
+        // Refresh failed, logout user silently
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         // Don't redirect here - let the component handle it
         // This prevents infinite redirect loops
         return Promise.reject(refreshError);
+      }
+    }
+
+    // Suppress console errors for expected 401s (unauthenticated requests)
+    if (error.response?.status === 401) {
+      // Check if this is an expected 401 (no token in storage)
+      const hasToken = localStorage.getItem('accessToken');
+      if (!hasToken) {
+        // Expected 401 - user is not authenticated, suppress console error
+        // The error will still be rejected for components to handle
+        return Promise.reject(error);
       }
     }
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useNotifications as useNotificationsQuery, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '../api/notifications';
+import { useAuth } from '../hooks/useAuth';
 
 export interface Notification {
   id: string;
@@ -22,8 +23,11 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  // Fetch notifications from API
-  const { data: notificationsData, isLoading, error } = useNotificationsQuery();
+  // Check if user is authenticated
+  const { isAuthenticated } = useAuth();
+  
+  // Fetch notifications from API only if authenticated
+  const { data: notificationsData, isLoading, error } = useNotificationsQuery(undefined, isAuthenticated);
   const markAsReadMutation = useMarkNotificationAsRead();
   const markAllAsReadMutation = useMarkAllNotificationsAsRead();
 

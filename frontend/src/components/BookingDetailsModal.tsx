@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Calendar, MapPin, DollarSign, User, Building2, FileText, Download, Eye } from 'lucide-react';
@@ -247,8 +247,31 @@ export default function BookingDetailsModal({ isOpen, onClose, bookingId }: Book
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>Loading Booking Details</DialogTitle>
+            <DialogDescription>Please wait while we fetch the booking information</DialogDescription>
+          </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Handle 403 Forbidden error
+  if (error && (error as any)?.response?.status === 403) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>Access Denied</DialogTitle>
+            <DialogDescription>
+              You don't have permission to view this booking. Only the customer who made the booking or the service provider can access it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-4">
+            <Button onClick={onClose}>Close</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -261,6 +284,9 @@ export default function BookingDetailsModal({ isOpen, onClose, bookingId }: Book
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Booking Not Found</DialogTitle>
+            <DialogDescription>
+              The requested booking could not be found
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-gray-600">The booking with ID <span className="font-mono text-sm">{bookingId}</span> could not be found.</p>
@@ -295,6 +321,9 @@ export default function BookingDetailsModal({ isOpen, onClose, bookingId }: Book
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader>
           <DialogTitle>Booking Details</DialogTitle>
+          <DialogDescription>
+            View complete information about this booking
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

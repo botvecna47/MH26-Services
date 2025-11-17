@@ -5,8 +5,7 @@
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { ProfilePictureUpload } from '../components/ProfilePictureUpload';
-import { useUpdateMe } from '../api/users';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '../api/axiosClient';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/Input';
@@ -17,8 +16,25 @@ import { toast } from 'sonner';
 import { Loader2, User, Lock, Mail, Phone, Save } from 'lucide-react';
 
 export default function Settings() {
-  const { user, refreshUser } = useUser();
-  const updateMeMutation = useUpdateMe();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+  
+  // Profile update mutation with toast handling
+  const updateMeMutation = useMutation({
+    mutationFn: async (data: { name: string; phone?: string }) => {
+      const response = await axiosClient.patch('/users/me', data);
+      return response.data;
+    },
+    onSuccess: async () => {
+      // Invalidate user queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+      toast.success('Profile updated successfully');
+      // User context will sync automatically via localStorage
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update profile');
+    },
+  });
 
   // Profile settings
   const [profileData, setProfileData] = useState({
@@ -56,16 +72,10 @@ export default function Settings() {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await updateMeMutation.mutateAsync({
-        name: profileData.name,
-        phone: profileData.phone,
-      });
-      toast.success('Profile updated successfully');
-      refreshUser();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update profile');
-    }
+    updateMeMutation.mutate({
+      name: profileData.name,
+      phone: profileData.phone,
+    });
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -109,7 +119,8 @@ export default function Settings() {
               <ProfilePictureUpload 
                 size="lg"
                 onUploadComplete={() => {
-                  refreshUser();
+                  // User context will sync automatically via localStorage
+                  queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
                 }}
               />
             </CardContent>
@@ -160,10 +171,21 @@ export default function Settings() {
                       id="phone"
                       type="tel"
                       value={profileData.phone || ''}
-                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                      placeholder="Enter your phone number"
+                      onChange={(e) => {
+                        // Only allow digits, max 10 digits
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setProfileData({ ...profileData, phone: value });
+                      }}
+                      placeholder="9876543210"
+                      maxLength={10}
                     />
                   </div>
+                  {profileData.phone && profileData.phone.length !== 10 && (
+                    <p className="text-xs text-gray-500">Phone number must be 10 digits</p>
+                  )}
+                  {profileData.phone && !/^[6-9]/.test(profileData.phone) && profileData.phone.length > 0 && (
+                    <p className="text-xs text-red-500">Phone number must start with 6, 7, 8, or 9</p>
+                  )}
                 </div>
 
                 <Button

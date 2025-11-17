@@ -41,56 +41,12 @@ export function NotificationSystem({ userType, userId }: NotificationSystemProps
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread' | 'today'>('all');
 
-  // Mock notifications - in real app this would come from API/WebSocket
+  // Note: This component uses mock data for demonstration
+  // In production, notifications should come from the NotificationContext/API
+  // This component appears to be unused in the current app (NotificationContext handles notifications)
   useEffect(() => {
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'booking',
-        title: 'New Booking Request',
-        message: userType === 'provider' 
-          ? 'You have a new booking request from Priya Sharma for pipe repair.'
-          : 'Your booking with QuickFix Plumbing has been confirmed.',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        read: false,
-        priority: 'high'
-      },
-      {
-        id: '2',
-        type: 'payment',
-        title: 'Payment Processed',
-        message: userType === 'provider'
-          ? 'Payment of ₹400 has been credited to your account.'
-          : 'Payment of ₹400 has been processed for your recent service.',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        read: false,
-        priority: 'medium'
-      },
-      {
-        id: '3',
-        type: 'review',
-        title: 'New Review Received',
-        message: userType === 'provider'
-          ? 'You received a 5-star review from Rajesh Kumar.'
-          : 'Please rate your recent service with Maharashtrian Tiffin.',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        read: true,
-        priority: 'low'
-      },
-      {
-        id: '4',
-        type: 'system',
-        title: userType === 'admin' ? 'System Alert' : 'Service Update',
-        message: userType === 'admin'
-          ? 'Server load is above 80%. Monitoring required.'
-          : 'New features have been added to your dashboard.',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        read: true,
-        priority: userType === 'admin' ? 'high' : 'low'
-      }
-    ];
-
-    setNotifications(mockNotifications);
+    // Empty notifications - real notifications come from API via NotificationContext
+    setNotifications([]);
   }, [userType]);
 
   // Simulate real-time notifications
