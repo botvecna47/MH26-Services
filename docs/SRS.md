@@ -1,9 +1,8 @@
 # Software Requirements Specification (SRS)
 ## MH26 Services Marketplace Platform
-
-**Version:** 1.0  
+ 
 **Date:** 2025  
-**Prepared by:** Development Team
+**Prepared by:** Darshdeep Singh Dutta & Shivam Jatale
 
 ---
 
