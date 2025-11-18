@@ -118,16 +118,27 @@
 ### 📅 Booking System
 
 - **Booking Creation**:
+  - User-initiated booking requests
   - Multi-step booking form
   - Service selection
   - Date and time scheduling
   - Address management
   - Special requirements input
+  - Automatic platform fee calculation (5%)
+  - Provider earnings calculation
+- **Booking Request Flow**:
+  - Customer creates booking with PENDING status
+  - Provider receives real-time notification
+  - Provider can accept (CONFIRMED) or reject (REJECTED) booking
+  - Customer receives notification of provider's decision
+  - Optional rejection reason from provider
 - **Booking Management**:
   - View all bookings (customer/provider/admin)
-  - Booking status tracking (PENDING, CONFIRMED, COMPLETED, CANCELLED)
-  - Booking cancellation
-  - Booking updates and notifications
+  - Role-based booking filtering
+  - Booking status tracking (PENDING → CONFIRMED/REJECTED → COMPLETED)
+  - Provider accept/reject actions
+  - Booking cancellation (customer/provider)
+  - Booking updates and real-time notifications via Socket.io
 - **Invoice Generation**:
   - Automatic invoice creation
   - PDF invoice download
@@ -177,7 +188,9 @@
   - Notification center
 - **Notification Types**:
   - New messages
-  - Booking updates
+  - New booking requests (for providers)
+  - Booking acceptance/rejection (for customers)
+  - Booking status updates
   - Provider approval/rejection
   - Provider suspension/unsuspension
   - Appeal status updates
@@ -606,9 +619,13 @@ The API follows RESTful conventions. Base URL: `http://localhost:3000/api`
   - `PATCH /api/providers/:id` - Update provider
 
 - **Bookings**: `/api/bookings/*`
-  - `POST /api/bookings` - Create booking
-  - `GET /api/bookings` - List bookings
+  - `POST /api/bookings` - Create booking (customer initiates booking request)
+  - `GET /api/bookings` - List bookings (filtered by user role)
   - `GET /api/bookings/:id` - Get booking details
+  - `POST /api/bookings/:id/accept` - Accept booking (provider action)
+  - `POST /api/bookings/:id/reject` - Reject booking (provider action)
+  - `PATCH /api/bookings/:id` - Update booking status (provider/admin)
+  - `POST /api/bookings/:id/cancel` - Cancel booking (customer/provider)
   - `GET /api/bookings/:id/invoice` - Get invoice
 
 - **Messages**: `/api/messages/*`

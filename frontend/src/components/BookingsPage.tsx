@@ -18,17 +18,24 @@ import {
   Loader2,
 } from "lucide-react";
 import { useUser } from "../context/UserContext";
-import { useBookings } from "../api/bookings";
+import { useBookings, useAcceptBooking, useRejectBooking } from "../api/bookings";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Textarea } from "./ui/textarea";
 
 export default function BookingsPage() {
   const { user, isProvider } = useUser();
   const [activeTab, setActiveTab] = useState('all');
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   // Fetch real bookings from API
   const { data: bookingsData, isLoading: bookingsLoading } = useBookings({ limit: 100 });
+  const acceptBooking = useAcceptBooking();
+  const rejectBooking = useRejectBooking();
 
   if (!user) {
     return (
@@ -70,6 +77,7 @@ export default function BookingsPage() {
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -85,6 +93,7 @@ export default function BookingsPage() {
       case 'completed':
         return <CheckCircle className="w-3 h-3" />;
       case 'cancelled':
+      case 'rejected':
         return <XCircle className="w-3 h-3" />;
       case 'pending':
         return <AlertCircle className="w-3 h-3" />;
@@ -123,6 +132,37 @@ export default function BookingsPage() {
   const handleCancelBooking = (bookingId: string) => {
     // TODO: Implement cancel booking
     toast.info('Cancel booking functionality coming soon');
+  };
+
+  const handleAcceptBooking = async (bookingId: string) => {
+    try {
+      await acceptBooking.mutateAsync(bookingId);
+      toast.success('Booking accepted successfully!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to accept booking');
+    }
+  };
+
+  const handleRejectBooking = async () => {
+    if (!selectedBookingId) return;
+    
+    try {
+      await rejectBooking.mutateAsync({ 
+        id: selectedBookingId, 
+        reason: rejectReason || undefined 
+      });
+      toast.success('Booking rejected');
+      setRejectDialogOpen(false);
+      setSelectedBookingId(null);
+      setRejectReason('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to reject booking');
+    }
+  };
+
+  const openRejectDialog = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setRejectDialogOpen(true);
   };
 
   return (
@@ -188,6 +228,7 @@ export default function BookingsPage() {
                   <TabsTrigger value="confirmed">Upcoming</TabsTrigger>
                   <TabsTrigger value="completed">Completed</TabsTrigger>
                   <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                  {isProvider && <TabsTrigger value="rejected">Rejected</TabsTrigger>}
                 </TabsList>
 
                 <TabsContent value={activeTab} className="space-y-4">
@@ -262,7 +303,37 @@ export default function BookingsPage() {
 
                             {/* Right Section - Actions */}
                             <div className="flex md:flex-col gap-2">
-                              {(booking.status === 'confirmed' || booking.status === 'pending') && (
+                              {/* Provider actions for pending bookings */}
+                              {isProvider && booking.status === 'pending' && (
+                                <>
+                                  <Button 
+                                    size="sm" 
+                                    className="flex-1 md:flex-none bg-green-600 hover:bg-green-700"
+                                    onClick={() => handleAcceptBooking(booking.id)}
+                                    disabled={acceptBooking.isPending}
+                                  >
+                                    <CheckCircle className="w-4 h-4 md:mr-2" />
+                                    <span className="hidden md:inline">
+                                      {acceptBooking.isPending ? 'Accepting...' : 'Accept'}
+                                    </span>
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="flex-1 md:flex-none text-destructive hover:text-destructive"
+                                    onClick={() => openRejectDialog(booking.id)}
+                                    disabled={rejectBooking.isPending}
+                                  >
+                                    <XCircle className="w-4 h-4 md:mr-2" />
+                                    <span className="hidden md:inline">
+                                      {rejectBooking.isPending ? 'Rejecting...' : 'Reject'}
+                                    </span>
+                                  </Button>
+                                </>
+                              )}
+                              
+                              {/* Customer actions */}
+                              {!isProvider && (booking.status === 'confirmed' || booking.status === 'pending') && (
                                 <>
                                   {booking.booking?.provider?.user?.phone && (
                                     <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
@@ -278,19 +349,38 @@ export default function BookingsPage() {
                                       <span className="hidden md:inline">Message</span>
                                     </Link>
                                   </Button>
-                                  {!isProvider && (
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="flex-1 md:flex-none text-destructive hover:text-destructive"
-                                      onClick={() => handleCancelBooking(booking.id)}
-                                    >
-                                      <XCircle className="w-4 h-4 md:mr-2" />
-                                      <span className="hidden md:inline">Cancel</span>
-                                    </Button>
-                                  )}
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="flex-1 md:flex-none text-destructive hover:text-destructive"
+                                    onClick={() => handleCancelBooking(booking.id)}
+                                  >
+                                    <XCircle className="w-4 h-4 md:mr-2" />
+                                    <span className="hidden md:inline">Cancel</span>
+                                  </Button>
                                 </>
                               )}
+                              
+                              {/* Provider actions for confirmed bookings */}
+                              {isProvider && booking.status === 'confirmed' && (
+                                <>
+                                  {booking.booking?.user?.phone && (
+                                    <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
+                                      <a href={`tel:${booking.booking.user.phone}`}>
+                                        <Phone className="w-4 h-4 md:mr-2" />
+                                        <span className="hidden md:inline">Call</span>
+                                      </a>
+                                    </Button>
+                                  )}
+                                  <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
+                                    <Link to={`/messages?user=${booking.booking?.userId}`}>
+                                      <MessageSquare className="w-4 h-4 md:mr-2" />
+                                      <span className="hidden md:inline">Message</span>
+                                    </Link>
+                                  </Button>
+                                </>
+                              )}
+                              
                               {booking.status === 'completed' && !booking.rating && !isProvider && (
                                 <Button size="sm" className="flex-1 md:flex-none" asChild>
                                   <Link to={`/provider/${booking.booking?.providerId}`}>
@@ -316,6 +406,52 @@ export default function BookingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reject Booking Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Booking Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reject this booking? You can optionally provide a reason.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Reason (Optional)
+              </label>
+              <Textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Enter reason for rejection..."
+                rows={4}
+                className="w-full"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRejectDialogOpen(false);
+                  setRejectReason('');
+                  setSelectedBookingId(null);
+                }}
+                disabled={rejectBooking.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleRejectBooking}
+                disabled={rejectBooking.isPending}
+              >
+                {rejectBooking.isPending ? 'Rejecting...' : 'Reject Booking'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

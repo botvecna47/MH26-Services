@@ -32,6 +32,11 @@ export const bookingController = {
         return;
       }
 
+      // Calculate platform fee and provider earnings
+      const platformFeeRate = 0.05; // 5% platform fee
+      const platformFee = Number(totalAmount) * platformFeeRate;
+      const providerEarnings = Number(totalAmount) - platformFee;
+
       // Create booking
       const booking = await prisma.booking.create({
         data: {
@@ -40,7 +45,11 @@ export const bookingController = {
           serviceId,
           scheduledAt: new Date(scheduledAt),
           totalAmount,
+          platformFee,
+          providerEarnings,
           status: 'PENDING',
+          address: req.body.address,
+          requirements: req.body.requirements,
         },
         include: {
           user: {
@@ -56,6 +65,26 @@ export const bookingController = {
           service: true,
         },
       });
+
+      // Create notification for provider
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: provider.userId,
+            type: 'BOOKING_REQUEST',
+            title: 'New Booking Request',
+            message: `${booking.user.name} has requested ${booking.service.title} on ${new Date(booking.scheduledAt).toLocaleDateString()}`,
+            metadata: {
+              bookingId: booking.id,
+              serviceId: booking.serviceId,
+              scheduledAt: booking.scheduledAt.toISOString(),
+            },
+          },
+        });
+      } catch (error) {
+        logger.error('Failed to create booking notification:', error);
+        // Don't fail the booking creation if notification fails
+      }
 
       // Emit socket event
       emitBookingUpdate(provider.userId, booking);
@@ -229,12 +258,41 @@ export const bookingController = {
               },
             },
           },
-          service: true,
+          service: { select: { title: true } },
         },
       });
 
-      // Emit socket event
+      // Create notification for customer when status changes
+      try {
+        let notificationTitle = '';
+        let notificationMessage = '';
+
+        if (status === 'COMPLETED') {
+          notificationTitle = 'Service Completed';
+          notificationMessage = `Your booking for ${updated.service.title} has been marked as completed`;
+        }
+
+        if (notificationTitle) {
+          await prisma.notification.create({
+            data: {
+              userId: booking.userId,
+              type: 'BOOKING_UPDATE',
+              title: notificationTitle,
+              message: notificationMessage,
+              metadata: {
+                bookingId: booking.id,
+                status: status,
+              },
+            },
+          });
+        }
+      } catch (error) {
+        logger.error('Failed to create booking update notification:', error);
+      }
+
+      // Emit socket events
       emitBookingUpdate(booking.userId, updated);
+      emitBookingUpdate(booking.provider.userId, updated);
 
       res.json(updated);
     } catch (error) {
@@ -303,6 +361,176 @@ export const bookingController = {
     } catch (error) {
       logger.error('Cancel booking error:', error);
       res.status(500).json({ error: 'Failed to cancel booking' });
+    }
+  },
+
+  /**
+   * Accept booking (provider action)
+   */
+  async accept(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+
+      const booking = await prisma.booking.findUnique({
+        where: { id },
+        include: {
+          provider: {
+            include: {
+              user: { select: { id: true } },
+            },
+          },
+          user: { select: { id: true, name: true } },
+          service: { select: { title: true } },
+        },
+      });
+
+      if (!booking) {
+        res.status(404).json({ error: 'Booking not found' });
+        return;
+      }
+
+      // Check authorization (only provider can accept)
+      if (booking.provider.userId !== userId && req.user!.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Only the provider can accept this booking' });
+        return;
+      }
+
+      if (booking.status !== 'PENDING') {
+        res.status(400).json({ error: 'Can only accept pending bookings' });
+        return;
+      }
+
+      const updated = await prisma.booking.update({
+        where: { id },
+        data: { status: 'CONFIRMED' },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true },
+          },
+          provider: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
+          service: true,
+        },
+      });
+
+      // Create notification for customer
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: booking.userId,
+            type: 'BOOKING_UPDATE',
+            title: 'Booking Confirmed',
+            message: `Your booking for ${booking.service.title} has been confirmed by the provider`,
+            metadata: {
+              bookingId: booking.id,
+              status: 'CONFIRMED',
+            },
+          },
+        });
+      } catch (error) {
+        logger.error('Failed to create acceptance notification:', error);
+      }
+
+      // Emit socket events
+      emitBookingUpdate(booking.userId, updated);
+      emitBookingUpdate(booking.provider.userId, updated);
+
+      res.json(updated);
+    } catch (error) {
+      logger.error('Accept booking error:', error);
+      res.status(500).json({ error: 'Failed to accept booking' });
+    }
+  },
+
+  /**
+   * Reject booking (provider action)
+   */
+  async reject(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      const booking = await prisma.booking.findUnique({
+        where: { id },
+        include: {
+          provider: {
+            include: {
+              user: { select: { id: true } },
+            },
+          },
+          user: { select: { id: true, name: true } },
+          service: { select: { title: true } },
+        },
+      });
+
+      if (!booking) {
+        res.status(404).json({ error: 'Booking not found' });
+        return;
+      }
+
+      // Check authorization (only provider can reject)
+      if (booking.provider.userId !== userId && req.user!.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Only the provider can reject this booking' });
+        return;
+      }
+
+      if (booking.status !== 'PENDING') {
+        res.status(400).json({ error: 'Can only reject pending bookings' });
+        return;
+      }
+
+      const updated = await prisma.booking.update({
+        where: { id },
+        data: { status: 'REJECTED' },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true },
+          },
+          provider: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
+          service: true,
+        },
+      });
+
+      // Create notification for customer
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: booking.userId,
+            type: 'BOOKING_UPDATE',
+            title: 'Booking Rejected',
+            message: `Your booking request for ${booking.service.title} has been rejected${reason ? `: ${reason}` : ' by the provider'}`,
+            metadata: {
+              bookingId: booking.id,
+              status: 'REJECTED',
+              reason: reason || null,
+            },
+          },
+        });
+      } catch (error) {
+        logger.error('Failed to create rejection notification:', error);
+      }
+
+      // Emit socket events
+      emitBookingUpdate(booking.userId, updated);
+      emitBookingUpdate(booking.provider.userId, updated);
+
+      res.json(updated);
+    } catch (error) {
+      logger.error('Reject booking error:', error);
+      res.status(500).json({ error: 'Failed to reject booking' });
     }
   },
 

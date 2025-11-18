@@ -88,6 +88,16 @@ export const bookingsApi = {
     const response = await axiosClient.get(`/bookings/${id}/invoice`);
     return response.data;
   },
+
+  acceptBooking: async (id: string) => {
+    const response = await axiosClient.post(`/bookings/${id}/accept`);
+    return response.data;
+  },
+
+  rejectBooking: async (id: string, reason?: string) => {
+    const response = await axiosClient.post(`/bookings/${id}/reject`, { reason });
+    return response.data;
+  },
 };
 
 // React Query hooks
@@ -153,6 +163,31 @@ export function useCancelBooking() {
       bookingsApi.cancelBooking(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+}
+
+export function useAcceptBooking() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => bookingsApi.acceptBooking(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
+    },
+  });
+}
+
+export function useRejectBooking() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      bookingsApi.rejectBooking(id, reason),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
     },
   });
 }

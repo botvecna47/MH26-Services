@@ -112,11 +112,13 @@ See `.env.example` for all required variables:
 - `POST /api/providers/:id/reject` - Reject provider (Admin)
 
 ### Bookings
-- `POST /api/bookings` - Create booking
-- `GET /api/bookings` - List bookings (user/provider)
+- `POST /api/bookings` - Create booking (customer initiates booking request)
+- `GET /api/bookings` - List bookings (filtered by user role)
 - `GET /api/bookings/:id` - Get booking details
-- `PATCH /api/bookings/:id` - Update booking status
-- `POST /api/bookings/:id/cancel` - Cancel booking
+- `POST /api/bookings/:id/accept` - Accept booking (provider action)
+- `POST /api/bookings/:id/reject` - Reject booking (provider action)
+- `PATCH /api/bookings/:id` - Update booking status (provider/admin)
+- `POST /api/bookings/:id/cancel` - Cancel booking (customer/provider)
 - `GET /api/bookings/:id/invoice` - Get invoice
 
 ### Payments

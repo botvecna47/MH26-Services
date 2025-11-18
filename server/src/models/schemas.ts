@@ -69,6 +69,17 @@ export const createBookingSchema = z.object({
     serviceId: z.string().uuid('Invalid service ID'),
     scheduledAt: z.string().datetime('Invalid date format'),
     totalAmount: z.number().positive('Amount must be positive'),
+    address: z.string().min(10, 'Address must be at least 10 characters').optional(),
+    requirements: z.string().optional(),
+  }),
+});
+
+export const rejectBookingSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid booking ID'),
+  }),
+  body: z.object({
+    reason: z.string().optional(),
   }),
 });
 

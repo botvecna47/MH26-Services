@@ -6,14 +6,14 @@ import { bookingController } from '../controllers/bookingController';
 import { authenticate, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { asyncHandler } from '../middleware/errorHandler';
-import { createBookingSchema, updateBookingSchema } from '../models/schemas';
+import { createBookingSchema, updateBookingSchema, rejectBookingSchema } from '../models/schemas';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticate);
 
-// Create booking
+// Create booking (customer creates booking request)
 router.post('/', validate(createBookingSchema), asyncHandler(bookingController.create));
 
 // List bookings (user sees their bookings, provider sees assigned bookings)
@@ -21,6 +21,12 @@ router.get('/', asyncHandler(bookingController.list));
 
 // Get booking by ID
 router.get('/:id', asyncHandler(bookingController.getById));
+
+// Accept booking (provider accepts pending booking)
+router.post('/:id/accept', requireRole('PROVIDER', 'ADMIN'), asyncHandler(bookingController.accept));
+
+// Reject booking (provider rejects pending booking)
+router.post('/:id/reject', requireRole('PROVIDER', 'ADMIN'), validate(rejectBookingSchema), asyncHandler(bookingController.reject));
 
 // Update booking status (provider can confirm/complete)
 router.patch('/:id', requireRole('PROVIDER', 'ADMIN'), validate(updateBookingSchema), asyncHandler(bookingController.update));

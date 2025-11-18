@@ -50,9 +50,11 @@
 
 ### Routes (Implementation Status)
 - [x] **Bookings Routes** (`/api/bookings`) ✅ **IMPLEMENTED**
-  - [x] POST `/api/bookings` - Create booking
+  - [x] POST `/api/bookings` - Create booking (customer initiates)
   - [x] GET `/api/bookings` - List bookings (user/provider filtered)
   - [x] GET `/api/bookings/:id` - Get booking details
+  - [x] POST `/api/bookings/:id/accept` - Accept booking (provider)
+  - [x] POST `/api/bookings/:id/reject` - Reject booking (provider)
   - [x] PATCH `/api/bookings/:id` - Update booking status
   - [x] POST `/api/bookings/:id/cancel` - Cancel booking
   - [x] GET `/api/bookings/:id/invoice` - Generate invoice
