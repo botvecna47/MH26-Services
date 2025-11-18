@@ -1510,6 +1510,7 @@ classDiagram
         +UserRole role
         +register()
         +login()
+        +updateProfile()
     }
     
     class Provider {
@@ -1519,6 +1520,7 @@ classDiagram
         +String city
         +Float rating
         +createProfile()
+        +updateProfile()
     }
     
     class Service {
@@ -1527,6 +1529,7 @@ classDiagram
         +String description
         +Decimal price
         +create()
+        +update()
     }
     
     class Booking {
@@ -1537,12 +1540,14 @@ classDiagram
         +create()
         +accept()
         +reject()
+        +cancel()
     }
     
     class Message {
         +String id
         +String text
         +send()
+        +markAsRead()
     }
     
     class Review {
@@ -1550,18 +1555,19 @@ classDiagram
         +Int rating
         +String comment
         +submit()
+        +update()
     }
     
-    User --> Booking : creates
-    User --> Message : sends
-    User --> Review : writes
-    User --> Provider : has
+    User "1" --> "*" Booking : creates
+    User "1" --> "*" Message : sends
+    User "1" --> "*" Review : writes
+    User "1" --> "0..1" Provider : has
     
-    Provider --> Service : offers
-    Provider --> Booking : receives
+    Provider "1" --> "*" Service : offers
+    Provider "1" --> "*" Booking : receives
     
-    Service --> Booking : booked_for
-    Booking --> Review : generates
+    Service "1" --> "*" Booking : booked_for
+    Booking "1" --> "0..1" Review : generates
 ```
 
 ---
@@ -1570,30 +1576,33 @@ classDiagram
 
 ```mermaid
 graph LR
-    subgraph Customer["Customer"]
-        C_ID["id: user-123"]
-        C_NAME["name: John Doe"]
+    subgraph Customer1["customer1:Customer"]
+        C1_ID["id = user-123"]
+        C1_NAME["name = John Doe"]
+        C1_EMAIL["email = john@example.com"]
     end
     
-    subgraph Provider["Provider"]
-        P_ID["id: provider-456"]
-        P_NAME["businessName: QuickFix"]
+    subgraph Provider1["provider1:Provider"]
+        P1_ID["id = provider-456"]
+        P1_NAME["businessName = QuickFix Plumbing"]
+        P1_STATUS["status = APPROVED"]
     end
     
-    subgraph Service["Service"]
-        S_TITLE["title: Pipe Repair"]
-        S_PRICE["price: 500"]
+    subgraph Service1["service1:Service"]
+        S1_ID["id = service-789"]
+        S1_TITLE["title = Pipe Repair"]
+        S1_PRICE["price = 500.00"]
     end
     
-    subgraph Booking["Booking"]
-        B_ID["id: booking-001"]
-        B_STATUS["status: PENDING"]
-        B_AMOUNT["amount: 500"]
+    subgraph Booking1["booking1:Booking"]
+        B1_ID["id = booking-001"]
+        B1_STATUS["status = PENDING"]
+        B1_AMOUNT["totalAmount = 500.00"]
     end
     
-    Customer -->|creates| Booking
-    Provider -->|receives| Booking
-    Service -->|booked_for| Booking
+    Customer1 -->|creates| Booking1
+    Provider1 -->|receives| Booking1
+    Service1 -->|booked_for| Booking1
 ```
 
 ---
@@ -1632,18 +1641,21 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    Start([Customer starts]) --> Search[Search Services]
+    Start([●]) --> Search[Search Services]
     Search --> Select[Select Service]
     Select --> Fill[Fill Booking Details]
     Fill --> Submit[Submit Booking Request]
-    Submit --> Pending{Booking Status: PENDING}
-    Pending --> Notify[Notify Provider]
-    Notify --> Wait[Wait for Provider Response]
-    Wait --> Decision{Provider Decision}
-    Decision -->|Accept| Confirmed[Status: CONFIRMED]
-    Decision -->|Reject| Rejected[Status: REJECTED]
-    Confirmed --> Complete([Booking Confirmed])
-    Rejected --> End([Booking Rejected])
+    Submit --> Pending{Provider Decision?}
+    Pending -->|Accept| Notify1[Notify Provider]
+    Pending -->|Reject| Notify2[Notify Customer]
+    Notify1 --> Update1[Update Status: CONFIRMED]
+    Notify2 --> Update2[Update Status: REJECTED]
+    Update1 --> Complete([●])
+    Update2 --> End([●])
+    
+    style Start fill:#000,stroke:#000,color:#fff
+    style Complete fill:#000,stroke:#000,stroke-width:3px,color:#fff
+    style End fill:#000,stroke:#000,stroke-width:3px,color:#fff
 ```
 
 ---
@@ -1652,14 +1664,24 @@ flowchart TD
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING: Customer creates booking
-    PENDING --> CONFIRMED: Provider accepts
-    PENDING --> REJECTED: Provider rejects
-    CONFIRMED --> COMPLETED: Service completed
-    CONFIRMED --> CANCELLED: Customer/Provider cancels
+    [*] --> PENDING: create()
+    PENDING --> CONFIRMED: accept()
+    PENDING --> REJECTED: reject()
+    CONFIRMED --> COMPLETED: complete()
+    CONFIRMED --> CANCELLED: cancel()
     REJECTED --> [*]
     COMPLETED --> [*]
     CANCELLED --> [*]
+    
+    note right of PENDING
+        Initial state when
+        customer creates booking
+    end note
+    
+    note right of CONFIRMED
+        Provider has accepted
+        the booking request
+    end note
 ```
 
 ---
