@@ -15,6 +15,7 @@ This document contains all UML diagrams for the MH26 Services platform.
 7. [Component Diagram](#7-component-diagram)
 8. [Deployment Diagram](#8-deployment-diagram)
 9. [Database Schema (ER Diagram)](#9-database-schema-er-diagram)
+10. [Simplified Diagrams for Academic Reports](#10-simplified-diagrams-for-academic-reports)
 
 ---
 
@@ -1435,6 +1436,319 @@ erDiagram
 7. **Provider ↔ Review**: One-to-Many - A provider can receive multiple reviews
 8. **User ↔ Notification**: One-to-Many - A user can receive multiple notifications
 9. **Provider ↔ Report**: One-to-Many - A provider can be reported multiple times
+
+---
+
+## 10. Simplified Diagrams for Academic Reports
+
+This section contains simplified versions of all UML diagrams suitable for Software Engineering practicals and mini project reports. These diagrams focus on essential functionality while maintaining accuracy to the main project.
+
+---
+
+### 10.1 Simplified Use Case Diagram
+
+```mermaid
+graph TB
+    classDef actorStyle fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff,font-weight:bold
+    classDef customerUC fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    classDef providerUC fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+    classDef adminUC fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    
+    Customer((Customer))
+    Provider((Service Provider))
+    Admin((Administrator))
+    
+    UC1[Register & Login]
+    UC2[Search Services]
+    UC3[Create Booking]
+    UC4[View Bookings]
+    UC5[Send Messages]
+    UC6[Submit Review]
+    
+    UC7[Register Provider]
+    UC8[Manage Services]
+    UC9[Accept/Reject Booking]
+    UC10[View Bookings]
+    
+    UC11[Approve Provider]
+    UC12[Manage Users]
+    UC13[View Reports]
+    
+    Customer --> UC1
+    Customer --> UC2
+    Customer --> UC3
+    Customer --> UC4
+    Customer --> UC5
+    Customer --> UC6
+    
+    Provider --> UC7
+    Provider --> UC8
+    Provider --> UC9
+    Provider --> UC10
+    
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    
+    class Customer,Provider,Admin actorStyle
+    class UC1,UC2,UC3,UC4,UC5,UC6 customerUC
+    class UC7,UC8,UC9,UC10 providerUC
+    class UC11,UC12,UC13 adminUC
+```
+
+---
+
+### 10.2 Simplified Class Diagram
+
+```mermaid
+classDiagram
+    class User {
+        +String id
+        +String name
+        +String email
+        +String phone
+        +UserRole role
+        +register()
+        +login()
+    }
+    
+    class Provider {
+        +String id
+        +String businessName
+        +String category
+        +String city
+        +Float rating
+        +createProfile()
+    }
+    
+    class Service {
+        +String id
+        +String title
+        +String description
+        +Decimal price
+        +create()
+    }
+    
+    class Booking {
+        +String id
+        +DateTime scheduledAt
+        +BookingStatus status
+        +Decimal totalAmount
+        +create()
+        +accept()
+        +reject()
+    }
+    
+    class Message {
+        +String id
+        +String text
+        +send()
+    }
+    
+    class Review {
+        +String id
+        +Int rating
+        +String comment
+        +submit()
+    }
+    
+    User --> Booking : creates
+    User --> Message : sends
+    User --> Review : writes
+    User --> Provider : has
+    
+    Provider --> Service : offers
+    Provider --> Booking : receives
+    
+    Service --> Booking : booked_for
+    Booking --> Review : generates
+```
+
+---
+
+### 10.3 Simplified Object Diagram
+
+```mermaid
+graph LR
+    subgraph Customer["Customer"]
+        C_ID["id: user-123"]
+        C_NAME["name: John Doe"]
+    end
+    
+    subgraph Provider["Provider"]
+        P_ID["id: provider-456"]
+        P_NAME["businessName: QuickFix"]
+    end
+    
+    subgraph Service["Service"]
+        S_TITLE["title: Pipe Repair"]
+        S_PRICE["price: 500"]
+    end
+    
+    subgraph Booking["Booking"]
+        B_ID["id: booking-001"]
+        B_STATUS["status: PENDING"]
+        B_AMOUNT["amount: 500"]
+    end
+    
+    Customer -->|creates| Booking
+    Provider -->|receives| Booking
+    Service -->|booked_for| Booking
+```
+
+---
+
+### 10.4 Simplified Sequence Diagram - Booking Process
+
+```mermaid
+sequenceDiagram
+    participant C as Customer
+    participant F as Frontend
+    participant B as Backend
+    participant DB as Database
+    participant P as Provider
+    
+    C->>F: Select service & book
+    F->>B: Create booking request
+    B->>DB: Save booking (PENDING)
+    DB-->>B: Booking saved
+    B->>P: Notify provider
+    B-->>F: Booking created
+    F-->>C: Confirmation shown
+    
+    P->>F: View booking request
+    P->>F: Accept booking
+    F->>B: Update booking status
+    B->>DB: Update to CONFIRMED
+    DB-->>B: Updated
+    B->>C: Notify customer
+    B-->>F: Booking confirmed
+    F-->>P: Confirmation shown
+```
+
+---
+
+### 10.5 Simplified Activity Diagram - Booking Flow
+
+```mermaid
+flowchart TD
+    Start([Customer starts]) --> Search[Search Services]
+    Search --> Select[Select Service]
+    Select --> Fill[Fill Booking Details]
+    Fill --> Submit[Submit Booking Request]
+    Submit --> Pending{Booking Status: PENDING}
+    Pending --> Notify[Notify Provider]
+    Notify --> Wait[Wait for Provider Response]
+    Wait --> Decision{Provider Decision}
+    Decision -->|Accept| Confirmed[Status: CONFIRMED]
+    Decision -->|Reject| Rejected[Status: REJECTED]
+    Confirmed --> Complete([Booking Confirmed])
+    Rejected --> End([Booking Rejected])
+```
+
+---
+
+### 10.6 Simplified State Diagram - Booking States
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: Customer creates booking
+    PENDING --> CONFIRMED: Provider accepts
+    PENDING --> REJECTED: Provider rejects
+    CONFIRMED --> COMPLETED: Service completed
+    CONFIRMED --> CANCELLED: Customer/Provider cancels
+    REJECTED --> [*]
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+```
+
+---
+
+### 10.7 Simplified Component Diagram
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React)"]
+        UI[User Interface]
+        Pages[Pages]
+        Components[Components]
+    end
+    
+    subgraph Backend["Backend (Node.js)"]
+        API[API Routes]
+        Controllers[Controllers]
+        Services[Services]
+    end
+    
+    subgraph Database["Database"]
+        DB[(PostgreSQL)]
+    end
+    
+    subgraph External["External Services"]
+        Email[Email Service]
+        Socket[Socket.io]
+    end
+    
+    UI --> Pages
+    Pages --> Components
+    Components --> API
+    API --> Controllers
+    Controllers --> Services
+    Services --> DB
+    Services --> Email
+    Services --> Socket
+```
+
+---
+
+### 10.8 Simplified Deployment Diagram
+
+```mermaid
+graph TB
+    subgraph Client["Client Side"]
+        Browser[Web Browser]
+        Mobile[Mobile Browser]
+    end
+    
+    subgraph Server["Server Side"]
+        WebServer[Web Server<br/>Node.js + Express]
+        AppServer[Application Server]
+    end
+    
+    subgraph Database["Data Layer"]
+        PostgreSQL[(PostgreSQL<br/>Database)]
+    end
+    
+    subgraph External["External Services"]
+        EmailService[Email Service<br/>SMTP]
+    end
+    
+    Browser --> WebServer
+    Mobile --> WebServer
+    WebServer --> AppServer
+    AppServer --> PostgreSQL
+    AppServer --> EmailService
+```
+
+---
+
+### 10.9 Simplified ER Diagram
+
+```mermaid
+erDiagram
+    USER ||--o{ BOOKING : creates
+    USER ||--o| PROVIDER : has
+    USER ||--o{ MESSAGE : sends
+    USER ||--o{ REVIEW : writes
+    
+    PROVIDER ||--o{ SERVICE : offers
+    PROVIDER ||--o{ BOOKING : receives
+    PROVIDER ||--o{ REVIEW : receives
+    
+    SERVICE ||--o{ BOOKING : booked_for
+    
+    BOOKING ||--o| REVIEW : generates
+```
 
 ---
 
