@@ -24,51 +24,96 @@ This document contains all UML diagrams for the MH26 Services platform.
 
 ```mermaid
 graph TB
+    %% Styling
+    classDef actorStyle fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff,font-weight:bold
+    classDef customerUC fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    classDef providerUC fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+    classDef adminUC fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    classDef systemUC fill:#E1F5FE,stroke:#00BCD4,stroke-width:2px
+    
     %% Actors
-    Customer[Customer]
-    Provider[Service Provider]
-    Admin[Administrator]
-    System[System]
+    Customer((Customer))
+    Provider((Service Provider))
+    Admin((Administrator))
+    System((System))
     
     %% Customer Use Cases
-    Customer --> UC1[Register Account]
-    Customer --> UC2[Login/Logout]
-    Customer --> UC3[Search Services]
-    Customer --> UC4[View Provider Details]
-    Customer --> UC5[Create Booking Request]
-    Customer --> UC6[Send Message]
-    Customer --> UC7[Submit Review]
-    Customer --> UC8[Report Provider]
-    Customer --> UC9[View Notifications]
-    Customer --> UC10[Cancel Booking]
+    UC1[Register Account]
+    UC2[Login/Logout]
+    UC3[Search Services]
+    UC4[View Provider Details]
+    UC5[Create Booking Request]
+    UC6[Send Message]
+    UC7[Submit Review]
+    UC8[Report Provider]
+    UC9[View Notifications]
+    UC10[Cancel Booking]
     
     %% Provider Use Cases
-    Provider --> UC11[Register Provider Profile]
-    Provider --> UC12[Upload Documents]
-    Provider --> UC13[Create Service Listing]
-    Provider --> UC14[View Booking Requests]
-    Provider --> UC15[Accept Booking]
-    Provider --> UC16[Reject Booking]
-    Provider --> UC17[Complete Booking]
-    Provider --> UC18[Update Profile]
+    UC11[Register Provider Profile]
+    UC12[Upload Documents]
+    UC13[Create Service Listing]
+    UC14[View Booking Requests]
+    UC15[Accept Booking]
+    UC16[Reject Booking]
+    UC17[Complete Booking]
+    UC18[Update Profile]
     
     %% Admin Use Cases
-    Admin --> UC19[Approve Provider]
-    Admin --> UC20[Reject Provider]
-    Admin --> UC21[Manage Users]
-    Admin --> UC22[View Analytics]
-    Admin --> UC23[Handle Reports]
-    Admin --> UC24[Configure Settings]
+    UC19[Approve Provider]
+    UC20[Reject Provider]
+    UC21[Manage Users]
+    UC22[View Analytics]
+    UC23[Handle Reports]
+    UC24[Configure Settings]
     
     %% System Use Cases
-    System --> UC25[Send Email Verification]
-    System --> UC26[Send Email OTP]
-    System --> UC27[Generate Invoice]
-    System --> UC28[Calculate Platform Fee]
-    System --> UC29[Update Provider Rating]
-    System --> UC30[Send Booking Notifications]
+    UC25[Send Email Verification]
+    UC26[Send Email OTP]
+    UC27[Generate Invoice]
+    UC28[Calculate Platform Fee]
+    UC29[Update Provider Rating]
+    UC30[Send Booking Notifications]
     
-    %% Relationships
+    %% Customer Relationships
+    Customer --> UC1
+    Customer --> UC2
+    Customer --> UC3
+    Customer --> UC4
+    Customer --> UC5
+    Customer --> UC6
+    Customer --> UC7
+    Customer --> UC8
+    Customer --> UC9
+    Customer --> UC10
+    
+    %% Provider Relationships
+    Provider --> UC11
+    Provider --> UC12
+    Provider --> UC13
+    Provider --> UC14
+    Provider --> UC15
+    Provider --> UC16
+    Provider --> UC17
+    Provider --> UC18
+    
+    %% Admin Relationships
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+    Admin --> UC24
+    
+    %% System Relationships
+    System --> UC25
+    System --> UC26
+    System --> UC27
+    System --> UC28
+    System --> UC29
+    System --> UC30
+    
+    %% Include Relationships (dashed)
     UC1 -.->|includes| UC25
     UC1 -.->|includes| UC26
     UC5 -.->|includes| UC30
@@ -77,8 +122,17 @@ graph TB
     UC11 -.->|includes| UC12
     UC15 -.->|includes| UC30
     UC16 -.->|includes| UC30
+    
+    %% Extend Relationships (dashed)
     UC19 -.->|extends| UC18
     UC20 -.->|extends| UC18
+    
+    %% Apply Styles
+    class Customer,Provider,Admin,System actorStyle
+    class UC1,UC2,UC3,UC4,UC5,UC6,UC7,UC8,UC9,UC10 customerUC
+    class UC11,UC12,UC13,UC14,UC15,UC16,UC17,UC18 providerUC
+    class UC19,UC20,UC21,UC22,UC23,UC24 adminUC
+    class UC25,UC26,UC27,UC28,UC29,UC30 systemUC
 ```
 
 ### 1.2 Detailed Use Case Descriptions
@@ -132,6 +186,7 @@ graph TB
 ```mermaid
 classDiagram
     class User {
+        <<entity>>
         +String id
         +String name
         +String email
@@ -151,6 +206,7 @@ classDiagram
     }
     
     class Provider {
+        <<entity>>
         +String id
         +String userId
         +String businessName
@@ -167,6 +223,7 @@ classDiagram
     }
     
     class Service {
+        <<entity>>
         +String id
         +String providerId
         +String title
@@ -180,6 +237,7 @@ classDiagram
     }
     
     class Booking {
+        <<entity>>
         +String id
         +String userId
         +String providerId
@@ -199,6 +257,7 @@ classDiagram
     }
     
     class Message {
+        <<entity>>
         +String id
         +String conversationId
         +String senderId
@@ -210,6 +269,7 @@ classDiagram
     }
     
     class Review {
+        <<entity>>
         +String id
         +String providerId
         +String userId
@@ -220,6 +280,7 @@ classDiagram
     }
     
     class Notification {
+        <<entity>>
         +String id
         +String userId
         +String type
@@ -231,6 +292,7 @@ classDiagram
     }
     
     class Report {
+        <<entity>>
         +String id
         +String reporterId
         +String providerId
@@ -240,20 +302,20 @@ classDiagram
         +update()
     }
     
-    User ||--o{ Booking : creates
-    User ||--o{ Message : sends
-    User ||--o{ Review : writes
-    User ||--o{ Notification : receives
-    User ||--o| Provider : has
+    User --> Booking : creates
+    User --> Message : sends
+    User --> Review : writes
+    User --> Notification : receives
+    User --> Provider : has
     
-    Provider ||--o{ Service : offers
-    Provider ||--o{ Booking : receives
-    Provider ||--o{ Review : receives
-    Provider ||--o{ Report : reported_in
+    Provider --> Service : offers
+    Provider --> Booking : receives
+    Provider --> Review : receives
+    Provider --> Report : reported_in
     
-    Service ||--o{ Booking : booked_for
+    Service --> Booking : booked_for
     
-    Booking ||--o| Review : generates
+    Booking --> Review : generates
 ```
 
 ### 2.2 Controller Classes
@@ -382,76 +444,87 @@ classDiagram
 ### 3.1 Booking Creation Object Diagram
 
 ```mermaid
-objectDiagram
-    customer1 : Customer
-    customer1 : id = "user-123"
-    customer1 : name = "John Doe"
-    customer1 : email = "john@example.com"
+graph LR
+    subgraph Customer1["Customer Instance"]
+        C1_ID["id: user-123"]
+        C1_NAME["name: John Doe"]
+        C1_EMAIL["email: john@example.com"]
+    end
     
-    provider1 : Provider
-    provider1 : id = "provider-456"
-    provider1 : businessName = "QuickFix Plumbing"
-    provider1 : status = APPROVED
+    subgraph Provider1["Provider Instance"]
+        P1_ID["id: provider-456"]
+        P1_NAME["businessName: QuickFix Plumbing"]
+        P1_STATUS["status: APPROVED"]
+    end
     
-    service1 : Service
-    service1 : id = "service-789"
-    service1 : title = "Pipe Repair"
-    service1 : price = 500.00
+    subgraph Service1["Service Instance"]
+        S1_ID["id: service-789"]
+        S1_TITLE["title: Pipe Repair"]
+        S1_PRICE["price: 500.00"]
+    end
     
-    booking1 : Booking
-    booking1 : id = "booking-001"
-    booking1 : status = PENDING
-    booking1 : scheduledAt = "2024-12-15 10:00"
-    booking1 : totalAmount = 500.00
-    booking1 : platformFee = 25.00
-    booking1 : providerEarnings = 475.00
+    subgraph Booking1["Booking Instance"]
+        B1_ID["id: booking-001"]
+        B1_STATUS["status: PENDING"]
+        B1_DATE["scheduledAt: 2024-12-15 10:00"]
+        B1_AMOUNT["totalAmount: 500.00"]
+        B1_FEE["platformFee: 25.00"]
+        B1_EARNINGS["providerEarnings: 475.00"]
+    end
     
-    notification1 : Notification
-    notification1 : type = "BOOKING_REQUEST"
-    notification1 : title = "New Booking Request"
+    subgraph Notification1["Notification Instance"]
+        N1_TYPE["type: BOOKING_REQUEST"]
+        N1_TITLE["title: New Booking Request"]
+    end
     
-    customer1 --> booking1 : creates
-    provider1 --> booking1 : receives
-    service1 --> booking1 : booked_for
-    booking1 --> notification1 : generates
+    Customer1 -->|creates| Booking1
+    Provider1 -->|receives| Booking1
+    Service1 -->|booked_for| Booking1
+    Booking1 -->|generates| Notification1
 ```
 
 ### 3.2 Provider Approval Object Diagram
 
 ```mermaid
-objectDiagram
-    admin1 : Administrator
-    admin1 : id = "admin-001"
-    admin1 : name = "Admin User"
-    admin1 : role = ADMIN
+graph LR
+    subgraph Admin1["Administrator Instance"]
+        A1_ID["id: admin-001"]
+        A1_NAME["name: Admin User"]
+        A1_ROLE["role: ADMIN"]
+    end
     
-    provider2 : Provider
-    provider2 : id = "provider-002"
-    provider2 : businessName = "New Plumbing Service"
-    provider2 : status = PENDING
+    subgraph Provider2["Provider Instance"]
+        P2_ID["id: provider-002"]
+        P2_NAME["businessName: New Plumbing Service"]
+        P2_STATUS["status: PENDING"]
+    end
     
-    user2 : User
-    user2 : id = "user-002"
-    user2 : name = "Provider Owner"
-    user2 : role = PROVIDER
+    subgraph User2["User Instance"]
+        U2_ID["id: user-002"]
+        U2_NAME["name: Provider Owner"]
+        U2_ROLE["role: PROVIDER"]
+    end
     
-    doc1 : ProviderDocument
-    doc1 : type = "aadhar"
-    doc1 : url = "https://s3.../aadhar.pdf"
+    subgraph Doc1["ProviderDocument Instance"]
+        D1_TYPE["type: aadhar"]
+        D1_URL["url: https://s3.../aadhar.pdf"]
+    end
     
-    doc2 : ProviderDocument
-    doc2 : type = "trade_license"
-    doc2 : url = "https://s3.../license.pdf"
+    subgraph Doc2["ProviderDocument Instance"]
+        D2_TYPE["type: trade_license"]
+        D2_URL["url: https://s3.../license.pdf"]
+    end
     
-    notification1 : Notification
-    notification1 : type = "provider_approved"
-    notification1 : title = "Provider Approved"
+    subgraph Notification1["Notification Instance"]
+        N1_TYPE["type: provider_approved"]
+        N1_TITLE["title: Provider Approved"]
+    end
     
-    admin1 --> provider2 : approves
-    user2 --> provider2 : owns
-    provider2 --> doc1 : has
-    provider2 --> doc2 : has
-    provider2 --> notification1 : generates
+    Admin1 -->|approves| Provider2
+    User2 -->|owns| Provider2
+    Provider2 -->|has| Doc1
+    Provider2 -->|has| Doc2
+    Provider2 -->|generates| Notification1
 ```
 
 ---
