@@ -28,11 +28,20 @@ export const apiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window
+  max: 10, // 10 requests per window (increased from 5 for better UX)
   message: 'Too many authentication attempts, please try again later.',
-  standardHeaders: true,
+  standardHeaders: true, // Adds 'RateLimit-*' headers
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  // Custom handler to include retryAfter in response body
+  handler: (req, res) => {
+    const retryAfter = Math.ceil(15 * 60); // 15 minutes in seconds
+    res.setHeader('Retry-After', retryAfter.toString());
+    res.status(429).json({
+      error: 'Too many authentication attempts, please try again later.',
+      retryAfter: retryAfter,
+    });
+  },
 });
 
 /**

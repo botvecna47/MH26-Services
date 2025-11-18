@@ -59,11 +59,19 @@ export const messagesApi = {
   },
 
   createConversation: async (receiverId: string, text?: string) => {
-    const response = await axiosClient.post('/messages/conversations', { 
-      receiverId, 
-      text: text || 'Hello! I would like to inquire about your services.' 
-    });
-    return response.data;
+    try {
+      const response = await axiosClient.post('/messages/conversations', { 
+        receiverId, 
+        text: text || 'Hello! I would like to inquire about your services.' 
+      });
+      return response.data;
+    } catch (error: any) {
+      // Re-throw 429 errors so they can be handled with retry logic
+      if (error.response?.status === 429) {
+        throw error;
+      }
+      throw error;
+    }
   },
 
   sendMessage: async (data: SendMessageData) => {

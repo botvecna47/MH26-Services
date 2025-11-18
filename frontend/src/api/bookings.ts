@@ -36,6 +36,8 @@ export interface Booking {
     title: string;
     price: number;
     durationMin: number;
+    imageUrl?: string;
+    description?: string;
   };
   cancellation?: {
     id: string;

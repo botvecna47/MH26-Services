@@ -23,6 +23,8 @@ export default function MessagingPage() {
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const conversationCreationRef = useRef<string | null>(null); // Track which conversation is being created
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch provider if providerId is in query
   const { data: providerData } = useProvider(providerId || '');
@@ -77,48 +79,96 @@ export default function MessagingPage() {
 
   // Handle provider query parameter - create/select conversation
   useEffect(() => {
-    if (providerId && providerData?.user?.id && user?.id && !isCreatingConversation) {
-      const receiverId = providerData.user.id;
-      
-      // Don't create conversation with self
-      if (receiverId === user.id) {
-        toast.error('Cannot message yourself');
-        return;
+    // Cleanup retry timeout on unmount
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
       }
-      
-      // Check if conversation already exists - match by otherUser ID
-      const existingConv = conversations.find((conv: any) => 
-        conv.otherUser?.id === receiverId
-      );
+    };
+  }, []);
 
-      if (existingConv) {
-        setSelectedConversation(existingConv.id);
-      } else {
-        // Create new conversation
-        setIsCreatingConversation(true);
-        messagesApi.createConversation(receiverId, 'Hello! I would like to inquire about your services.')
-          .then((result) => {
-            if (result.conversationId) {
-              setSelectedConversation(result.conversationId);
-              // Refetch conversations to get the new one
-              setTimeout(() => {
-                refetchConversations();
-              }, 500);
-              setMessageText('');
-              toast.success('Conversation started');
-            }
-          })
-          .catch((error: any) => {
-            const errorMsg = error.response?.data?.error || 'Failed to start conversation';
+  useEffect(() => {
+    if (!providerId || !providerData?.user?.id || !user?.id || isCreatingConversation) {
+      return;
+    }
+
+    const receiverId = providerData.user.id;
+    
+    // Don't create conversation with self
+    if (receiverId === user.id) {
+      toast.error('Cannot message yourself');
+      return;
+    }
+
+    // Prevent duplicate creation attempts for the same receiver
+    if (conversationCreationRef.current === receiverId) {
+      return;
+    }
+    
+    // Check if conversation already exists - match by otherUser ID
+    const existingConv = conversations.find((conv: any) => 
+      conv.otherUser?.id === receiverId
+    );
+
+    if (existingConv) {
+      setSelectedConversation(existingConv.id);
+      conversationCreationRef.current = null;
+    } else {
+      // Create new conversation with retry logic for 429 errors
+      const createConvWithRetry = async (retryCount = 0) => {
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
+
+        try {
+          setIsCreatingConversation(true);
+          conversationCreationRef.current = receiverId;
+          
+          const result = await messagesApi.createConversation(receiverId, 'Hello! I would like to inquire about your services.');
+          
+          if (result.conversationId) {
+            setSelectedConversation(result.conversationId);
+            // Refetch conversations to get the new one
+            setTimeout(() => {
+              refetchConversations();
+            }, 500);
+            setMessageText('');
+            toast.success('Conversation started');
+            conversationCreationRef.current = null;
+          }
+        } catch (error: any) {
+          // Handle 429 rate limit errors with exponential backoff
+          if (error.response?.status === 429 && retryCount < maxRetries) {
+            const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff: 1s, 2s, 4s
+            const retryAfter = error.response?.headers?.['retry-after'] 
+              ? parseInt(error.response.headers['retry-after']) * 1000 
+              : delay;
+            
+            console.warn(`Rate limited. Retrying in ${retryAfter}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+            
+            retryTimeoutRef.current = setTimeout(() => {
+              createConvWithRetry(retryCount + 1);
+            }, retryAfter);
+          } else {
+            // For other errors or max retries reached
+            const errorMsg = error.response?.status === 429
+              ? 'Too many requests. Please wait a moment and try again.'
+              : error.response?.data?.error || 'Failed to start conversation';
+            
             toast.error(errorMsg);
             console.error('Create conversation error:', error);
-          })
-          .finally(() => {
+            conversationCreationRef.current = null;
             setIsCreatingConversation(false);
-          });
-      }
+          }
+        } finally {
+          if (retryTimeoutRef.current === null) {
+            setIsCreatingConversation(false);
+          }
+        }
+      };
+
+      createConvWithRetry();
     }
-  }, [providerId, providerData, user, conversations, isCreatingConversation, refetchConversations]);
+  }, [providerId, providerData?.user?.id, user?.id, conversations, isCreatingConversation, refetchConversations]);
 
   // Debug logging - placed after selectedConv and currentMessages are defined
   useEffect(() => {
@@ -232,21 +282,63 @@ export default function MessagingPage() {
 
     // If no conversation selected but we have a provider, create conversation first
     if (!selectedConversation && providerId && providerData?.user?.id) {
-      try {
-        setIsCreatingConversation(true);
-        const result = await messagesApi.createConversation(providerData.user.id, messageText.trim());
-        if (result.conversationId) {
-          setSelectedConversation(result.conversationId);
-          refetchConversations();
-          setMessageText('');
-          toast.success('Message sent');
+      // Check if conversation already exists before creating
+      const existingConv = conversations.find((conv: any) => 
+        conv.otherUser?.id === providerData.user.id
+      );
+
+      let conversationId = existingConv?.id;
+      
+      // Only create if conversation doesn't exist and not already creating
+      if (!conversationId && !isCreatingConversation && conversationCreationRef.current !== providerData.user.id) {
+        try {
+          setIsCreatingConversation(true);
+          conversationCreationRef.current = providerData.user.id;
+          
+          const result = await messagesApi.createConversation(providerData.user.id, messageText.trim());
+          conversationId = result.conversationId;
+          
+          if (conversationId) {
+            setSelectedConversation(conversationId);
+            conversationCreationRef.current = null;
+            setTimeout(() => {
+              refetchConversations();
+            }, 500);
+            // Continue to send the message below
+          } else {
+            setIsCreatingConversation(false);
+            conversationCreationRef.current = null;
+            toast.error('Failed to create conversation');
+            return;
+          }
+        } catch (error: any) {
+          setIsCreatingConversation(false);
+          conversationCreationRef.current = null;
+          
+          if (error.response?.status === 429) {
+            toast.error('Too many requests. Please wait a moment and try again.');
+          } else {
+            toast.error('Failed to start conversation. Please try again.');
+          }
+          return;
+        } finally {
+          setIsCreatingConversation(false);
         }
-      } catch (error: any) {
-        toast.error(error.response?.data?.error || 'Failed to send message');
-      } finally {
-        setIsCreatingConversation(false);
+      } else if (!conversationId) {
+        toast.error('Please wait for the conversation to be created');
+        return;
+      } else {
+        // Use existing conversation
+        setSelectedConversation(conversationId);
       }
-      return;
+      
+      // Now send the message with the conversation ID
+      if (conversationId) {
+        setSelectedConversation(conversationId);
+        // Continue to send message below (don't return here)
+      } else {
+        return;
+      }
     }
 
     if (!selectedConversation || !selectedConv) {

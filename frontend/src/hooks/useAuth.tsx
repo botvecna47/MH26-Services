@@ -149,7 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string, retryCount = 0): Promise<void> => {
+    const maxRetries = 2;
+    const baseDelay = 2000; // 2 seconds
+
     try {
       const response = await axiosClient.post('/auth/login', { email, password });
       const { user: userData, tokens } = response.data;
@@ -172,7 +175,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         navigate('/dashboard');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      // Handle 429 rate limit errors with exponential backoff
+      if (error.response?.status === 429 && retryCount < maxRetries) {
+        const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff: 2s, 4s
+        const retryAfter = error.response?.data?.retryAfter 
+          ? error.response.data.retryAfter * 1000 
+          : error.response?.headers?.['retry-after'] 
+            ? parseInt(error.response.headers['retry-after']) * 1000 
+            : delay;
+        
+        const waitSeconds = Math.ceil(retryAfter / 1000);
+        toast.warning(`Too many login attempts. Retrying in ${waitSeconds} second${waitSeconds !== 1 ? 's' : ''}...`);
+        
+        // Wait and retry
+        await new Promise(resolve => setTimeout(resolve, retryAfter));
+        return login(email, password, retryCount + 1);
+      } else if (error.response?.status === 401) {
+        toast.error('Invalid email or password');
+      } else if (error.response?.status === 429) {
+        toast.error('Too many login attempts. Please wait a few minutes before trying again.');
+      } else {
+        toast.error(error.response?.data?.error || 'Login failed. Please try again.');
+      }
       throw error;
     }
   };

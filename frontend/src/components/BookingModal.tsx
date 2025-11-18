@@ -3,6 +3,7 @@ import { X, Calendar, Clock, MapPin, DollarSign, User, Phone, Mail } from 'lucid
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useUser } from '../context/UserContext';
 import { useCreateBooking } from '../api/bookings';
 import { toast } from 'sonner';
@@ -19,6 +20,8 @@ interface BookingModalProps {
       title: string;
       price: number;
       durationMin: number;
+      imageUrl?: string;
+      description?: string;
     }>;
   };
 }
@@ -83,10 +86,10 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-gray-200 shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Book Service with {provider.businessName}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-2xl font-bold text-gray-900">Book Service with {provider.businessName}</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Select a service and schedule your appointment
           </DialogDescription>
         </DialogHeader>
@@ -105,23 +108,35 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                   onClick={() => setSelectedServiceId(service.id)}
                   className={`w-full p-4 border-2 rounded-lg text-left transition-colors ${
                     selectedServiceId === service.id
-                      ? 'border-[#ff6b35] bg-orange-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-[#ff6b35] bg-orange-50 text-gray-900'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 text-gray-900'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{service.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{service.description || 'Professional service'}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {service.durationMin} min
-                        </span>
+                  <div className="flex gap-4">
+                    {/* Service Image */}
+                    {service.imageUrl && (
+                      <div className="flex-shrink-0">
+                        <ImageWithFallback
+                          src={service.imageUrl}
+                          alt={service.title}
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">₹{Number(service.price).toFixed(2)}</p>
+                    )}
+                    <div className="flex-1 flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 text-base">{service.title}</h3>
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{service.description || 'Professional service'}</p>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {service.durationMin} min
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="text-lg font-bold text-gray-900">₹{Number(service.price).toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -141,7 +156,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
               onChange={(e) => setSelectedDate(e.target.value)}
               min={today}
               required
-              className="w-full"
+              className="w-full bg-white text-gray-900 border-gray-300"
             />
           </div>
 
@@ -157,10 +172,10 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                   key={time}
                   type="button"
                   onClick={() => setSelectedTime(time)}
-                  className={`p-2 border rounded-lg text-sm transition-colors ${
+                  className={`p-2 border rounded-lg text-sm transition-colors font-medium ${
                     selectedTime === time
                       ? 'border-[#ff6b35] bg-orange-50 text-[#ff6b35]'
-                      : 'border-gray-200 hover:border-gray-300'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 text-gray-700'
                   }`}
                 >
                   {time}
@@ -181,7 +196,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
               required
               rows={3}
               placeholder="Enter complete address where service is needed"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6b35]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b35] focus:border-[#ff6b35]"
             />
           </div>
 
@@ -195,15 +210,15 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
               onChange={(e) => setRequirements(e.target.value)}
               rows={3}
               placeholder="Any special instructions or requirements"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6b35]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b35] focus:border-[#ff6b35]"
             />
           </div>
 
           {/* Customer Info Display */}
           {user && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Your Contact Information</h3>
-              <div className="space-y-1 text-sm text-gray-600">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Your Contact Information</h3>
+              <div className="space-y-1 text-sm text-gray-700">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   <span>{user.name}</span>

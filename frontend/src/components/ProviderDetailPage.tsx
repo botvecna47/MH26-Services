@@ -10,7 +10,8 @@ import {
   Flag,
   ArrowLeft,
   Eye,
-  Lock
+  Lock,
+  Clock
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -197,6 +198,48 @@ export default function ProviderDetailPage() {
               )}
             </div>
 
+            {/* Services */}
+            {provider.services && provider.services.length > 0 && (
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h2 className="text-gray-900 mb-4">Services Offered</h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {provider.services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-[#ff6b35] transition-colors"
+                    >
+                      <div className="flex gap-4">
+                        {service.imageUrl && (
+                          <div className="flex-shrink-0">
+                            <ImageWithFallback
+                              src={service.imageUrl}
+                              alt={service.title}
+                              className="w-24 h-24 rounded-lg object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 mb-1">{service.title}</h3>
+                          {service.description && (
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{service.description}</p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                {service.durationMin} min
+                              </span>
+                            </div>
+                            <p className="text-lg font-semibold text-gray-900">₹{Number(service.price).toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Reviews */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-gray-900 mb-4">Reviews & Ratings</h2>
@@ -258,7 +301,7 @@ export default function ProviderDetailPage() {
 
               {/* Book Service Button */}
               <Button
-                onClick={handleBookService}
+                onClick={() => setShowBookingModal(true)}
                 className="w-full bg-[#ff6b35] hover:bg-[#ff5722] mb-2"
               >
                 <Calendar className="h-4 w-4 mr-2" />

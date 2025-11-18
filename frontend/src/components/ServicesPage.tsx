@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Filter, Star, Shield, MapPin, Loader2 } from 'lucide-react';
+import { Search, Filter, Star, Shield, MapPin, Loader2, Clock, IndianRupee, Building2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { useProviders } from '../api/providers';
+import { useServices } from '../api/services';
 import {
   Select,
   SelectContent,
@@ -17,11 +17,13 @@ export default function ServicesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [sortBy, setSortBy] = useState('rating');
-  const [isSearching, setIsSearching] = useState(false);
+  const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'rating' | 'newest' | 'name'>('rating');
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
 
   // Debounced search query
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,46 +38,41 @@ export default function ServicesPage() {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set('q', debouncedQuery);
     if (selectedCategory !== 'all') params.set('category', selectedCategory);
+    if (sortBy) params.set('sort', sortBy);
     setSearchParams(params, { replace: true });
-  }, [debouncedQuery, selectedCategory, setSearchParams]);
+  }, [debouncedQuery, selectedCategory, sortBy, setSearchParams]);
 
-  // Fetch providers from API
-  const { data: providersData, isLoading, error } = useProviders({
+  // Fetch services from API
+  const { data: servicesData, isLoading, error } = useServices({
     q: debouncedQuery || undefined,
     category: selectedCategory !== 'all' ? selectedCategory : undefined,
-    city: 'Nanded',
+    sortBy,
+    minPrice,
+    maxPrice,
     page: 1,
     limit: 50,
   });
 
-  // Filter and sort providers
-  const filteredProviders = useMemo(() => {
-    setIsSearching(false);
-    if (!providersData?.data) return [];
-    
-    let filtered = [...providersData.data];
+  const services = servicesData?.data || [];
 
-    // Additional client-side filtering if needed
-    // (API already filters by category and search query)
-
-    // Sort
-    if (sortBy === 'rating') {
-      filtered.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
-    } else if (sortBy === 'name') {
-      filtered.sort((a, b) => a.businessName.localeCompare(b.businessName));
-    }
-
-    return filtered;
-  }, [providersData, sortBy]);
+  // Update searching state
+  useEffect(() => {
+    setIsSearching(isLoading);
+  }, [isLoading]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchParams({ q: searchQuery, category: selectedCategory });
+    const params: any = { q: searchQuery, category: selectedCategory };
+    if (sortBy) params.sort = sortBy;
+    setSearchParams(params);
   };
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory('all');
+    setSortBy('rating');
+    setMinPrice(undefined);
+    setMaxPrice(undefined);
     setSearchParams({});
   };
 
@@ -113,25 +110,27 @@ export default function ServicesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="plumbing">Plumbing</SelectItem>
-                <SelectItem value="electrical">Electrical</SelectItem>
-                <SelectItem value="cleaning">Cleaning</SelectItem>
-                <SelectItem value="tiffin">Tiffin Service</SelectItem>
-                <SelectItem value="salon">Salon & Beauty</SelectItem>
-                <SelectItem value="tutoring">Tutoring</SelectItem>
-                <SelectItem value="fitness">Fitness</SelectItem>
-                <SelectItem value="catering">Catering</SelectItem>
+                <SelectItem value="Plumbing">Plumbing</SelectItem>
+                <SelectItem value="Electrical">Electrical</SelectItem>
+                <SelectItem value="Cleaning">Cleaning</SelectItem>
+                <SelectItem value="Salon">Salon</SelectItem>
+                <SelectItem value="Tutoring">Tutoring</SelectItem>
+                <SelectItem value="Fitness">Fitness</SelectItem>
+                <SelectItem value="Catering">Catering</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Sort By */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-40">
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="rating">Top Rated</SelectItem>
-                <SelectItem value="reviews">Most Reviews</SelectItem>
+                <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                <SelectItem value="name">Name (A-Z)</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
               </SelectContent>
             </Select>
 
@@ -146,11 +145,11 @@ export default function ServicesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-4 flex justify-between items-center">
           <div>
-            <h1 className="text-gray-900 mb-1">
-              {selectedCategory !== 'all' ? selectedCategory : 'All Services'}
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              {selectedCategory !== 'all' ? `${selectedCategory} Services` : 'All Services in Nanded'}
             </h1>
             <p className="text-gray-600">
-              {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
+              {services.length} service{services.length !== 1 ? 's' : ''} found
             </p>
           </div>
         </div>
@@ -167,10 +166,10 @@ export default function ServicesPage() {
               Retry
             </Button>
           </div>
-        ) : filteredProviders.length === 0 ? (
+        ) : services.length === 0 ? (
           <div className="bg-white rounded-lg p-12 text-center">
             <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-gray-900 mb-2">No providers found</h3>
+            <h3 className="text-gray-900 mb-2">No services found</h3>
             <p className="text-gray-600 mb-4">
               Try adjusting your search or filters to find what you're looking for
             </p>
@@ -183,80 +182,90 @@ export default function ServicesPage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProviders.map((provider) => (
+            {services.map((service) => (
               <Link
-                key={provider.id}
-                to={`/provider/${provider.id}`}
+                key={service.id}
+                to={`/provider/${service.provider.id}`}
                 className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-200 hover:border-primary-500"
               >
-                {/* Provider Image */}
+                {/* Service Image */}
                 <div className="aspect-[4/3] bg-gray-200 relative">
-                  {provider.user?.avatarUrl ? (
+                  {service.imageUrl ? (
                     <ImageWithFallback
-                      src={provider.user.avatarUrl}
-                      alt={provider.businessName}
+                      src={service.imageUrl}
+                      alt={service.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No Image
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
+                      <div className="text-center">
+                        <Building2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">No Image</p>
+                      </div>
                     </div>
                   )}
-                  {provider.status === 'APPROVED' && (
+                  {service.provider.averageRating > 4 && (
                     <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
                       <Shield className="h-3 w-3" />
                       Verified
                     </div>
                   )}
-                  {provider.status === 'PENDING' && (
-                    <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs">
-                      Pending
-                    </div>
-                  )}
                 </div>
 
-                {/* Provider Info */}
+                {/* Service Info */}
                 <div className="p-4">
-                  <h3 className="text-gray-900 mb-2">{provider.businessName}</h3>
-
-                  {/* Categories */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                      {provider.primaryCategory}
-                    </span>
-                    {provider.secondaryCategory && (
-                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                        {provider.secondaryCategory}
-                      </span>
-                    )}
-                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">{service.title}</h3>
+                  
+                  {/* Provider Name */}
+                  <p className="text-sm text-gray-600 mb-2">by {service.provider.businessName}</p>
 
                   {/* Description */}
-                  {provider.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{provider.description}</p>
+                  {service.description && (
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{service.description}</p>
                   )}
 
-                  {/* Rating & Location */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{provider.averageRating?.toFixed(1) || 'New'}</span>
-                      {provider.totalRatings > 0 && (
-                        <span className="text-gray-400">({provider.totalRatings})</span>
-                      )}
+                  {/* Category Badge */}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                      {service.provider.primaryCategory}
+                    </span>
+                  </div>
+
+                  {/* Price, Duration, Rating */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <IndianRupee className="h-4 w-4 text-green-600" />
+                        <span className="text-xl font-bold text-gray-900">₹{Number(service.price).toFixed(0)}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-600">{service.durationMin} min</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-500">
-                      <MapPin className="h-3 w-3" />
-                      <span className="text-xs truncate max-w-[120px]">
-                        {provider.city || 'Nanded'}
-                      </span>
+
+                    {/* Rating & Location */}
+                    <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{service.provider.averageRating?.toFixed(1) || 'New'}</span>
+                        {service.provider.totalRatings > 0 && (
+                          <span className="text-gray-400">({service.provider.totalRatings})</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        <span className="text-xs truncate max-w-[100px]">
+                          {service.provider.city || 'Nanded'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Contact Preview */}
+                  {/* View Details Button */}
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <Button variant="outline" size="sm" className="w-full" asChild>
-                      <span>View Details</span>
+                      <span>View Details & Book</span>
                     </Button>
                   </div>
                 </div>

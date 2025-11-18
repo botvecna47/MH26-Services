@@ -39,6 +39,7 @@ export interface Service {
   description?: string;
   price: number;
   durationMin: number;
+  imageUrl?: string;
 }
 
 export interface ProviderDocument {

@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Calendar, MapPin, DollarSign, User, Building2, FileText, Download, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useBooking, bookingsApi } from '../api/bookings';
@@ -359,9 +360,21 @@ export default function BookingDetailsModal({ isOpen, onClose, bookingId }: Book
                 <Building2 className="h-4 w-4 text-gray-500" />
                 <p className="text-sm text-gray-600">Service</p>
               </div>
+              {booking.service?.imageUrl && (
+                <div className="mb-3">
+                  <ImageWithFallback
+                    src={booking.service.imageUrl}
+                    alt={booking.service.title || 'Service'}
+                    className="w-full h-32 rounded-lg object-cover"
+                  />
+                </div>
+              )}
               <p className="font-medium text-gray-900">{booking.service?.title || 'N/A'}</p>
               {booking.service?.description && (
                 <p className="text-sm text-gray-600 mt-1">{booking.service.description}</p>
+              )}
+              {booking.service?.durationMin && (
+                <p className="text-xs text-gray-500 mt-1">Duration: {booking.service.durationMin} minutes</p>
               )}
             </div>
 

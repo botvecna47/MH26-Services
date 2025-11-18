@@ -47,7 +47,8 @@ export const providerController = {
             },
           },
           services: {
-            take: 3,
+            take: 10,
+            orderBy: { createdAt: 'desc' },
           },
         },
         orderBy: { averageRating: 'desc' },

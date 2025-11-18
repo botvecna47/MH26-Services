@@ -131,7 +131,6 @@ graph TB
 
 ```mermaid
 classDiagram
-    %% User Classes
     class User {
         +String id
         +String name
@@ -174,6 +173,7 @@ classDiagram
         +String description
         +Decimal price
         +Int durationMin
+        +String imageUrl
         +create()
         +update()
         +delete()
@@ -240,21 +240,20 @@ classDiagram
         +update()
     }
     
-    %% Relationships
-    User "1" --> "*" Booking : creates
-    User "1" --> "*" Message : sends
-    User "1" --> "*" Review : writes
-    User "1" --> "*" Notification : receives
-    User "1" --> "0..1" Provider : has
+    User ||--o{ Booking : creates
+    User ||--o{ Message : sends
+    User ||--o{ Review : writes
+    User ||--o{ Notification : receives
+    User ||--o| Provider : has
     
-    Provider "1" --> "*" Service : offers
-    Provider "1" --> "*" Booking : receives
-    Provider "1" --> "*" Review : receives
-    Provider "1" --> "*" Report : reported_in
+    Provider ||--o{ Service : offers
+    Provider ||--o{ Booking : receives
+    Provider ||--o{ Review : receives
+    Provider ||--o{ Report : reported_in
     
-    Service "1" --> "*" Booking : booked_for
+    Service ||--o{ Booking : booked_for
     
-    Booking "1" --> "0..1" Review : generates
+    Booking ||--o| Review : generates
 ```
 
 ### 2.2 Controller Classes
@@ -312,6 +311,23 @@ classDiagram
         +listUsers()
         +banUser()
     }
+    
+    class ServiceController {
+        +list()
+        +getById()
+        +create()
+        +update()
+        +delete()
+    }
+    
+    AuthController ..> User : manages
+    ProviderController ..> Provider : manages
+    BookingController ..> Booking : manages
+    MessageController ..> Message : manages
+    ReviewController ..> Review : manages
+    AdminController ..> User : manages
+    AdminController ..> Provider : manages
+    ServiceController ..> Service : manages
 ```
 
 ### 2.3 Service Classes
@@ -345,6 +361,18 @@ classDiagram
         +emitBookingUpdate()
         +emitProviderApproval()
     }
+    
+    class OTPService {
+        +generateOTP()
+        +verifyOTP()
+        +storeOTP()
+    }
+    
+    EmailService ..> User : sends to
+    NotificationService ..> Notification : creates
+    SocketService ..> Message : emits
+    SocketService ..> Notification : emits
+    OTPService ..> User : verifies
 ```
 
 ---
