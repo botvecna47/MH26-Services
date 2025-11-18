@@ -30,21 +30,21 @@ graph TB
     Customer --> UC2[Login/Logout]
     Customer --> UC3[Search Services]
     Customer --> UC4[View Provider Details]
-    Customer --> UC5[Create Booking]
-    Customer --> UC6[Make Payment]
-    Customer --> UC7[Send Message]
-    Customer --> UC8[Submit Review]
-    Customer --> UC9[Report Provider]
-    Customer --> UC10[View Notifications]
+    Customer --> UC5[Create Booking Request]
+    Customer --> UC6[Send Message]
+    Customer --> UC7[Submit Review]
+    Customer --> UC8[Report Provider]
+    Customer --> UC9[View Notifications]
+    Customer --> UC10[Cancel Booking]
     
     %% Provider Use Cases
     Provider --> UC11[Register Provider Profile]
     Provider --> UC12[Upload Documents]
     Provider --> UC13[Create Service Listing]
-    Provider --> UC14[Manage Bookings]
-    Provider --> UC15[Confirm Booking]
-    Provider --> UC16[Complete Booking]
-    Provider --> UC17[View Earnings]
+    Provider --> UC14[View Booking Requests]
+    Provider --> UC15[Accept Booking]
+    Provider --> UC16[Reject Booking]
+    Provider --> UC17[Complete Booking]
     Provider --> UC18[Update Profile]
     
     %% Admin Use Cases
@@ -57,19 +57,21 @@ graph TB
     
     %% System Use Cases
     System --> UC25[Send Email Verification]
-    System --> UC26[Send OTP]
-    System --> UC27[Process Payment]
-    System --> UC28[Generate Invoice]
-    System --> UC29[Calculate Platform Fee]
-    System --> UC30[Update Provider Rating]
+    System --> UC26[Send Email OTP]
+    System --> UC27[Generate Invoice]
+    System --> UC28[Calculate Platform Fee]
+    System --> UC29[Update Provider Rating]
+    System --> UC30[Send Booking Notifications]
     
     %% Relationships
     UC1 -.->|includes| UC25
     UC1 -.->|includes| UC26
-    UC5 -.->|includes| UC27
+    UC5 -.->|includes| UC30
     UC5 -.->|includes| UC28
-    UC8 -.->|includes| UC30
+    UC7 -.->|includes| UC29
     UC11 -.->|includes| UC12
+    UC15 -.->|includes| UC30
+    UC16 -.->|includes| UC30
     UC19 -.->|extends| UC18
     UC20 -.->|extends| UC18
 ```
@@ -101,18 +103,20 @@ graph TB
   3. System returns matching providers
   4. Customer views results
 
-**UC-5: Create Booking**
+**UC-5: Create Booking Request**
 - **Actor**: Customer
-- **Description**: Customer creates a booking for a service
-- **Preconditions**: Customer must be logged in, service must exist
-- **Postconditions**: Booking created, provider notified
+- **Description**: Customer creates a booking request for a service
+- **Preconditions**: Customer must be logged in, service must exist, provider must be approved
+- **Postconditions**: Booking created with PENDING status, provider notified
 - **Main Flow**:
   1. Customer selects service
   2. Customer selects date/time
   3. Customer enters address and requirements
-  4. System creates booking
-  5. System notifies provider
-  6. System sends confirmation to customer
+  4. System calculates total amount and platform fee
+  5. System creates booking with PENDING status
+  6. System creates notification for provider
+  7. System emits real-time notification via Socket.io
+  8. System returns booking details to customer
 
 ---
 
@@ -178,22 +182,15 @@ classDiagram
         +DateTime scheduledAt
         +BookingStatus status
         +Decimal totalAmount
+        +Decimal platformFee
+        +Decimal providerEarnings
+        +String address
+        +String requirements
         +create()
-        +confirm()
+        +accept()
+        +reject()
         +cancel()
         +complete()
-    }
-    
-    class Transaction {
-        +String id
-        +String userId
-        +String bookingId
-        +Decimal amount
-        +TransactionStatus status
-        +createOrder()
-        +processPayment()
-        +verifyPayment()
-        +processRefund()
     }
     
     class Message {
@@ -240,7 +237,6 @@ classDiagram
     
     %% Relationships
     User "1" --> "*" Booking : creates
-    User "1" --> "*" Transaction : makes
     User "1" --> "*" Message : sends
     User "1" --> "*" Review : writes
     User "1" --> "*" Notification : receives
@@ -253,7 +249,6 @@ classDiagram
     
     Service "1" --> "*" Booking : booked_for
     
-    Booking "1" --> "0..1" Transaction : has
     Booking "1" --> "0..1" Review : generates
 ```
 
@@ -285,16 +280,11 @@ classDiagram
         +create()
         +list()
         +getById()
+        +accept()
+        +reject()
         +update()
         +cancel()
         +getInvoice()
-    }
-    
-    class PaymentController {
-        +createOrder()
-        +verifyPayment()
-        +processRefund()
-        +getHistory()
     }
     
     class MessageController {
@@ -329,13 +319,7 @@ classDiagram
         +sendPasswordResetEmail()
         +sendProviderApprovalEmail()
         +sendBookingConfirmationEmail()
-    }
-    
-    class PaymentService {
-        +createOrder()
-        +verifyPayment()
-        +processRefund()
-        +calculatePlatformFee()
+        +sendEmailOTP()
     }
     
     class UploadService {
@@ -386,16 +370,17 @@ objectDiagram
     booking1 : status = PENDING
     booking1 : scheduledAt = "2024-12-15 10:00"
     booking1 : totalAmount = 500.00
+    booking1 : platformFee = 25.00
+    booking1 : providerEarnings = 475.00
     
-    transaction1 : Transaction
-    transaction1 : id = "txn-001"
-    transaction1 : status = PENDING
-    transaction1 : amount = 500.00
+    notification1 : Notification
+    notification1 : type = "BOOKING_REQUEST"
+    notification1 : title = "New Booking Request"
     
     customer1 --> booking1 : creates
     provider1 --> booking1 : receives
     service1 --> booking1 : booked_for
-    booking1 --> transaction1 : has
+    booking1 --> notification1 : generates
 ```
 
 ### 3.2 Provider Approval Object Diagram
@@ -466,43 +451,57 @@ sequenceDiagram
     F-->>C: Show success message
 ```
 
-### 4.2 Booking Creation Sequence Diagram
+### 4.2 Booking Creation and Acceptance Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant C as Customer
     participant F as Frontend
     participant BC as BookingController
-    participant PC as PaymentController
     participant DB as Database
     participant NS as NotificationService
     participant SS as SocketService
+    participant P as Provider
     
-    C->>F: Select service & date
+    Note over C,P: Step 1: Customer Creates Booking Request
+    C->>F: Select service, date & time
     F->>BC: POST /api/bookings
-    BC->>DB: Validate service exists
-    DB-->>BC: Service found
-    BC->>DB: Check provider availability
-    DB-->>BC: Available
-    BC->>BC: Calculate total amount
+    BC->>DB: Validate service & provider
+    DB-->>BC: Service & provider valid
+    BC->>BC: Calculate total amount & platform fee
     BC->>DB: Create booking (PENDING)
     DB-->>BC: Booking created
-    BC->>PC: Create payment order
-    PC->>PC: Generate order ID
-    PC-->>BC: Order ID
     BC->>NS: Create notification for provider
     NS->>DB: Save notification
     NS->>SS: Emit notification to provider
-    BC-->>F: Return booking + payment order
-    F-->>C: Show booking confirmation
-    F->>PC: Initiate payment
-    PC-->>F: Payment gateway URL
-    C->>PC: Complete payment
-    PC->>PC: Verify payment
-    PC->>DB: Update transaction status
-    PC->>BC: Update booking status
-    BC->>DB: Update booking (CONFIRMED)
-    BC->>NS: Notify customer
+    SS-->>P: Real-time notification
+    BC-->>F: Return booking details
+    F-->>C: Show booking request confirmation
+    
+    Note over C,P: Step 2: Provider Accepts/Rejects
+    P->>F: View booking request
+    P->>F: Click Accept/Reject
+    alt Provider Accepts
+        F->>BC: POST /api/bookings/:id/accept
+        BC->>DB: Update booking (CONFIRMED)
+        DB-->>BC: Booking updated
+        BC->>NS: Create notification for customer
+        NS->>DB: Save notification
+        NS->>SS: Emit notification to customer
+        SS-->>C: Real-time notification
+        BC-->>F: Return updated booking
+        F-->>P: Show acceptance confirmation
+    else Provider Rejects
+        F->>BC: POST /api/bookings/:id/reject
+        BC->>DB: Update booking (REJECTED)
+        DB-->>BC: Booking updated
+        BC->>NS: Create notification for customer
+        NS->>DB: Save notification
+        NS->>SS: Emit notification to customer
+        SS-->>C: Real-time notification
+        BC-->>F: Return updated booking
+        F-->>P: Show rejection confirmation
+    end
 ```
 
 ### 4.3 Provider Approval Sequence Diagram
@@ -563,39 +562,50 @@ sequenceDiagram
     SS->>F: Real-time update to receiver
 ```
 
-### 4.5 Payment Processing Sequence Diagram
+### 4.5 Provider Accept/Reject Booking Sequence Diagram
 
 ```mermaid
 sequenceDiagram
-    participant C as Customer
+    participant P as Provider
     participant F as Frontend
-    participant PC as PaymentController
-    participant PG as Payment Gateway
-    participant DB as Database
     participant BC as BookingController
+    participant DB as Database
+    participant NS as NotificationService
+    participant SS as SocketService
+    participant C as Customer
     
-    C->>F: Click pay for booking
-    F->>PC: POST /api/payments/create-order
-    PC->>DB: Get booking details
-    DB-->>PC: Booking data
-    PC->>PC: Calculate amount + platform fee
-    PC->>PG: Create order
-    PG-->>PC: Order ID + payment URL
-    PC->>DB: Create transaction record
-    DB-->>PC: Transaction created
-    PC-->>F: Return payment URL
-    F->>PG: Redirect to payment page
-    C->>PG: Enter payment details
-    PG->>PG: Process payment
-    PG-->>F: Payment callback
-    F->>PC: POST /api/payments/verify
-    PC->>PG: Verify payment signature
-    PG-->>PC: Verification result
-    PC->>DB: Update transaction (SUCCESS)
-    PC->>BC: Update booking (CONFIRMED)
-    BC->>DB: Update booking status
-    PC-->>F: Payment success
-    F-->>C: Show confirmation
+    P->>F: View pending booking request
+    P->>F: Click Accept or Reject
+    
+    alt Provider Accepts Booking
+        F->>BC: POST /api/bookings/:id/accept
+        BC->>DB: Get booking details
+        DB-->>BC: Booking data
+        BC->>BC: Validate booking status (PENDING)
+        BC->>DB: Update booking (CONFIRMED)
+        DB-->>BC: Booking updated
+        BC->>NS: Create notification for customer
+        NS->>DB: Save notification
+        NS->>SS: Emit notification to customer
+        SS-->>C: Real-time notification
+        BC-->>F: Return updated booking
+        F-->>P: Show acceptance confirmation
+        F-->>C: Show booking confirmed (via notification)
+    else Provider Rejects Booking
+        F->>BC: POST /api/bookings/:id/reject
+        BC->>DB: Get booking details
+        DB-->>BC: Booking data
+        BC->>BC: Validate booking status (PENDING)
+        BC->>DB: Update booking (REJECTED)
+        DB-->>BC: Booking updated
+        BC->>NS: Create notification for customer
+        NS->>DB: Save notification with rejection reason
+        NS->>SS: Emit notification to customer
+        SS-->>C: Real-time notification
+        BC-->>F: Return updated booking
+        F-->>P: Show rejection confirmation
+        F-->>C: Show booking rejected (via notification)
+    end
 ```
 
 ### 4.6 Review Submission Sequence Diagram
@@ -653,20 +663,28 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    Start([Customer Views Service]) --> Select[Select Service & Date]
-    Select --> CreateBooking[Create Booking]
+    Start([Customer Views Service]) --> Select[Select Service, Date & Time]
+    Select --> EnterDetails[Enter Address & Requirements]
+    EnterDetails --> CreateBooking[Create Booking Request]
     CreateBooking --> Pending{Status: PENDING}
-    Pending --> Payment[Initiate Payment]
-    Payment --> PayProcess{Payment Successful?}
-    PayProcess -->|Yes| Confirm[Provider Confirms]
-    PayProcess -->|No| Cancel1[Cancel Booking]
-    Confirm --> Confirmed{Status: CONFIRMED}
+    Pending --> NotifyProvider[Notify Provider]
+    NotifyProvider --> ProviderDecision{Provider Decision}
+    ProviderDecision -->|Accept| Accept[Provider Accepts]
+    ProviderDecision -->|Reject| Reject[Provider Rejects]
+    Accept --> Confirmed{Status: CONFIRMED}
+    Reject --> Rejected{Status: REJECTED}
+    Rejected --> NotifyCustomer[Notify Customer of Rejection]
+    NotifyCustomer --> End1([Booking Closed])
     Confirmed --> Service[Service Performed]
     Service --> Complete[Provider Marks Complete]
     Complete --> Completed{Status: COMPLETED}
-    Completed --> Review[Customer Reviews]
-    Review --> End([Booking Closed])
-    Cancel1 --> End
+    Completed --> NotifyCustomer2[Notify Customer]
+    NotifyCustomer2 --> Review[Customer Reviews]
+    Review --> End2([Booking Closed])
+    Pending -->|Customer Cancels| Cancel1[Cancel Booking]
+    Confirmed -->|Customer/Provider Cancels| Cancel2[Cancel Booking]
+    Cancel1 --> End3([Booking Closed])
+    Cancel2 --> End3
 ```
 
 ---
@@ -677,15 +695,15 @@ flowchart TD
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING: Create Booking
-    PENDING --> CONFIRMED: Payment Success + Provider Confirms
-    PENDING --> CANCELLED: Customer/Provider Cancels
+    [*] --> PENDING: Customer Creates Booking Request
+    PENDING --> CONFIRMED: Provider Accepts
+    PENDING --> REJECTED: Provider Rejects
+    PENDING --> CANCELLED: Customer Cancels
     CONFIRMED --> COMPLETED: Provider Marks Complete
-    CONFIRMED --> CANCELLED: Cancellation Requested
+    CONFIRMED --> CANCELLED: Customer/Provider Cancels
     COMPLETED --> [*]: Booking Closed
     CANCELLED --> [*]: Booking Closed
-    REJECTED --> [*]: Provider Rejects
-    PENDING --> REJECTED: Provider Rejects
+    REJECTED --> [*]: Booking Closed
 ```
 
 ### 6.2 Provider Status State Diagram
@@ -718,22 +736,27 @@ graph TB
         AuthAPI[Auth API]
         ProviderAPI[Provider API]
         BookingAPI[Booking API]
-        PaymentAPI[Payment API]
         MessageAPI[Message API]
+        NotificationAPI[Notification API]
+        ReviewAPI[Review API]
+        AdminAPI[Admin API]
     end
     
     subgraph "Business Logic Layer"
         AuthController[Auth Controller]
         ProviderController[Provider Controller]
         BookingController[Booking Controller]
-        PaymentController[Payment Controller]
+        MessageController[Message Controller]
+        NotificationController[Notification Controller]
+        ReviewController[Review Controller]
+        AdminController[Admin Controller]
     end
     
     subgraph "Service Layer"
         EmailService[Email Service]
-        PaymentService[Payment Service]
         UploadService[Upload Service]
         SocketService[Socket Service]
+        OTPService[OTP Service]
     end
     
     subgraph "Data Layer"
@@ -751,30 +774,38 @@ graph TB
     React --> AuthAPI
     React --> ProviderAPI
     React --> BookingAPI
-    React --> PaymentAPI
     React --> MessageAPI
+    React --> NotificationAPI
+    React --> ReviewAPI
+    React --> AdminAPI
     
     AuthAPI --> AuthController
     ProviderAPI --> ProviderController
     BookingAPI --> BookingController
-    PaymentAPI --> PaymentController
+    MessageAPI --> MessageController
+    NotificationAPI --> NotificationController
+    ReviewAPI --> ReviewController
+    AdminAPI --> AdminController
     
     AuthController --> EmailService
-    BookingController --> PaymentService
-    ProviderController --> UploadService
+    AuthController --> OTPService
     BookingController --> SocketService
+    ProviderController --> UploadService
+    MessageController --> SocketService
+    NotificationController --> SocketService
     
     AuthController --> Database
     ProviderController --> Database
     BookingController --> Database
-    PaymentController --> Database
+    MessageController --> Database
+    NotificationController --> Database
+    ReviewController --> Database
+    AdminController --> Database
     
-    PaymentService --> PaymentGateway
     EmailService --> SMTP
-    AuthController --> SMS
-    
     UploadService --> Storage
     SocketService --> Cache
+    OTPService --> Cache
 ```
 
 ---
