@@ -10,6 +10,11 @@ This document contains all UML diagrams for the MH26 Services platform.
 2. [Class Diagram](#2-class-diagram)
 3. [Object Diagram](#3-object-diagram)
 4. [Sequence Diagrams](#4-sequence-diagrams)
+5. [Activity Diagrams](#5-activity-diagrams)
+6. [State Diagram](#6-state-diagram)
+7. [Component Diagram](#7-component-diagram)
+8. [Deployment Diagram](#8-deployment-diagram)
+9. [Database Schema (ER Diagram)](#9-database-schema-er-diagram)
 
 ---
 
@@ -845,7 +850,6 @@ graph TB
     end
     
     subgraph "External Services"
-        Razorpay[Payment Gateway]
         SMTP[Email Service]
     end
     
@@ -866,9 +870,6 @@ graph TB
     App1 --> S3
     App2 --> S3
     App3 --> S3
-    App1 --> Razorpay
-    App2 --> Razorpay
-    App3 --> Razorpay
     App1 --> SMTP
     App2 --> SMTP
     App3 --> SMTP
@@ -876,8 +877,468 @@ graph TB
 
 ---
 
+## 9. Database Schema (ER Diagram)
+
+### 9.1 Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    User ||--o{ Booking : creates
+    User ||--o| Provider : has
+    User ||--o{ Message : "sends/receives"
+    User ||--o{ Review : writes
+    User ||--o{ Notification : receives
+    User ||--o{ Report : creates
+    User ||--o{ RefreshToken : has
+    User ||--o{ EmailVerificationToken : has
+    User ||--o{ PasswordResetToken : has
+    User ||--o{ PhoneOTP : has
+    User ||--o{ SavedProvider : saves
+    User ||--o{ AuditLog : "performs actions"
+    User ||--o{ ProviderAppeal : reviews
+    
+    Provider ||--o{ Service : offers
+    Provider ||--o{ Booking : receives
+    Provider ||--o{ Review : receives
+    Provider ||--o{ Report : reported_in
+    Provider ||--o{ ProviderDocument : has
+    Provider ||--o{ Payout : receives
+    Provider ||--o{ SavedProvider : saved_by
+    Provider ||--o{ ProviderAppeal : appeals
+    
+    Service ||--o{ Booking : booked_for
+    
+    Booking ||--o| BookingCancellation : has
+    Booking ||--o| Transaction : has
+    Booking ||--o| Review : generates
+    
+    User {
+        string id PK
+        string name
+        string email UK
+        string phone UK
+        string passwordHash
+        string avatarUrl
+        enum role
+        boolean emailVerified
+        boolean phoneVerified
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    Provider {
+        string id PK
+        string userId FK,UK
+        string businessName
+        string description
+        string primaryCategory
+        string secondaryCategory
+        string address
+        string city
+        string state
+        string pincode
+        float lat
+        float lng
+        float averageRating
+        int totalRatings
+        enum status
+        boolean phoneVisible
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    Service {
+        string id PK
+        string providerId FK
+        string title
+        string description
+        decimal price
+        int durationMin
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    Booking {
+        string id PK
+        string userId FK
+        string providerId FK
+        string serviceId FK
+        datetime scheduledAt
+        enum status
+        decimal totalAmount
+        decimal platformFee
+        decimal providerEarnings
+        string address
+        string requirements
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    Message {
+        string id PK
+        string conversationId
+        string senderId FK
+        string receiverId FK
+        string text
+        json attachments
+        boolean read
+        datetime createdAt
+    }
+    
+    Notification {
+        string id PK
+        string userId FK
+        string type
+        string title
+        string body
+        json payload
+        boolean read
+        datetime createdAt
+    }
+    
+    Review {
+        string id PK
+        string bookingId FK,UK
+        string providerId FK
+        string userId FK
+        int rating
+        string comment
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    Report {
+        string id PK
+        string reporterId FK
+        string providerId FK
+        string reason
+        string details
+        json attachments
+        enum status
+        string adminNotes
+        datetime createdAt
+        datetime updatedAt
+        datetime resolvedAt
+    }
+    
+    Transaction {
+        string id PK
+        string userId FK
+        string bookingId FK,UK
+        decimal amount
+        string currency
+        string gateway
+        string gatewayOrderId
+        string gatewayPaymentId
+        enum status
+        json metadata
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    BookingCancellation {
+        string id PK
+        string bookingId FK,UK
+        string cancelledBy
+        string reason
+        datetime createdAt
+    }
+    
+    ProviderDocument {
+        string id PK
+        string providerId FK
+        string type
+        string url
+        string filename
+        datetime uploadedAt
+    }
+    
+    ProviderAppeal {
+        string id PK
+        string providerId FK
+        enum type
+        string reason
+        string details
+        enum status
+        string adminNotes
+        string reviewedBy FK
+        datetime reviewedAt
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    RefreshToken {
+        string id PK
+        string userId FK
+        string token UK
+        datetime expiresAt
+        datetime createdAt
+        datetime revokedAt
+    }
+    
+    EmailVerificationToken {
+        string id PK
+        string userId FK,UK
+        string token UK
+        datetime expiresAt
+        datetime createdAt
+    }
+    
+    PasswordResetToken {
+        string id PK
+        string userId FK
+        string token UK
+        datetime expiresAt
+        datetime createdAt
+        boolean used
+    }
+    
+    PhoneOTP {
+        string id PK
+        string phone
+        string code
+        string userId FK
+        boolean verified
+        datetime expiresAt
+        datetime createdAt
+    }
+    
+    AuditLog {
+        string id PK
+        string userId FK
+        string action
+        string tableName
+        string recordId
+        json oldData
+        json newData
+        string ipAddress
+        string userAgent
+        datetime createdAt
+    }
+    
+    Payout {
+        string id PK
+        string providerId FK
+        decimal amount
+        enum status
+        string gatewayRef
+        json metadata
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    SavedProvider {
+        string id PK
+        string userId FK
+        string providerId FK
+        datetime createdAt
+    }
+```
+
+### 9.2 Database Schema Details
+
+#### Core Models
+
+**User Model**
+- Primary Key: `id` (UUID)
+- Unique Constraints: `email`, `phone`
+- Indexes: `email`, `phone`, `role`
+- Relationships:
+  - One-to-Many: Bookings, Messages, Reviews, Notifications, Reports
+  - One-to-One: Provider (optional)
+  - One-to-Many: RefreshTokens, EmailVerificationToken, PasswordResetTokens, PhoneOTPs
+
+**Provider Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId` (unique, references User)
+- Indexes: `city + primaryCategory`, `status`, `userId`, `lat + lng`
+- Relationships:
+  - Many-to-One: User
+  - One-to-Many: Services, Bookings, Reviews, Documents, Payouts, Appeals
+
+**Booking Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `userId`, `providerId`, `serviceId`
+- Indexes: `userId + status`, `providerId + scheduledAt`, `status`, `scheduledAt`
+- Status Enum: `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`, `REJECTED`
+- Relationships:
+  - Many-to-One: User, Provider, Service
+  - One-to-One: BookingCancellation, Transaction, Review (optional)
+
+**Service Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `providerId`
+- Index: `providerId`
+- Relationships:
+  - Many-to-One: Provider
+  - One-to-Many: Bookings
+
+**Message Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `senderId`, `receiverId`
+- Indexes: `conversationId + createdAt`, `senderId`, `receiverId`, `read`
+- Relationships:
+  - Many-to-One: User (as sender and receiver)
+
+**Notification Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId`
+- Indexes: `userId + read + createdAt`, `type`
+- Relationships:
+  - Many-to-One: User
+
+**Review Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `providerId`, `userId`, `bookingId` (unique, optional)
+- Indexes: `providerId`, `userId`, `rating`
+- Relationships:
+  - Many-to-One: Provider, User
+  - One-to-One: Booking (optional)
+
+**Report Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `reporterId`, `providerId`
+- Status Enum: `OPEN`, `INVESTIGATING`, `RESOLVED`, `DISMISSED`
+- Indexes: `providerId`, `status`, `reporterId`
+- Relationships:
+  - Many-to-One: User (reporter), Provider
+
+#### Authentication & Security Models
+
+**RefreshToken Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId`
+- Unique: `token`
+- Indexes: `userId`, `token`, `expiresAt`
+
+**EmailVerificationToken Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId` (unique)
+- Unique: `token`
+- Indexes: `token`, `expiresAt`
+
+**PasswordResetToken Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId`
+- Unique: `token`
+- Indexes: `token`, `expiresAt`, `userId`
+
+**PhoneOTP Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId` (optional)
+- Indexes: `phone`, `code`, `userId`, `expiresAt`
+
+#### Supporting Models
+
+**ProviderDocument Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `providerId`
+- Index: `providerId`
+- Document types: `aadhar`, `trade_license`, `gst`, `shop_photo`, etc.
+
+**BookingCancellation Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `bookingId` (unique)
+- Stores cancellation reason and who cancelled
+
+**Transaction Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `userId`, `bookingId` (unique, optional)
+- Status Enum: `PENDING`, `SUCCESS`, `FAILED`, `REFUNDED`
+- Indexes: `userId`, `bookingId`, `status`, `gatewayOrderId`
+- Note: Payment integration not yet implemented
+
+**ProviderAppeal Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `providerId`, `reviewedBy` (optional)
+- Type Enum: `UNBAN_REQUEST`, `REJECTION_APPEAL`, `SUSPENSION_APPEAL`, `OTHER`
+- Status Enum: `PENDING`, `APPROVED`, `REJECTED`, `UNDER_REVIEW`
+- Indexes: `providerId`, `status`, `type`
+
+**Payout Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `providerId`
+- Status Enum: `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`
+- Indexes: `providerId`, `status`
+
+**SavedProvider Model**
+- Primary Key: `id` (UUID)
+- Foreign Keys: `userId`, `providerId`
+- Unique Constraint: `userId + providerId`
+- Index: `userId`
+
+**AuditLog Model**
+- Primary Key: `id` (UUID)
+- Foreign Key: `userId` (optional)
+- Indexes: `userId`, `tableName + recordId`, `createdAt`
+- Stores all admin actions and changes
+
+### 9.3 Enums
+
+**UserRole**
+- `CUSTOMER` - Regular customer user
+- `PROVIDER` - Service provider user
+- `ADMIN` - Administrator user
+
+**ProviderStatus**
+- `PENDING` - Application submitted, awaiting review
+- `APPROVED` - Application approved, provider active
+- `REJECTED` - Application rejected
+- `SUSPENDED` - Provider temporarily suspended
+
+**BookingStatus**
+- `PENDING` - Booking request created, awaiting provider response
+- `CONFIRMED` - Provider accepted the booking
+- `COMPLETED` - Service completed by provider
+- `CANCELLED` - Booking cancelled by customer or provider
+- `REJECTED` - Booking rejected by provider
+
+**TransactionStatus**
+- `PENDING` - Transaction initiated
+- `SUCCESS` - Payment successful
+- `FAILED` - Payment failed
+- `REFUNDED` - Payment refunded
+
+**ReportStatus**
+- `OPEN` - Report submitted
+- `INVESTIGATING` - Under investigation
+- `RESOLVED` - Issue resolved
+- `DISMISSED` - Report dismissed
+
+**AppealType**
+- `UNBAN_REQUEST` - Request to unban account
+- `REJECTION_APPEAL` - Appeal against rejection
+- `SUSPENSION_APPEAL` - Appeal against suspension
+- `OTHER` - Other appeal types
+
+**AppealStatus**
+- `PENDING` - Appeal submitted
+- `APPROVED` - Appeal approved
+- `REJECTED` - Appeal rejected
+- `UNDER_REVIEW` - Under review
+
+**PayoutStatus**
+- `PENDING` - Payout requested
+- `PROCESSING` - Payout being processed
+- `COMPLETED` - Payout completed
+- `FAILED` - Payout failed
+
+### 9.4 Key Relationships Summary
+
+1. **User ↔ Provider**: One-to-One (optional) - A user can have one provider profile
+2. **User ↔ Booking**: One-to-Many - A user can create multiple bookings
+3. **Provider ↔ Service**: One-to-Many - A provider can offer multiple services
+4. **Service ↔ Booking**: One-to-Many - A service can be booked multiple times
+5. **Booking ↔ Review**: One-to-One (optional) - A booking can have one review
+6. **User ↔ Message**: One-to-Many (as sender and receiver) - Users can send/receive messages
+7. **Provider ↔ Review**: One-to-Many - A provider can receive multiple reviews
+8. **User ↔ Notification**: One-to-Many - A user can receive multiple notifications
+9. **Provider ↔ Report**: One-to-Many - A provider can be reported multiple times
+
+---
+
 **Document Status**: Complete  
-**Last Updated**: 2024  
-**Version**: 1.0
+**Last Updated**: January 2025  
+**Version**: 1.1
 
 
