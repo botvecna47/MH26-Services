@@ -1441,7 +1441,199 @@ erDiagram
 
 ---
 
-## 10. Simplified Diagrams for Academic Reports
+## 10. Package Diagram
+
+### 10.1 System Package Structure
+
+The Package Diagram shows the organization of the system into logical packages/modules.
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend Package"]
+        UI[UI Components]
+        Pages[Pages]
+        API_Client[API Client]
+        Hooks[Custom Hooks]
+        Context[Context Providers]
+        Utils[Utilities]
+    end
+    
+    subgraph Backend["Backend Package"]
+        Controllers[Controllers]
+        Services[Services]
+        Routes[Routes]
+        Middleware[Middleware]
+        Models[Models/Schemas]
+        Utils_Backend[Utilities]
+    end
+    
+    subgraph Database["Database Package"]
+        Prisma[Prisma ORM]
+        Schema[Schema Definition]
+        Migrations[Migrations]
+        Seed[Seed Data]
+    end
+    
+    subgraph External["External Services"]
+        Socket[Socket.io]
+        Email[Email Service]
+        S3[S3 Storage]
+        Redis[Redis Cache]
+    end
+    
+    Frontend --> Backend
+    Backend --> Database
+    Backend --> External
+    
+    UI --> Pages
+    Pages --> API_Client
+    API_Client --> Hooks
+    Hooks --> Context
+    
+    Controllers --> Services
+    Controllers --> Routes
+    Routes --> Middleware
+    Services --> Models
+    Services --> Utils_Backend
+    
+    Prisma --> Schema
+    Prisma --> Migrations
+    Prisma --> Seed
+```
+
+### 10.2 Package Dependencies
+
+```mermaid
+graph LR
+    subgraph Frontend_Pkg["frontend/"]
+        React[React Components]
+        Router[React Router]
+        Query[TanStack Query]
+        Axios[Axios Client]
+    end
+    
+    subgraph Backend_Pkg["server/"]
+        Express[Express Server]
+        Prisma_Client[Prisma Client]
+        Socket_Server[Socket.io Server]
+        JWT[JWT Utils]
+    end
+    
+    subgraph Database_Pkg["database/"]
+        PostgreSQL[(PostgreSQL)]
+        Redis_Cache[(Redis)]
+    end
+    
+    React --> Router
+    Router --> Query
+    Query --> Axios
+    Axios --> Express
+    Express --> Prisma_Client
+    Express --> Socket_Server
+    Express --> JWT
+    Prisma_Client --> PostgreSQL
+    Express --> Redis_Cache
+```
+
+---
+
+## 11. Communication Diagram
+
+### 11.1 Booking Creation Communication Diagram
+
+Communication diagrams (also called Collaboration diagrams) show object interactions in a different format than sequence diagrams, emphasizing the relationships between objects.
+
+```mermaid
+graph TB
+    subgraph Customer_Object["customer:Customer"]
+        C1[id = user-123]
+        C2[name = John Doe]
+    end
+    
+    subgraph Frontend_Object["frontend:ReactApp"]
+        F1[BookingModal Component]
+        F2[API Client]
+    end
+    
+    subgraph Backend_Object["backend:ExpressServer"]
+        B1[BookingController]
+        B2[BookingService]
+        B3[NotificationService]
+    end
+    
+    subgraph Database_Object["database:PostgreSQL"]
+        D1[(Booking Table)]
+        D2[(Notification Table)]
+    end
+    
+    subgraph Provider_Object["provider:Provider"]
+        P1[id = provider-456]
+        P2[businessName = QuickFix]
+    end
+    
+    Customer_Object -->|1: createBooking| Frontend_Object
+    Frontend_Object -->|2: POST /api/bookings| Backend_Object
+    Backend_Object -->|3: save| Database_Object
+    Backend_Object -->|4: createNotification| Database_Object
+    Backend_Object -->|5: notify| Provider_Object
+    Backend_Object -->|6: response| Frontend_Object
+    Frontend_Object -->|7: showConfirmation| Customer_Object
+    
+    style Customer_Object fill:#E8F5E9
+    style Frontend_Object fill:#E3F2FD
+    style Backend_Object fill:#FFF3E0
+    style Database_Object fill:#F3E5F5
+    style Provider_Object fill:#E8F5E9
+```
+
+### 11.2 Provider Approval Communication Diagram
+
+```mermaid
+graph TB
+    subgraph Admin_Object["admin:Admin"]
+        A1[id = admin-001]
+        A2[name = Admin User]
+    end
+    
+    subgraph Frontend_Object["frontend:AdminPanel"]
+        F1[Provider Management UI]
+        F2[API Client]
+    end
+    
+    subgraph Backend_Object["backend:ExpressServer"]
+        B1[AdminController]
+        B2[ProviderService]
+        B3[EmailService]
+    end
+    
+    subgraph Database_Object["database:PostgreSQL"]
+        D1[(Provider Table)]
+        D2[(Notification Table)]
+    end
+    
+    subgraph Provider_Object["provider:Provider"]
+        P1[id = provider-789]
+        P2[status = PENDING]
+    end
+    
+    Admin_Object -->|1: approveProvider| Frontend_Object
+    Frontend_Object -->|2: POST /api/admin/providers/:id/approve| Backend_Object
+    Backend_Object -->|3: updateStatus| Database_Object
+    Backend_Object -->|4: sendEmail| Provider_Object
+    Backend_Object -->|5: createNotification| Database_Object
+    Backend_Object -->|6: response| Frontend_Object
+    Frontend_Object -->|7: showSuccess| Admin_Object
+    
+    style Admin_Object fill:#F3E5F5
+    style Frontend_Object fill:#E3F2FD
+    style Backend_Object fill:#FFF3E0
+    style Database_Object fill:#F3E5F5
+    style Provider_Object fill:#E8F5E9
+```
+
+---
+
+## 12. Simplified Diagrams for Academic Reports
 
 This section contains simplified versions of all UML diagrams suitable for Software Engineering practicals and mini project reports. These diagrams focus on essential functionality while maintaining accuracy to the main project.
 
