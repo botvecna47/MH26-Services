@@ -15,7 +15,9 @@ This document contains all UML diagrams for the MH26 Services platform.
 7. [Component Diagram](#7-component-diagram)
 8. [Deployment Diagram](#8-deployment-diagram)
 9. [Database Schema (ER Diagram)](#9-database-schema-er-diagram)
-10. [Simplified Diagrams for Academic Reports](#10-simplified-diagrams-for-academic-reports)
+10. [Package Diagram](#10-package-diagram)
+11. [Communication Diagram](#11-communication-diagram)
+12. [Simplified Diagrams for Academic Reports](#12-simplified-diagrams-for-academic-reports)
 
 ---
 
@@ -1774,8 +1776,33 @@ erDiagram
 
 ---
 
+---
+
+## UML Diagrams Summary
+
+This document contains the following UML diagrams:
+
+| Diagram Type | Section | Status |
+|--------------|---------|--------|
+| Use Case Diagram | Section 1 | ✅ Complete |
+| Class Diagram | Section 2 | ✅ Complete |
+| Object Diagram | Section 3 | ✅ Complete |
+| Sequence Diagrams | Section 4 | ✅ Complete (6 diagrams) |
+| Activity Diagrams | Section 5 | ✅ Complete (2 diagrams) |
+| State Diagram | Section 6 | ✅ Complete (2 diagrams) |
+| Component Diagram | Section 7 | ✅ Complete |
+| Deployment Diagram | Section 8 | ✅ Complete |
+| ER Diagram | Section 9 | ✅ Complete |
+| Package Diagram | Section 10 | ✅ Complete |
+| Communication Diagram | Section 11 | ✅ Complete (2 diagrams) |
+| Simplified Diagrams | Section 12 | ✅ Complete (9 diagrams) |
+
+**Total Diagrams**: 30+ diagrams covering all aspects of the system.
+
+---
+
 **Document Status**: Complete  
-**Last Updated**: January 2025  
-**Version**: 1.1
+**Last Updated**: September 19, 2025  
+**Version**: 2.0
 
 

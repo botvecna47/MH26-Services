@@ -19,6 +19,7 @@
 7. [Retrospectives](#retrospectives)
 8. [Product Backlog](#product-backlog)
 9. [Velocity Tracking](#velocity-tracking)
+10. [System Documentation](#system-documentation)
 
 ---
 
@@ -672,6 +673,34 @@ The agile development process has been effective for this project. The two-week 
 - More automated testing
 - Better deployment preparation
 - More detailed API documentation
+
+---
+
+## System Documentation
+
+### UML Diagrams
+
+All system architecture diagrams are documented in [UML_DIAGRAMS.md](./UML_DIAGRAMS.md), including:
+
+- **Use Case Diagrams**: System functionality from user perspective
+- **Class Diagrams**: System structure and relationships
+- **Object Diagrams**: Runtime object instances
+- **Sequence Diagrams**: Interaction flows (6 major flows)
+- **Activity Diagrams**: Business process flows
+- **State Diagrams**: State transitions for bookings and providers
+- **Component Diagrams**: System architecture components
+- **Deployment Diagrams**: System deployment architecture
+- **ER Diagrams**: Database schema and relationships
+- **Package Diagrams**: Module/package organization
+- **Communication Diagrams**: Object collaboration views
+
+**Total**: 30+ diagrams covering all aspects of the system.
+
+### Related Documentation
+
+- **[SRS.md](./SRS.md)**: Software Requirements Specification
+- **[DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)**: Detailed development log
+- **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)**: Current implementation status
 
 ---
 
