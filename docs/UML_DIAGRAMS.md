@@ -17,7 +17,8 @@ This document contains all UML diagrams for the MH26 Services platform.
 9. [Database Schema (ER Diagram)](#9-database-schema-er-diagram)
 10. [Package Diagram](#10-package-diagram)
 11. [Communication Diagram](#11-communication-diagram)
-12. [Simplified Diagrams for Academic Reports](#12-simplified-diagrams-for-academic-reports)
+12. [Collaboration Diagrams](#12-collaboration-diagrams)
+13. [Simplified Diagrams for Academic Reports](#13-simplified-diagrams-for-academic-reports)
 
 ---
 
@@ -1633,7 +1634,226 @@ graph TB
 
 ---
 
-## 12. Simplified Diagrams for Academic Reports
+## 12. Collaboration Diagrams
+
+### 12.1 Detailed Collaboration Diagram - Booking Creation Flow
+
+This diagram shows the detailed object interactions during booking creation, emphasizing the relationships and message flow between objects.
+
+```mermaid
+graph TB
+    subgraph Customer_Layer["Customer Layer"]
+        Customer[Customer Object<br/>id: user-123<br/>name: John Doe<br/>email: customer1@example.com]
+    end
+    
+    subgraph Frontend_Layer["Frontend Layer"]
+        BookingModal[BookingModal Component<br/>state: formData<br/>selectedService: service-456]
+        API_Client[API Client<br/>baseURL: http://localhost:3000/api<br/>headers: Authorization]
+        BookingHook[useCreateBooking Hook<br/>mutation: createBooking]
+    end
+    
+    subgraph Backend_Layer["Backend Layer"]
+        BookingRoute[Booking Route<br/>POST /api/bookings<br/>middleware: authenticate]
+        BookingController[BookingController<br/>method: create<br/>userId: from token]
+        BookingService[BookingService<br/>validateProvider<br/>calculateFees]
+        NotificationService[NotificationService<br/>createNotification<br/>sendEmail]
+    end
+    
+    subgraph Database_Layer["Database Layer"]
+        PrismaClient[Prisma Client<br/>booking.create<br/>provider.findUnique<br/>service.findUnique]
+        BookingTable[(Booking Table<br/>id, userId, providerId<br/>status: PENDING)]
+        NotificationTable[(Notification Table<br/>userId, type, title)]
+        ProviderTable[(Provider Table<br/>id, status: APPROVED)]
+    end
+    
+    subgraph Provider_Layer["Provider Layer"]
+        Provider[Provider Object<br/>id: provider-456<br/>businessName: QuickFix<br/>status: APPROVED]
+    end
+    
+    Customer -->|1: clicks Book Now| BookingModal
+    BookingModal -->|2: validates form| BookingModal
+    BookingModal -->|3: calls mutation| BookingHook
+    BookingHook -->|4: POST /api/bookings| API_Client
+    API_Client -->|5: sends request with token| BookingRoute
+    BookingRoute -->|6: validates auth| BookingController
+    BookingController -->|7: extracts userId| BookingController
+    BookingController -->|8: validates provider| BookingService
+    BookingService -->|9: queries provider| PrismaClient
+    PrismaClient -->|10: SELECT * FROM Provider| ProviderTable
+    ProviderTable -->|11: returns provider| PrismaClient
+    PrismaClient -->|12: returns provider| BookingService
+    BookingService -->|13: calculates fees| BookingService
+    BookingController -->|14: creates booking| PrismaClient
+    PrismaClient -->|15: INSERT INTO Booking| BookingTable
+    BookingTable -->|16: returns booking| PrismaClient
+    PrismaClient -->|17: returns booking| BookingController
+    BookingController -->|18: creates notification| NotificationService
+    NotificationService -->|19: creates notification| PrismaClient
+    PrismaClient -->|20: INSERT INTO Notification| NotificationTable
+    NotificationTable -->|21: returns notification| PrismaClient
+    PrismaClient -->|22: returns notification| NotificationService
+    NotificationService -->|23: sends email| Provider
+    BookingController -->|24: returns response| BookingRoute
+    BookingRoute -->|25: returns JSON| API_Client
+    API_Client -->|26: returns data| BookingHook
+    BookingHook -->|27: updates cache| BookingHook
+    BookingHook -->|28: shows success| BookingModal
+    BookingModal -->|29: closes modal| Customer
+    
+    style Customer_Layer fill:#E8F5E9
+    style Frontend_Layer fill:#E3F2FD
+    style Backend_Layer fill:#FFF3E0
+    style Database_Layer fill:#F3E5F5
+    style Provider_Layer fill:#E8F5E9
+```
+
+### 12.2 Simple Collaboration Diagram - User Authentication Flow
+
+A simplified view of the authentication process showing key object interactions.
+
+```mermaid
+graph LR
+    User[User] -->|1: enters credentials| LoginForm[Login Form]
+    LoginForm -->|2: validates input| LoginForm
+    LoginForm -->|3: POST /api/auth/login| AuthAPI[Auth API Client]
+    AuthAPI -->|4: sends request| AuthRoute[Auth Route]
+    AuthRoute -->|5: validates schema| AuthController[Auth Controller]
+    AuthController -->|6: finds user| Prisma[Prisma Client]
+    Prisma -->|7: SELECT FROM User| Database[(User Table)]
+    Database -->|8: returns user| Prisma
+    Prisma -->|9: returns user| AuthController
+    AuthController -->|10: verifies password| AuthController
+    AuthController -->|11: generates tokens| JWTUtils[JWT Utils]
+    JWTUtils -->|12: returns tokens| AuthController
+    AuthController -->|13: saves refresh token| Prisma
+    Prisma -->|14: INSERT INTO RefreshToken| Database
+    AuthController -->|15: returns response| AuthRoute
+    AuthRoute -->|16: returns JSON| AuthAPI
+    AuthAPI -->|17: stores tokens| LocalStorage[Local Storage]
+    AuthAPI -->|18: returns user data| LoginForm
+    LoginForm -->|19: updates context| UserContext[User Context]
+    UserContext -->|20: redirects to dashboard| User
+    
+    style User fill:#E8F5E9
+    style LoginForm fill:#E3F2FD
+    style AuthAPI fill:#E3F2FD
+    style AuthRoute fill:#FFF3E0
+    style AuthController fill:#FFF3E0
+    style Prisma fill:#F3E5F5
+    style Database fill:#F3E5F5
+    style JWTUtils fill:#FFF3E0
+    style LocalStorage fill:#E3F2FD
+    style UserContext fill:#E3F2FD
+```
+
+### 12.3 Detailed Collaboration Diagram - Provider Approval Flow
+
+Shows the complete interaction flow when an admin approves a provider.
+
+```mermaid
+graph TB
+    subgraph Admin_Layer["Admin Layer"]
+        Admin[Admin User<br/>id: admin-001<br/>role: ADMIN]
+    end
+    
+    subgraph Frontend_Layer["Frontend Layer"]
+        AdminPanel[Admin Panel<br/>component: ProviderManagement]
+        ProviderCard[Provider Card<br/>status: PENDING<br/>actions: Approve/Reject]
+        API_Client[API Client<br/>method: POST<br/>endpoint: /api/admin/providers/:id/approve]
+    end
+    
+    subgraph Backend_Layer["Backend Layer"]
+        AdminRoute[Admin Route<br/>POST /api/admin/providers/:id/approve<br/>middleware: requireRole ADMIN]
+        AdminController[Admin Controller<br/>method: approveProvider<br/>providerId: from params]
+        ProviderService[Provider Service<br/>updateStatus<br/>sendNotification]
+        EmailService[Email Service<br/>sendApprovalEmail<br/>template: provider-approved]
+    end
+    
+    subgraph Database_Layer["Database Layer"]
+        PrismaClient[Prisma Client<br/>provider.update<br/>notification.create]
+        ProviderTable[(Provider Table<br/>id, status: PENDING → APPROVED<br/>updatedAt: now)]
+        NotificationTable[(Notification Table<br/>userId, type: PROVIDER_APPROVED<br/>read: false)]
+        UserTable[(User Table<br/>id, email, name)]
+    end
+    
+    subgraph Provider_Layer["Provider Layer"]
+        Provider[Provider Object<br/>id: provider-789<br/>businessName: TechFix<br/>status: PENDING → APPROVED]
+        ProviderUser[Provider User<br/>id: user-456<br/>email: provider1@example.com]
+    end
+    
+    Admin -->|1: clicks Approve| ProviderCard
+    ProviderCard -->|2: confirms action| AdminPanel
+    AdminPanel -->|3: calls API| API_Client
+    API_Client -->|4: POST request| AdminRoute
+    AdminRoute -->|5: validates admin| AdminController
+    AdminController -->|6: gets provider| PrismaClient
+    PrismaClient -->|7: SELECT FROM Provider| ProviderTable
+    ProviderTable -->|8: returns provider| PrismaClient
+    PrismaClient -->|9: returns provider| AdminController
+    AdminController -->|10: updates status| ProviderService
+    ProviderService -->|11: updates provider| PrismaClient
+    PrismaClient -->|12: UPDATE Provider SET status| ProviderTable
+    ProviderTable -->|13: returns updated| PrismaClient
+    PrismaClient -->|14: returns updated| ProviderService
+    ProviderService -->|15: creates notification| PrismaClient
+    PrismaClient -->|16: INSERT INTO Notification| NotificationTable
+    NotificationTable -->|17: returns notification| PrismaClient
+    ProviderService -->|18: sends email| EmailService
+    EmailService -->|19: gets user email| PrismaClient
+    PrismaClient -->|20: SELECT FROM User| UserTable
+    UserTable -->|21: returns user| PrismaClient
+    EmailService -->|22: sends email| ProviderUser
+    AdminController -->|23: returns success| AdminRoute
+    AdminRoute -->|24: returns JSON| API_Client
+    API_Client -->|25: updates UI| AdminPanel
+    AdminPanel -->|26: shows success| Admin
+    AdminPanel -->|27: refreshes list| AdminPanel
+    
+    style Admin_Layer fill:#F3E5F5
+    style Frontend_Layer fill:#E3F2FD
+    style Backend_Layer fill:#FFF3E0
+    style Database_Layer fill:#F3E5F5
+    style Provider_Layer fill:#E8F5E9
+```
+
+### 12.4 Simple Collaboration Diagram - Message Sending Flow
+
+A simplified collaboration diagram showing how messages are sent between users.
+
+```mermaid
+graph LR
+    Sender[User A] -->|1: types message| MessageInput[Message Input]
+    MessageInput -->|2: validates| MessageInput
+    MessageInput -->|3: POST /api/messages| MessageAPI[Message API]
+    MessageAPI -->|4: sends request| MessageRoute[Message Route]
+    MessageRoute -->|5: authenticates| MessageController[Message Controller]
+    MessageController -->|6: creates message| Prisma[Prisma Client]
+    Prisma -->|7: INSERT INTO Message| Database[(Message Table)]
+    Database -->|8: returns message| Prisma
+    Prisma -->|9: returns message| MessageController
+    MessageController -->|10: emits socket event| SocketIO[Socket.io Server]
+    SocketIO -->|11: broadcasts to receiver| Receiver[User B]
+    MessageController -->|12: returns response| MessageRoute
+    MessageRoute -->|13: returns JSON| MessageAPI
+    MessageAPI -->|14: updates UI| MessageList[Message List]
+    MessageList -->|15: shows message| Sender
+    MessageList -->|16: shows message| Receiver
+    
+    style Sender fill:#E8F5E9
+    style MessageInput fill:#E3F2FD
+    style MessageAPI fill:#E3F2FD
+    style MessageRoute fill:#FFF3E0
+    style MessageController fill:#FFF3E0
+    style Prisma fill:#F3E5F5
+    style Database fill:#F3E5F5
+    style SocketIO fill:#FFF3E0
+    style Receiver fill:#E8F5E9
+    style MessageList fill:#E3F2FD
+```
+
+---
+
+## 13. Simplified Diagrams for Academic Reports
 
 This section contains simplified versions of all UML diagrams suitable for Software Engineering practicals and mini project reports. These diagrams focus on essential functionality while maintaining accuracy to the main project.
 
@@ -1987,7 +2207,8 @@ This document contains the following UML diagrams:
 | ER Diagram | Section 9 | ✅ Complete |
 | Package Diagram | Section 10 | ✅ Complete |
 | Communication Diagram | Section 11 | ✅ Complete (2 diagrams) |
-| Simplified Diagrams | Section 12 | ✅ Complete (9 diagrams) |
+| Collaboration Diagrams | Section 12 | ✅ Complete (4 diagrams) |
+| Simplified Diagrams | Section 13 | ✅ Complete (9 diagrams) |
 
 **Total Diagrams**: 30+ diagrams covering all aspects of the system.
 
