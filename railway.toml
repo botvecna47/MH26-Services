@@ -1,0 +1,67 @@
+# Railway Multi-Service Configuration
+# Deploy Database, Backend, and Frontend in one go
+# 
+# Usage:
+# 1. Push this file to your GitHub repository
+# 2. In Railway: New Project → Deploy from GitHub repo
+# 3. Railway will automatically detect and create all services
+# 4. Set environment variables in Railway dashboard
+# 5. Deploy!
+
+[build]
+builder = "nixpacks"
+
+# ============================================
+# DATABASE SERVICE (PostgreSQL)
+# ============================================
+[services.database]
+name = "mh26-database"
+type = "postgresql"
+plan = "starter"
+
+# ============================================
+# BACKEND SERVICE
+# ============================================
+[services.backend]
+name = "mh26-backend"
+root = "server"
+buildCommand = "npm ci && npm run build && npx prisma generate"
+startCommand = "npm run migrate:deploy && npm start"
+watchPatterns = ["server/**"]
+
+# Backend will automatically get DATABASE_URL from database service
+# You need to set these in Railway dashboard:
+# - JWT_ACCESS_SECRET (min 32 chars)
+# - JWT_REFRESH_SECRET (min 32 chars)
+# - CORS_ORIGIN (set after frontend deploys)
+
+[services.backend.variables]
+NODE_ENV = "production"
+PORT = "3000"
+
+# ============================================
+# FRONTEND SERVICE
+# ============================================
+[services.frontend]
+name = "mh26-frontend"
+root = "frontend"
+buildCommand = "npm ci && npm run build"
+startCommand = "npx serve -s build -l $PORT"
+watchPatterns = ["frontend/**"]
+
+# Frontend needs VITE_API_BASE_URL pointing to backend
+# Set this in Railway dashboard after backend deploys:
+# VITE_API_BASE_URL = "https://your-backend.railway.app/api"
+
+[services.frontend.variables]
+NODE_ENV = "production"
+
+# ============================================
+# SERVICE DEPENDENCIES
+# ============================================
+# Backend depends on Database
+[services.backend.dependsOn]
+database = "DATABASE_URL"
+
+# Frontend depends on Backend (for API URL)
+# Note: You'll need to set VITE_API_BASE_URL manually after backend URL is generated
