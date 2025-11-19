@@ -115,7 +115,7 @@ export function useProviders(filters?: ProviderFilters) {
       // Only retry once for other errors
       return failureCount < 1;
     },
-    retryDelay: (attemptIndex, error: any) => {
+    retryDelay: (_attemptIndex, error: any) => {
       // If 429 error, wait longer before retry
       if (error?.response?.status === 429) {
         return 30000; // Wait 30 seconds for rate limit
@@ -126,14 +126,6 @@ export function useProviders(filters?: ProviderFilters) {
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: false, // Don't refetch on mount if data is fresh
     refetchOnReconnect: false, // Don't refetch on reconnect
-    // Return empty data on error instead of throwing
-    onError: (error) => {
-      if (error?.response?.status === 429) {
-        console.warn('Rate limited on providers request, will retry later');
-      } else {
-        console.error('Error fetching providers:', error);
-      }
-    },
   });
 }
 

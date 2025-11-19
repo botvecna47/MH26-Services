@@ -17,6 +17,10 @@ This directory contains all documentation for the MH26 Services Marketplace Plat
 - **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** - Current implementation status
 - **[COMPLETED_TASKS.md](./COMPLETED_TASKS.md)** - Completed tasks log
 
+### Deployment Documentation
+- **[RAILWAY_DEPLOYMENT_GUIDE.md](./RAILWAY_DEPLOYMENT_GUIDE.md)** - Complete Railway deployment guide
+- **[deployment/RAILWAY_DEPLOY_INSTRUCTIONS.md](./deployment/RAILWAY_DEPLOY_INSTRUCTIONS.md)** - Quick Railway deployment instructions
+
 ### Server Documentation
 - **[server/README.md](./server/README.md)** - Backend API documentation
 - **[server/DEPLOYMENT_GUIDE.md](./server/DEPLOYMENT_GUIDE.md)** - Server deployment guide

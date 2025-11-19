@@ -84,12 +84,6 @@ export function useMe() {
       }
       return failureCount < 1;
     },
-    onError: (error: any) => {
-      // Suppress 401 errors from console
-      if (error?.response?.status !== 401) {
-        console.error('Error fetching user:', error);
-      }
-    },
   });
 }
 

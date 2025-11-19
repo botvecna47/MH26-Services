@@ -123,13 +123,6 @@ export function useBooking(id: string) {
       // Retry up to 2 times for other errors
       return failureCount < 2;
     },
-    onError: (error: any) => {
-      // Suppress console errors for expected 403/404 errors
-      if (error?.response?.status === 403 || error?.response?.status === 404) {
-        return;
-      }
-      console.error('Error fetching booking:', error);
-    },
   });
 }
 

@@ -120,14 +120,6 @@ export function useSendMessage() {
       queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
-    onError: (error, variables) => {
-      // On error, still invalidate to ensure UI is in sync
-      const conversationId = variables.conversationId;
-      if (conversationId) {
-        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-      }
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    },
   });
 }
 
@@ -136,7 +128,7 @@ export function useMarkAsRead() {
   
   return useMutation({
     mutationFn: messagesApi.markAsRead,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },

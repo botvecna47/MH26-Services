@@ -73,19 +73,12 @@ export function useNotifications(params?: { read?: boolean; page?: number; limit
       // Only retry once for other errors
       return failureCount < 1;
     },
-    retryDelay: (attemptIndex, error: any) => {
+    retryDelay: (_attemptIndex, error: any) => {
       // If 429 error, wait longer before retry
       if (error?.response?.status === 429) {
         return 30000; // Wait 30 seconds for rate limit
       }
       return 5000; // Wait 5 seconds for other errors
-    },
-    // Suppress errors for unauthenticated users
-    onError: (error: any) => {
-      // Only log non-401 errors
-      if (error?.response?.status !== 401) {
-        console.error('Error fetching notifications:', error);
-      }
     },
   });
 }

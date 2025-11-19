@@ -27,25 +27,9 @@ const queryClient = new QueryClient({
         }
         return Math.min(5000 * (attemptIndex + 1), 30000); // Exponential backoff, max 30s
       },
-      onError: (error: any) => {
-        // Silently handle query errors to prevent blank pages
-        if (error?.response?.status === 429) {
-          console.warn('Rate limited, will retry later');
-        } else {
-          console.error('Query error:', error);
-        }
-      },
     },
     mutations: {
       retry: 0, // Don't retry mutations
-      onError: (error: any) => {
-        // Silently handle mutation errors
-        if (error?.response?.status === 429) {
-          console.warn('Rate limited on mutation');
-        } else {
-          console.error('Mutation error:', error);
-        }
-      },
     },
   },
 });

@@ -356,6 +356,29 @@
 
 ```
 mh26-services/
+├── frontend/              # React + TypeScript frontend
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── server/                # Node.js + Express backend
+│   ├── src/
+│   ├── prisma/
+│   └── package.json
+├── docs/                  # Documentation
+│   ├── deployment/        # Deployment guides
+│   ├── archive/          # Historical docs
+│   └── ...
+├── scripts/              # Setup and utility scripts
+│   ├── setup.ps1
+│   ├── setup.sh
+│   └── start-project.bat
+├── railway.toml          # Railway deployment config
+├── package.json          # Workspace configuration
+└── README.md
+```
+
+```
+mh26-services/
 ├── frontend/                 # React frontend application
 │   ├── src/
 │   │   ├── api/             # API client functions
