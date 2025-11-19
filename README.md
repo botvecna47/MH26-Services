@@ -585,11 +585,17 @@ See `docs/SEEDED_CREDENTIALS.md` for test accounts after running the seed script
 
 ### Available Documentation
 
-- **[Complete Project Documentation](./docs/COMPLETE_PROJECT_DOCUMENTATION.md)** - Comprehensive project overview
+#### Project Management
+- **[Development Progress](./docs/DEVELOPMENT_PROGRESS.md)** - Detailed development log (Aug 20 - Sept 19, 2025)
+- **[Agile Project Documentation](./docs/AGILE_PROJECT_DOCUMENTATION.md)** - Sprint tracking, user stories, and agile methodology
+
+#### Technical Documentation
 - **[Software Requirements Specification](./docs/SRS.md)** - Detailed requirements
 - **[UML Diagrams](./docs/UML_DIAGRAMS.md)** - System architecture diagrams
 - **[Implementation Status](./docs/IMPLEMENTATION_STATUS.md)** - Current progress tracking
 - **[Completed Tasks](./docs/COMPLETED_TASKS.md)** - Task completion log
+
+#### Setup & Configuration
 - **[Seeded Credentials](./docs/SEEDED_CREDENTIALS.md)** - Test account information
 - **[Email Setup Guide](./docs/EMAIL_SETUP.md)** - Detailed email configuration instructions
 - **[Quick Email Setup](./QUICK_EMAIL_SETUP.md)** - Quick guide for Gmail SMTP setup
@@ -743,6 +749,16 @@ If you need help or have questions:
 ---
 
 ## 📊 Project Status
+
+### Development Methodology
+This project follows **Agile (Scrum-based)** methodology with 2-week sprints. Development period: August 20 - September 19, 2025.
+
+**Sprint Summary**:
+- **Sprint 1** (Aug 20 - Sept 2): Foundation & Core Features - 37 story points
+- **Sprint 2** (Sept 3 - Sept 16): Booking System & Real-time Features - 49 story points
+- **Sprint 3** (Sept 17 - Sept 19): Polish & Documentation - 13 story points
+
+For detailed progress tracking, see [Development Progress](./docs/DEVELOPMENT_PROGRESS.md) and [Agile Documentation](./docs/AGILE_PROJECT_DOCUMENTATION.md).
 
 ### Current Progress: ~85% Complete
 

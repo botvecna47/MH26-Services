@@ -221,88 +221,88 @@ export default function BookingsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : (
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mb-6">
-                  <TabsTrigger value="all">All</TabsTrigger>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-6">
+                <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="pending">Pending</TabsTrigger>
                   <TabsTrigger value="confirmed">Upcoming</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
-                  <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+                <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
                   {isProvider && <TabsTrigger value="rejected">Rejected</TabsTrigger>}
-                </TabsList>
+              </TabsList>
 
-                <TabsContent value={activeTab} className="space-y-4">
-                  {filteredBookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="font-medium mb-2">No bookings found</h3>
-                      <p className="text-muted-foreground">
-                        {activeTab === 'all' 
-                          ? 'You don\'t have any bookings yet'
-                          : `No ${activeTab} bookings`
-                        }
-                      </p>
-                    </div>
-                  ) : (
-                    filteredBookings.map((booking) => (
-                      <Card key={booking.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row md:items-center gap-4">
-                            {/* Left Section */}
-                            <div className="flex-1 space-y-3">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-medium">{booking.service}</h3>
-                                    <Badge className={getStatusColor(booking.status)}>
-                                      {getStatusIcon(booking.status)}
-                                      <span className="ml-1 capitalize">{booking.status}</span>
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">
+              <TabsContent value={activeTab} className="space-y-4">
+                {filteredBookings.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="font-medium mb-2">No bookings found</h3>
+                    <p className="text-muted-foreground">
+                      {activeTab === 'all' 
+                        ? 'You don\'t have any bookings yet'
+                        : `No ${activeTab} bookings`
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  filteredBookings.map((booking) => (
+                    <Card key={booking.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                          {/* Left Section */}
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-medium">{booking.service}</h3>
+                                  <Badge className={getStatusColor(booking.status)}>
+                                    {getStatusIcon(booking.status)}
+                                    <span className="ml-1 capitalize">{booking.status}</span>
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
                                     {isProvider ? 'Customer: ' : 'Provider: '}
-                                    {booking.customer || booking.provider}
-                                  </p>
-                                </div>
-                                <p className="font-medium text-lg">{booking.amount}</p>
+                                  {booking.customer || booking.provider}
+                                </p>
                               </div>
-
-                              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="w-4 h-4" />
-                                  {booking.date}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
-                                  {booking.time}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-4 h-4" />
-                                  {booking.location}
-                                </div>
-                              </div>
-
-                              {booking.rating && (
-                                <div className="flex items-center gap-1">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      className={`w-4 h-4 ${
-                                        i < booking.rating!
-                                          ? 'fill-yellow-400 text-yellow-400'
-                                          : 'text-gray-300'
-                                      }`}
-                                    />
-                                  ))}
-                                  <span className="text-sm text-muted-foreground ml-2">
-                                    {booking.rating}.0
-                                  </span>
-                                </div>
-                              )}
+                              <p className="font-medium text-lg">{booking.amount}</p>
                             </div>
 
-                            {/* Right Section - Actions */}
-                            <div className="flex md:flex-col gap-2">
+                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {booking.date}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                {booking.time}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                {booking.location}
+                              </div>
+                            </div>
+
+                            {booking.rating && (
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < booking.rating!
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-300'
+                                    }`}
+                                  />
+                                ))}
+                                <span className="text-sm text-muted-foreground ml-2">
+                                  {booking.rating}.0
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right Section - Actions */}
+                          <div className="flex md:flex-col gap-2">
                               {/* Provider actions for pending bookings */}
                               {isProvider && booking.status === 'pending' && (
                                 <>
@@ -334,21 +334,21 @@ export default function BookingsPage() {
                               
                               {/* Customer actions */}
                               {!isProvider && (booking.status === 'confirmed' || booking.status === 'pending') && (
-                                <>
+                              <>
                                   {booking.booking?.provider?.user?.phone && (
                                     <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
                                       <a href={`tel:${booking.booking.provider.user.phone}`}>
-                                        <Phone className="w-4 h-4 md:mr-2" />
-                                        <span className="hidden md:inline">Call</span>
+                                  <Phone className="w-4 h-4 md:mr-2" />
+                                  <span className="hidden md:inline">Call</span>
                                       </a>
-                                    </Button>
+                                </Button>
                                   )}
                                   <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
                                     <Link to={`/messages?provider=${booking.booking?.providerId}`}>
-                                      <MessageSquare className="w-4 h-4 md:mr-2" />
-                                      <span className="hidden md:inline">Message</span>
+                                  <MessageSquare className="w-4 h-4 md:mr-2" />
+                                  <span className="hidden md:inline">Message</span>
                                     </Link>
-                                  </Button>
+                                </Button>
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
@@ -370,38 +370,38 @@ export default function BookingsPage() {
                                         <Phone className="w-4 h-4 md:mr-2" />
                                         <span className="hidden md:inline">Call</span>
                                       </a>
-                                    </Button>
-                                  )}
+                                  </Button>
+                                )}
                                   <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
                                     <Link to={`/messages?user=${booking.booking?.userId}`}>
                                       <MessageSquare className="w-4 h-4 md:mr-2" />
                                       <span className="hidden md:inline">Message</span>
                                     </Link>
                                   </Button>
-                                </>
-                              )}
+                              </>
+                            )}
                               
                               {booking.status === 'completed' && !booking.rating && !isProvider && (
                                 <Button size="sm" className="flex-1 md:flex-none" asChild>
                                   <Link to={`/provider/${booking.booking?.providerId}`}>
-                                    <Star className="w-4 h-4 md:mr-2" />
-                                    <span className="hidden md:inline">Rate Service</span>
+                                <Star className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">Rate Service</span>
                                   </Link>
-                                </Button>
-                              )}
+                              </Button>
+                            )}
                               <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
                                 <Link to={`/bookings/${booking.id}`}>
-                                  View Details
+                              View Details
                                 </Link>
-                              </Button>
-                            </div>
+                            </Button>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </TabsContent>
-              </Tabs>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
             )}
           </CardContent>
         </Card>

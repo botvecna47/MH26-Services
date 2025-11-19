@@ -6,13 +6,16 @@ This directory contains all documentation for the MH26 Services Marketplace Plat
 
 ## 📚 Main Documentation
 
+### Project Management & Progress
+- **[DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)** - Detailed development progress log (Aug 20 - Sept 19, 2025)
+- **[AGILE_PROJECT_DOCUMENTATION.md](./AGILE_PROJECT_DOCUMENTATION.md)** - Agile methodology documentation, user stories, and sprint tracking
+
 ### Core Documentation
 - **[SRS.md](./SRS.md)** - Software Requirements Specification
 - **[UML_DIAGRAMS.md](./UML_DIAGRAMS.md)** - All UML diagrams (Use Cases, Class, Sequence, etc.)
 - **[PRODUCTION_READINESS_CHECKLIST.md](./PRODUCTION_READINESS_CHECKLIST.md)** - Production deployment checklist
-- **[ACTION_PLAN.md](./ACTION_PLAN.md)** - Immediate action items and priorities
-- **[ADDITIONAL_TASKS.md](./ADDITIONAL_TASKS.md)** - Additional tasks for production readiness
 - **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** - Current implementation status
+- **[COMPLETED_TASKS.md](./COMPLETED_TASKS.md)** - Completed tasks log
 
 ### Server Documentation
 - **[server/README.md](./server/README.md)** - Backend API documentation
@@ -74,14 +77,27 @@ docs/
 
 | Document | Status | Last Updated |
 |----------|--------|--------------|
-| SRS.md | ✅ Complete | 2024 |
-| UML_DIAGRAMS.md | ✅ Complete | 2024 |
-| PRODUCTION_READINESS_CHECKLIST.md | ✅ Active | 2024 |
-| ACTION_PLAN.md | ✅ Active | 2024 |
-| ADDITIONAL_TASKS.md | ✅ Active | 2024 |
-| IMPLEMENTATION_STATUS.md | ✅ Active | 2024 |
+| DEVELOPMENT_PROGRESS.md | ✅ Complete | Sept 19, 2025 |
+| AGILE_PROJECT_DOCUMENTATION.md | ✅ Complete | Sept 19, 2025 |
+| SRS.md | ✅ Complete | 2025 |
+| UML_DIAGRAMS.md | ✅ Complete | 2025 |
+| PRODUCTION_READINESS_CHECKLIST.md | ✅ Active | 2025 |
+| IMPLEMENTATION_STATUS.md | ✅ Active | 2025 |
+| COMPLETED_TASKS.md | ✅ Active | 2025 |
 
 ---
 
-**Last Updated**: 2024  
+## 📊 Development Methodology
+
+This project follows **Agile (Scrum-based)** methodology with:
+- **Sprint Duration**: 2 weeks
+- **Development Period**: August 20 - September 19, 2025
+- **Total Sprints**: 3 sprints
+- **Project Status**: ~85% Complete
+
+For detailed sprint breakdown, user stories, and velocity tracking, see [AGILE_PROJECT_DOCUMENTATION.md](./AGILE_PROJECT_DOCUMENTATION.md).
+
+---
+
+**Last Updated**: September 19, 2025  
 **Maintained by**: Development Team

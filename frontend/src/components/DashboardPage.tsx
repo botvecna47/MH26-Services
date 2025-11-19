@@ -84,32 +84,32 @@ export default function DashboardPage() {
                     <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                   </div>
                 ) : (
-                  <>
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600">Total Users</span>
-                        <Users className="h-5 w-5 text-blue-600" />
-                      </div>
+                <>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Total Users</span>
+                      <Users className="h-5 w-5 text-blue-600" />
+                    </div>
                       <div className="text-gray-900">{analyticsData?.stats?.totalUsers || 0}</div>
                       <p className="text-xs text-green-600 mt-1">Active users</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Total Providers</span>
+                      <TrendingUp className="h-5 w-5 text-purple-600" />
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600">Total Providers</span>
-                        <TrendingUp className="h-5 w-5 text-purple-600" />
-                      </div>
                       <div className="text-gray-900">{analyticsData?.stats?.totalProviders || 0}</div>
                       <p className="text-xs text-green-600 mt-1">Approved providers</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Revenue</span>
+                      <DollarSign className="h-5 w-5 text-green-600" />
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600">Revenue</span>
-                        <DollarSign className="h-5 w-5 text-green-600" />
-                      </div>
                       <div className="text-gray-900">₹{(analyticsData?.stats?.totalRevenue || 0).toLocaleString('en-IN')}</div>
                       <p className="text-xs text-green-600 mt-1">Total revenue</p>
-                    </div>
-                  </>
+                  </div>
+                </>
                 )
               ) : isProvider ? (
                 <>
@@ -229,8 +229,8 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex gap-2">
                           <Link to={`/invoices?bookingId=${booking.id}`}>
-                            <Button variant="ghost" size="sm">View Invoice</Button>
-                          </Link>
+                              <Button variant="ghost" size="sm">View Invoice</Button>
+                            </Link>
                           <Button variant="outline" size="sm">View Details</Button>
                         </div>
                       </div>
