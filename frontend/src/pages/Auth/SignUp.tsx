@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { axiosClient } from '../../api/axiosClient';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
-import Input from '../../components/ui/Input';
+import { Input } from '../../components/ui/input';
 import { Eye, EyeOff, Mail } from 'lucide-react';
 
 const signUpSchema = z.object({

@@ -8,7 +8,7 @@ import { ProfilePictureUpload } from '../components/ProfilePictureUpload';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from '../api/axiosClient';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/Input';
+import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';

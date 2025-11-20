@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/button';
-import Input from '../../components/ui/Input';
+import { Input } from '../../components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 
 const signInSchema = z.object({
