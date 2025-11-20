@@ -76,16 +76,36 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
         return;
       }
       
+      // Ensure totalAmount is a proper number
+      const finalTotalAmount = typeof totalAmount === 'string' 
+        ? parseFloat(totalAmount) 
+        : typeof totalAmount === 'number' 
+        ? totalAmount 
+        : Number(totalAmount);
+      
+      if (isNaN(finalTotalAmount) || finalTotalAmount <= 0) {
+        toast.error('Invalid service price. Please select a service.');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const bookingData = {
         providerId: provider.id,
         serviceId: selectedServiceId,
         scheduledAt: scheduledAt.toISOString(),
-        totalAmount: Number(totalAmount),
+        totalAmount: finalTotalAmount,
         address: address.trim(),
         ...(requirements?.trim() && { requirements: requirements.trim() }),
       };
       
       console.log('Creating booking with data:', bookingData);
+      console.log('Data types:', {
+        providerId: typeof bookingData.providerId,
+        serviceId: typeof bookingData.serviceId,
+        scheduledAt: typeof bookingData.scheduledAt,
+        totalAmount: typeof bookingData.totalAmount,
+        address: typeof bookingData.address,
+      });
       
       await createBooking.mutateAsync(bookingData);
 
