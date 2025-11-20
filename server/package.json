@@ -12,6 +12,7 @@
     "migrate:reset": "prisma migrate reset",
     "generate": "prisma generate",
     "seed": "ts-node prisma/seed.ts",
+    "fix-services": "ts-node prisma/fix-service-ids.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "jest --config jest.e2e.config.js",
