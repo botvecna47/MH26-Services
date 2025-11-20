@@ -36,6 +36,18 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
   const [requirements, setRequirements] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Log provider data when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      console.log('BookingModal opened with provider:', {
+        providerId: provider.id,
+        businessName: provider.businessName,
+        services: provider.services,
+        serviceIds: provider.services.map(s => ({ id: s.id, title: s.title })),
+      });
+    }
+  }, [isOpen, provider]);
+
   const selectedService = provider.services.find(s => s.id === selectedServiceId);
   const totalAmount = selectedService ? Number(selectedService.price) : 0;
 
@@ -194,7 +206,10 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                 <button
                   key={service.id}
                   type="button"
-                  onClick={() => setSelectedServiceId(service.id)}
+                  onClick={() => {
+                    console.log('Service selected:', { id: service.id, title: service.title });
+                    setSelectedServiceId(service.id);
+                  }}
                   className={`w-full p-4 border-2 rounded-lg text-left transition-colors ${
                     selectedServiceId === service.id
                       ? 'border-[#ff6b35] bg-orange-50 text-gray-900'
