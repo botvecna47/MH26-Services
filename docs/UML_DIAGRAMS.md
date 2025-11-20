@@ -2186,6 +2186,43 @@ erDiagram
     BOOKING ||--o| REVIEW : generates
 ```
 
+### 10.10 Simplified Collaboration Diagram - Booking Flow
+
+A simplified collaboration diagram showing the key object interactions during the booking creation process, suitable for academic reports.
+
+```mermaid
+graph LR
+    Customer[Customer] -->|1: Book Service| BookingUI[Booking UI]
+    BookingUI -->|2: Validate Form| BookingUI
+    BookingUI -->|3: POST /api/bookings| API[API Client]
+    API -->|4: Send Request| Backend[Backend Server]
+    Backend -->|5: Authenticate| Auth[Auth Middleware]
+    Auth -->|6: Validate Token| Auth
+    Backend -->|7: Create Booking| Controller[Booking Controller]
+    Controller -->|8: Validate Provider| Service[Booking Service]
+    Service -->|9: Query Database| Database[(Database)]
+    Database -->|10: Return Provider| Service
+    Service -->|11: Calculate Fees| Service
+    Controller -->|12: Save Booking| Database
+    Database -->|13: Return Booking| Controller
+    Controller -->|14: Create Notification| Notification[Notification Service]
+    Notification -->|15: Save Notification| Database
+    Controller -->|16: Return Response| Backend
+    Backend -->|17: Return JSON| API
+    API -->|18: Update UI| BookingUI
+    BookingUI -->|19: Show Success| Customer
+    
+    style Customer fill:#E8F5E9
+    style BookingUI fill:#E3F2FD
+    style API fill:#E3F2FD
+    style Backend fill:#FFF3E0
+    style Auth fill:#FFF3E0
+    style Controller fill:#FFF3E0
+    style Service fill:#FFF3E0
+    style Database fill:#F3E5F5
+    style Notification fill:#FFF3E0
+```
+
 ---
 
 ---
@@ -2208,9 +2245,9 @@ This document contains the following UML diagrams:
 | Package Diagram | Section 10 | ✅ Complete |
 | Communication Diagram | Section 11 | ✅ Complete (2 diagrams) |
 | Collaboration Diagrams | Section 12 | ✅ Complete (4 diagrams) |
-| Simplified Diagrams | Section 13 | ✅ Complete (9 diagrams) |
+| Simplified Diagrams | Section 13 | ✅ Complete (10 diagrams) |
 
-**Total Diagrams**: 30+ diagrams covering all aspects of the system.
+**Total Diagrams**: 35+ diagrams covering all aspects of the system.
 
 ---
 
