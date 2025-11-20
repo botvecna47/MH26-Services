@@ -170,6 +170,8 @@ export default function Settings() {
                     <Input
                       id="phone"
                       type="tel"
+                      autoComplete="tel"
+                      inputMode="numeric"
                       value={profileData.phone || ''}
                       onChange={(e) => {
                         // Only allow digits, max 10 digits

@@ -184,6 +184,8 @@ export default function SignUp() {
                 <Input
                   label="Phone Number"
                   type="tel"
+                  autoComplete="tel"
+                  inputMode="numeric"
                   {...register('phone')}
                   error={errors.phone?.message}
                   placeholder="9876543210"

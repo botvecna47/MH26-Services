@@ -216,6 +216,8 @@ export function ProfilePage({ user, userRole }: ProfilePageProps) {
                       <Input 
                         id="phone" 
                         type="tel"
+                        autoComplete="tel"
+                        inputMode="numeric"
                         defaultValue="+91 9876543210"
                         placeholder="Enter phone number"
                       />
