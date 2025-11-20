@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import PhoneRevealModal from './PhoneRevealModal';
 import ReportProviderModal from './ReportProviderModal';
 import ReviewsList from './ReviewsList';
+// Import BookingModal with explicit default import
 import BookingModal from './BookingModal';
 import { Loader2 } from 'lucide-react';
 import { providersApi } from '../api/providers';
