@@ -99,10 +99,24 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       setRequirements('');
     } catch (error: any) {
       console.error('Booking creation error:', error);
-      const errorMessage = error.response?.data?.details 
-        ? error.response.data.details.map((d: any) => d.message).join(', ')
-        : error.response?.data?.error || 'Failed to create booking';
-      toast.error(errorMessage);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Failed to create booking';
+      
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        // Show all validation errors
+        const errors = error.response.data.details.map((d: any) => {
+          const field = d.path?.replace('body.', '') || 'field';
+          return `${field}: ${d.message}`;
+        });
+        errorMessage = errors.join('\n');
+        toast.error(errorMessage, { duration: 5000 });
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+        toast.error(errorMessage);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }

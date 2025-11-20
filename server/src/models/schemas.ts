@@ -71,16 +71,7 @@ export const createBookingSchema = z.object({
       (val) => !isNaN(Date.parse(val)),
       { message: 'Invalid date format. Use ISO 8601 format.' }
     ),
-    totalAmount: z.preprocess(
-      (val) => {
-        if (typeof val === 'string') {
-          const num = Number(val);
-          return isNaN(num) ? val : num;
-        }
-        return val;
-      },
-      z.number().positive('Amount must be a positive number')
-    ),
+    totalAmount: z.coerce.number().positive('Amount must be a positive number'),
     address: z.string().min(10, 'Address must be at least 10 characters').optional(),
     requirements: z.string().optional(),
   }),
