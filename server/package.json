@@ -16,7 +16,7 @@
     "test:watch": "jest --watch",
     "test:e2e": "jest --config jest.e2e.config.js",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",
