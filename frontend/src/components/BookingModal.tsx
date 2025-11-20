@@ -53,17 +53,36 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       return;
     }
 
+    // Validate address length
+    if (address.trim().length < 10) {
+      toast.error('Address must be at least 10 characters long');
+      return;
+    }
+
+    // Validate total amount
+    if (!totalAmount || totalAmount <= 0) {
+      toast.error('Invalid service price');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const scheduledAt = new Date(`${selectedDate}T${selectedTime}:00`);
+      
+      // Validate date is in the future
+      if (scheduledAt < new Date()) {
+        toast.error('Please select a future date and time');
+        setIsSubmitting(false);
+        return;
+      }
       
       await createBooking.mutateAsync({
         providerId: provider.id,
         serviceId: selectedServiceId,
         scheduledAt: scheduledAt.toISOString(),
-        totalAmount,
-        address,
-        requirements: requirements || undefined,
+        totalAmount: Number(totalAmount),
+        address: address.trim(),
+        requirements: requirements?.trim() || undefined,
       });
 
       toast.success('Booking created successfully!');
@@ -75,7 +94,11 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       setAddress('');
       setRequirements('');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to create booking');
+      console.error('Booking creation error:', error);
+      const errorMessage = error.response?.data?.details 
+        ? error.response.data.details.map((d: any) => d.message).join(', ')
+        : error.response?.data?.error || 'Failed to create booking';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

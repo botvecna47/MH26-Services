@@ -67,8 +67,18 @@ export const createBookingSchema = z.object({
   body: z.object({
     providerId: z.string().uuid('Invalid provider ID'),
     serviceId: z.string().uuid('Invalid service ID'),
-    scheduledAt: z.string().datetime('Invalid date format'),
-    totalAmount: z.number().positive('Amount must be positive'),
+    scheduledAt: z.string().refine(
+      (val) => !isNaN(Date.parse(val)),
+      { message: 'Invalid date format. Use ISO 8601 format.' }
+    ),
+    totalAmount: z.union([
+      z.number().positive('Amount must be positive'),
+      z.string().transform((val) => {
+        const num = Number(val);
+        if (isNaN(num) || num <= 0) throw new Error('Amount must be a positive number');
+        return num;
+      })
+    ]),
     address: z.string().min(10, 'Address must be at least 10 characters').optional(),
     requirements: z.string().optional(),
   }),
@@ -120,16 +130,6 @@ export const createServiceSchema = z.object({
   }),
 });
 
-// Booking Schemas
-export const createBookingSchema = z.object({
-  body: z.object({
-    providerId: z.string().uuid('Invalid provider ID'),
-    serviceId: z.string().uuid('Invalid service ID'),
-    scheduledAt: z.string().datetime('Invalid date format'),
-    address: z.string().min(10, 'Address is required'),
-    requirements: z.string().optional(),
-  }),
-});
 
 export const updateBookingStatusSchema = z.object({
   params: z.object({
