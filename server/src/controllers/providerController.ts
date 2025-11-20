@@ -5,7 +5,6 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { AppError } from '../middleware/errorHandler';
-import { generatePresignedUploadUrl } from '../config/s3';
 import { generateSecureToken } from '../utils/security';
 
 export const providerController = {
@@ -162,11 +161,15 @@ export const providerController = {
   },
 
   /**
-   * Upload document (get presigned URL)
+   * Upload document (local storage)
    */
   async uploadDocument(req: AuthRequest, res: Response): Promise<void> {
     const { id } = req.params;
-    const { type, filename, contentType } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      throw new AppError('No file uploaded', 400);
+    }
 
     const provider = await prisma.provider.findUnique({
       where: { id },
@@ -176,23 +179,36 @@ export const providerController = {
       throw new AppError('Unauthorized', 403);
     }
 
-    const key = `providers/${id}/documents/${type}/${Date.now()}-${filename}`;
-    const presignedUrl = await generatePresignedUploadUrl(key, contentType);
+    // Save file to local storage
+    const fs = await import('fs');
+    const path = await import('path');
+    const uploadsDir = path.join(process.cwd(), 'server', 'uploads', 'documents', id);
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
 
-    // Create placeholder document record
+    const fileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, file.buffer);
+    
+    const url = `/uploads/documents/${id}/${fileName}`;
+    const documentType = req.body.type || 'document';
+
+    // Create document record
     const document = await prisma.providerDocument.create({
       data: {
         providerId: id,
-        type,
-        url: key, // Store S3 key, not full URL
-        filename,
+        type: documentType,
+        url,
+        filename: file.originalname,
       },
     });
 
     res.json({
       documentId: document.id,
-      presignedUrl,
-      key,
+      url,
+      filename: file.originalname,
     });
   },
 

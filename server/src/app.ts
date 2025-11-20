@@ -76,7 +76,7 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve uploaded files (if using local storage - FREE alternative to S3)
+// Serve uploaded files (local storage)
 // Add CORS headers for image serving
 app.use('/uploads', (req, res, next) => {
   // Set CORS headers for image requests

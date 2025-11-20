@@ -7,7 +7,7 @@ import logger from '../config/logger';
 
 // Create transporter (configure based on environment)
 const createTransporter = () => {
-  // In production, use SMTP service (SendGrid, AWS SES, etc.)
+  // In production, use SMTP service (SendGrid, etc.)
   if (process.env.NODE_ENV === 'production') {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,

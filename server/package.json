@@ -17,13 +17,11 @@
     "test:e2e": "jest --config jest.e2e.config.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "setup-cors": "ts-node scripts/setup-s3-cors.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "@react-pdf/renderer": "^3.4.0",
     "@types/nodemailer": "^7.0.3",
-    "aws-sdk": "^2.1519.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

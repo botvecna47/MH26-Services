@@ -9,20 +9,15 @@ const BACKEND_BASE_URL = API_BASE_URL.replace('/api', '');
 /**
  * Normalize image URL
  * If URL starts with /uploads, prefix with backend URL
- * Handles old S3 URLs by converting them to local paths if possible
- * Otherwise return as-is (for external URLs like S3, CDN, etc.)
+ * Otherwise return as-is (for external URLs like CDN, etc.)
  */
 export function normalizeImageUrl(url: string | null | undefined): string {
   if (!url) {
     return '';
   }
 
-  // If it's already a full URL (http/https), check if it's a broken S3 URL
+  // If it's already a full URL (http/https), return as-is
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    // Check if it's an old S3 URL that might not work
-    // If S3 is not configured, these URLs will fail
-    // For now, return as-is and let the image component handle the error
-    // In the future, we could extract the key and convert to local path
     return url;
   }
 

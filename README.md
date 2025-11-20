@@ -66,7 +66,7 @@
 ### 👥 User Management
 
 - **Profile Management**:
-  - Profile picture upload (S3 integration)
+  - Profile picture upload (local storage)
   - Update name, phone, and other details
   - Account information display
   - Role-specific information display
@@ -237,12 +237,12 @@
 ### 📁 File Management
 
 - **File Upload**:
-  - S3 presigned URL generation
+  - File upload handling
   - Document upload (provider documents)
   - Profile picture upload
   - Image validation (type and size)
 - **File Storage**:
-  - AWS S3 integration
+  - Local file storage
   - Secure file access
   - File preview functionality
 
@@ -275,7 +275,7 @@
   - Secure file upload with validation
 - **Data Protection**:
   - Environment variable validation
-  - Secure file uploads (local storage with S3 fallback)
+  - Secure file uploads (local storage)
   - Audit logging for admin actions
   - Privacy controls (phone visibility)
 
@@ -337,14 +337,13 @@
 | **Bcrypt** | 5.1.1 | Password Hashing |
 | **Winston** | 3.11.0 | Logging Library |
 | **Zod** | 3.22.4 | Schema Validation |
-| **AWS SDK** | 2.1519.0 | S3 Integration |
 | **Nodemailer** | Latest | Email Service |
 
 ### Infrastructure & Tools
 
 - **Database**: PostgreSQL 14+
 - **Cache**: Redis 6+
-- **Storage**: AWS S3 (or S3-compatible)
+- **Storage**: Local file storage
 - **Email**: SMTP (Nodemailer)
 - **Version Control**: Git
 - **Package Manager**: npm
@@ -424,7 +423,6 @@ mh26-services/
 │   │   ├── config/         # Configuration files
 │   │   │   ├── db.ts
 │   │   │   ├── redis.ts
-│   │   │   ├── s3.ts
 │   │   │   ├── logger.ts
 │   │   │   └── validateEnv.ts
 │   │   ├── controllers/     # Request handlers
@@ -548,11 +546,7 @@ CORS_ORIGIN=http://localhost:5173
 # Redis
 REDIS_URL="redis://localhost:6379"
 
-# AWS S3 (optional, for file uploads)
-AWS_ACCESS_KEY_ID=""
-AWS_SECRET_ACCESS_KEY=""
-AWS_REGION="ap-south-1"
-AWS_S3_BUCKET=""
+# File uploads use local storage (no configuration needed)
 
 # Email (required for OTP verification during registration)
 # See docs/EMAIL_SETUP.md or QUICK_EMAIL_SETUP.md for setup instructions
@@ -623,7 +617,7 @@ See `docs/SEEDED_CREDENTIALS.md` for test accounts after running the seed script
 - **[Email Setup Guide](./docs/EMAIL_SETUP.md)** - Detailed email configuration instructions
 - **[Quick Email Setup](./QUICK_EMAIL_SETUP.md)** - Quick guide for Gmail SMTP setup
 - **[Security Improvements](./SECURITY_IMPROVEMENTS.md)** - Security enhancements documentation
-- **[Free Storage Setup](./FREE_STORAGE_SETUP.md)** - Local file storage guide (no AWS required)
+- **File Storage**: Uses local storage by default (no external services required)
 
 ### API Documentation
 

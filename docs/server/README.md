@@ -9,7 +9,6 @@ Production-ready backend for MH26 Services marketplace built with Node.js, TypeS
 - Node.js 18+
 - PostgreSQL 14+
 - Redis 6+
-- AWS S3 (or S3-compatible storage)
 
 ### Installation
 
@@ -63,7 +62,7 @@ server/
 │   ├── schema.prisma      # Database schema
 │   └── seed.ts           # Seed script
 ├── src/
-│   ├── config/           # Configuration (DB, Redis, S3, Logger)
+│   ├── config/           # Configuration (DB, Redis, Logger)
 │   ├── middleware/       # Express middleware (auth, validation, rate limit)
 │   ├── routes/           # API routes
 │   ├── controllers/      # Route handlers
@@ -85,9 +84,6 @@ See `.env.example` for all required variables:
 - `JWT_ACCESS_SECRET` - JWT access token secret
 - `JWT_REFRESH_SECRET` - JWT refresh token secret
 - `REDIS_URL` - Redis connection URL
-- `AWS_ACCESS_KEY_ID` - AWS S3 access key
-- `AWS_SECRET_ACCESS_KEY` - AWS S3 secret key
-- `AWS_S3_BUCKET` - S3 bucket name
 - `RAZORPAY_KEY_ID` - Razorpay key ID
 - `RAZORPAY_KEY_SECRET` - Razorpay key secret
 
@@ -214,7 +210,6 @@ See `infra/` directory for deployment scripts and configurations.
 - [ ] Set strong JWT secrets
 - [ ] Configure production database
 - [ ] Set up Redis
-- [ ] Configure S3 bucket
 - [ ] Set up Razorpay production keys
 - [ ] Configure CORS origins
 - [ ] Set up monitoring (Sentry)

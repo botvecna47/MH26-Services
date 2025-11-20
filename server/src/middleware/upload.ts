@@ -27,7 +27,7 @@ const fileFilter = (
 };
 
 export const upload = multer({
-  storage: multer.memoryStorage(), // Store in memory for S3 upload
+  storage: multer.memoryStorage(), // Store in memory for file upload
   fileFilter,
   limits: {
     fileSize: MAX_FILE_SIZE,

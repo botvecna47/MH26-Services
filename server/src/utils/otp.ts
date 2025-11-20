@@ -77,7 +77,7 @@ export async function verifyOTP(phone: string, otp: string): Promise<boolean> {
  * Send OTP via SMS (placeholder - implement with actual SMS service)
  */
 export async function sendOTP(phone: string, otp: string): Promise<void> {
-  // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
+  // TODO: Integrate with SMS service (Twilio, etc.)
   // For now, just log
   logger.info('OTP would be sent via SMS:', {
     phone,

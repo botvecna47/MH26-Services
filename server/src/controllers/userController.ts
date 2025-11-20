@@ -125,67 +125,22 @@ export const userController = {
         return;
       }
 
-      const key = `users/${userId}/avatar/${Date.now()}-${file.originalname}`;
-
-      // Upload to S3 (if configured) or use local storage
-      let url: string;
+      // Upload to local storage
+      const fs = await import('fs');
+      const path = await import('path');
+      const uploadsDir = path.join(process.cwd(), 'server', 'uploads', 'avatars');
       
-      if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET) {
-        // Upload to S3/MinIO
-        try {
-          const s3Module = await import('../config/s3');
-          const s3 = s3Module.default;
-          const bucketName = s3Module.S3_BUCKET;
-          
-          await s3.putObject({
-            Bucket: bucketName,
-            Key: key,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-            ACL: 'private',
-          }).promise();
-
-          // Generate URL for access
-          if (process.env.AWS_S3_ENDPOINT) {
-            // MinIO or custom endpoint
-            url = `${process.env.AWS_S3_ENDPOINT}/${bucketName}/${key}`;
-          } else {
-            // AWS S3
-            url = `https://${bucketName}.s3.${process.env.AWS_REGION || 'ap-south-1'}.amazonaws.com/${key}`;
-          }
-        } catch (s3Error) {
-          logger.warn('S3 upload failed, falling back to local storage:', s3Error);
-          // Fall through to local storage
-          const fs = await import('fs');
-          const path = await import('path');
-          const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
-          
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-          }
-
-          const fileName = `${userId}-${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          const filePath = path.join(uploadsDir, fileName);
-          fs.writeFileSync(filePath, file.buffer);
-          url = `/uploads/avatars/${fileName}`;
-        }
-      } else {
-        // No S3 configured - use local storage (FREE!)
-        const fs = await import('fs');
-        const path = await import('path');
-        const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
-        
-        // Ensure directory exists
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-
-        const filePath = path.join(uploadsDir, `${userId}-${Date.now()}-${file.originalname}`);
-        fs.writeFileSync(filePath, file.buffer);
-        
-        // Return URL relative to backend (will be served by static middleware)
-        url = `/uploads/avatars/${path.basename(filePath)}`;
+      // Ensure directory exists
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
       }
+
+      const fileName = `${userId}-${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = path.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, file.buffer);
+      
+      // Return URL relative to backend (will be served by static middleware)
+      const url = `/uploads/avatars/${fileName}`;
 
       // Update user profile with new avatar URL
       await prisma.user.update({

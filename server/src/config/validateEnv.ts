@@ -18,11 +18,6 @@ const envSchema = z.object({
   // Optional but recommended
   REDIS_URL: z.string().url().optional(),
   
-  // AWS S3 (required if using file uploads)
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
-  AWS_S3_BUCKET: z.string().optional(),
-  AWS_REGION: z.string().optional(),
   
   // Email Service (required if using email)
   SMTP_HOST: z.string().optional(),
@@ -53,19 +48,6 @@ export function validateEnv(): Env {
     // Additional validation logic
     const warnings: string[] = [];
     const errors: string[] = [];
-    
-    // Check if S3 is configured (all or nothing)
-    const s3Vars = [
-      process.env.AWS_ACCESS_KEY_ID,
-      process.env.AWS_SECRET_ACCESS_KEY,
-      process.env.AWS_S3_BUCKET,
-    ];
-    const s3Configured = s3Vars.every(v => v);
-    const s3Partial = s3Vars.some(v => v);
-    
-    if (s3Partial && !s3Configured) {
-      errors.push('S3 configuration is incomplete. Provide all of: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET');
-    }
     
     // Check if email is configured (all or nothing)
     const emailVars = [
@@ -117,7 +99,6 @@ export function validateEnv(): Env {
       database: '✅',
       jwt: '✅',
       redis: env.REDIS_URL ? '✅' : '⚠️',
-      s3: s3Configured ? '✅' : '❌',
       email: emailConfigured ? '✅' : '❌',
       payment: paymentConfigured ? '✅' : '❌',
     });

@@ -58,7 +58,7 @@ export default function ReportProvider({ providerId, providerName, trigger }: Re
 
     setIsSubmitting(true);
 
-    // In production: Upload files to S3, then submit report
+    // Upload files to server, then submit report
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // TODO: Replace with actual API call
