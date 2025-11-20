@@ -239,42 +239,71 @@ export default function SignUp() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <div className="flex items-start gap-3">
                     <Mail className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm font-medium text-blue-900">Check your email</p>
                       <p className="text-sm text-blue-700 mt-1">
                         We've sent a 6-digit verification code to <strong>{registrationEmail}</strong>
                       </p>
+                      {process.env.NODE_ENV === 'development' && (
+                        <p className="text-xs text-blue-600 mt-2 italic">
+                          💡 Development mode: Check server console for OTP if email is not configured
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <Input
-                  label="Enter Verification Code"
-                  type="text"
-                  maxLength={6}
-                  {...register('otp')}
-                  error={errors.otp?.message}
-                  placeholder="000000"
-                  disabled={isLoading}
-                  className="text-center text-2xl tracking-widest font-mono"
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setValue('otp', value);
-                  }}
-                />
+                <div className="space-y-3">
+                  <Input
+                    label="Enter Verification Code"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    {...register('otp')}
+                    error={errors.otp?.message}
+                    placeholder="000000"
+                    disabled={isLoading}
+                    className="text-center text-2xl tracking-widest font-mono"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setValue('otp', value);
+                    }}
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setRequiresOTP(false);
-                    setValue('otp', '');
-                  }}
-                  className="text-sm text-[#ff6b35] hover:text-[#ff5722] w-full text-center"
-                  disabled={isLoading}
-                >
-                  Change email address
-                </button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await axiosClient.post('/auth/resend-registration-otp', {
+                            email: registrationEmail,
+                          });
+                          toast.success('OTP resent to your email');
+                        } catch (error: any) {
+                          toast.error(error.response?.data?.error || 'Failed to resend OTP');
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="flex-1"
+                    >
+                      Resend OTP
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setOtpSent(false);
+                        setRequiresOTP(false);
+                        setValue('otp', '');
+                      }}
+                      disabled={isLoading}
+                      className="flex-1"
+                    >
+                      Change Email
+                    </Button>
+                  </div>
+                </div>
               </>
             )}
           </div>

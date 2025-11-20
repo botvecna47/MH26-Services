@@ -130,6 +130,75 @@ export const authController = {
   },
 
   /**
+   * Resend registration OTP
+   */
+  async resendRegistrationOTP(req: Request, res: Response): Promise<void> {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new AppError('Email is required', 400);
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new AppError('User with this email already exists', 409);
+    }
+
+    // Check if there's pending registration data and get it
+    const key = `email_otp:${email}`;
+    let registrationData: any = null;
+
+    try {
+      // Try Redis first
+      const { getRedisClient } = await import('../config/redis');
+      const redis = getRedisClient();
+      const data = await redis.get(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        registrationData = parsed.registrationData;
+      }
+    } catch (error) {
+      // Fallback to in-memory - need to access the store directly
+      const { inMemoryOTPStore } = await import('../utils/otp');
+      const stored = inMemoryOTPStore.get(key);
+      if (stored) {
+        registrationData = stored.registrationData;
+      }
+    }
+
+    if (!registrationData) {
+      throw new AppError('No pending registration found. Please start registration again.', 404);
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+
+    // Update OTP in storage (reuse storeEmailOTP logic)
+    await storeEmailOTP(email, otp, registrationData);
+
+    // Send new OTP
+    try {
+      await sendEmailOTP(email, otp);
+      logger.info(`Registration OTP resent to: ${email}`);
+    } catch (error: any) {
+      logger.error('Failed to resend registration OTP email:', error);
+      // Log OTP to console for development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`\n📧 RESEND REGISTRATION OTP for ${email}: ${otp}\n`);
+      }
+    }
+
+    res.json({
+      message: 'OTP resent to your email address',
+      email: email,
+    });
+  },
+
+  /**
    * Verify email OTP and complete registration
    * User is created ONLY after OTP is verified
    */

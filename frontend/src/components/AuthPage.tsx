@@ -457,17 +457,44 @@ export default function AuthPage() {
                         />
                       </div>
                       {errors.otp && <p className="text-sm text-red-500">{errors.otp}</p>}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOtpSent(false);
-                          setRequiresOTP(false);
-                          setFormData(prev => ({ ...prev, otp: '' }));
-                        }}
-                        className="text-xs text-[#ff6b35] hover:text-[#ff5722] w-full text-center"
-                      >
-                        Change email address
-                      </button>
+                      {process.env.NODE_ENV === 'development' && (
+                        <p className="text-xs text-gray-500 italic">
+                          💡 Development mode: Check server console for OTP if email is not configured
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await axiosClient.post('/auth/resend-registration-otp', {
+                                email: formData.email,
+                              });
+                              toast.success('OTP resent to your email');
+                            } catch (error: any) {
+                              toast.error(error.response?.data?.error || 'Failed to resend OTP');
+                            }
+                          }}
+                          disabled={isLoading}
+                          className="flex-1"
+                        >
+                          Resend OTP
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setRequiresOTP(false);
+                            setFormData(prev => ({ ...prev, otp: '' }));
+                          }}
+                          disabled={isLoading}
+                          className="flex-1"
+                        >
+                          Change Email
+                        </Button>
+                      </div>
                     </div>
                   )}
 

@@ -8,11 +8,13 @@ import { authLimiter } from '../middleware/rateLimit';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import { registerSchema, loginSchema, refreshTokenSchema, changePasswordSchema, verifyRegistrationOTPSchema, sendPhoneOTPSchema, verifyPhoneOTPSchema } from '../models/schemas';
+import { z } from 'zod';
 
 const router = Router();
 
 // Public routes
 router.post('/register', authLimiter, validate(registerSchema), asyncHandler(authController.register));
+router.post('/resend-registration-otp', authLimiter, validate(z.object({ body: z.object({ email: z.string().email() }) })), asyncHandler(authController.resendRegistrationOTP));
 router.post('/verify-registration-otp', authLimiter, validate(verifyRegistrationOTPSchema), asyncHandler(authController.verifyRegistrationOTP));
 router.post('/login', authLimiter, validate(loginSchema), asyncHandler(authController.login));
 router.post('/refresh', validate(refreshTokenSchema), asyncHandler(authController.refresh));

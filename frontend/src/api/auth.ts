@@ -83,5 +83,12 @@ export const authApi = {
     });
     return response.data;
   },
+
+  resendRegistrationOTP: async (email: string): Promise<{ message: string; email: string }> => {
+    const response = await axiosClient.post<{ message: string; email: string }>('/auth/resend-registration-otp', {
+      email,
+    });
+    return response.data;
+  },
 };
 

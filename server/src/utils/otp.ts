@@ -5,7 +5,7 @@ import { prisma } from '../config/db';
 import logger from '../config/logger';
 
 // In-memory fallback for OTP storage (if Redis is unavailable)
-const inMemoryOTPStore = new Map<string, { otp: string; registrationData: any; expiresAt: number }>();
+export const inMemoryOTPStore = new Map<string, { otp: string; registrationData: any; expiresAt: number }>();
 
 // Clean up expired entries every 5 minutes
 setInterval(() => {
