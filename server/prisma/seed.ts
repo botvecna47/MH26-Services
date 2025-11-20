@@ -340,6 +340,10 @@ const PROVIDER_DATA = {
 
 async function main() {
   console.log('🌱 Starting seed...');
+  console.log('📝 Credentials will be created:');
+  console.log('   Admin: admin@mh26services.com / admin123');
+  console.log('   Providers: provider1@example.com to provider35@example.com / provider123');
+  console.log('   Customers: customer1@example.com to customer5@example.com / customer123');
 
   // Create admin user
   const adminPassword = await hashPassword('admin123');
@@ -463,7 +467,7 @@ async function main() {
         data: {
           providerId: provider.id,
           type: 'aadhar',
-          url: `https://s3.amazonaws.com/mh26-services-uploads/documents/${provider.id}/aadhar.pdf`,
+          url: `/uploads/documents/${provider.id}/aadhar.pdf`, // Local storage path
           filename: 'aadhar.pdf',
         },
       });
