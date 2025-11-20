@@ -25,6 +25,19 @@ export const verifyRegistrationOTPSchema = z.object({
   }),
 });
 
+export const sendPhoneOTPSchema = z.object({
+  body: z.object({
+    phone: z.string().regex(/^[6-9]\d{9}$/, 'Phone number must be exactly 10 digits starting with 6-9'),
+  }),
+});
+
+export const verifyPhoneOTPSchema = z.object({
+  body: z.object({
+    phone: z.string().regex(/^[6-9]\d{9}$/, 'Phone number must be exactly 10 digits starting with 6-9'),
+    otp: z.string().length(6, 'OTP must be 6 digits'),
+  }),
+});
+
 export const loginSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),

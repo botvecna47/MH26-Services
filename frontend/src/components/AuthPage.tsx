@@ -389,9 +389,15 @@ export default function AuthPage() {
                             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <Input
                               type="tel"
+                              autoComplete="tel"
+                              inputMode="numeric"
                               placeholder="9876543210"
                               value={formData.phone}
-                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              onChange={(e) => {
+                                // Only allow digits
+                                const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                handleInputChange('phone', value);
+                              }}
                               className={`pl-10 h-11 ${errors.phone ? 'border-red-500' : ''}`}
                               disabled={isLoading}
                               maxLength={10}

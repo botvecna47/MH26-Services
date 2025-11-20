@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, DollarSign, User, Phone, Mail } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, DollarSign, User, Phone, Mail, CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useUser } from '../context/UserContext';
 import { useCreateBooking } from '../api/bookings';
+import { authApi } from '../api/auth';
+import { validateAddress } from '../utils/addressValidation';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -35,6 +37,13 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
   const [address, setAddress] = useState('');
   const [requirements, setRequirements] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [phoneOTP, setPhoneOTP] = useState('');
+  const [showOTPInput, setShowOTPInput] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOTP, setSendingOTP] = useState(false);
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
 
   // Log provider data when modal opens
   useEffect(() => {
@@ -87,9 +96,19 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       return;
     }
 
-    // Validate address length
-    if (address.trim().length < 10) {
-      toast.error('Address must be at least 10 characters long');
+    // Validate address
+    const addressValidation = validateAddress(address);
+    if (!addressValidation.isValid) {
+      setAddressError(addressValidation.errors[0]);
+      toast.error(addressValidation.errors[0] || 'Please enter a valid address');
+      return;
+    }
+    setAddressError(null);
+
+    // Check if phone is verified (if user has phone)
+    if (user?.phone && !phoneVerified && !showOTPInput) {
+      setShowOTPInput(true);
+      toast.info('Please verify your phone number to continue');
       return;
     }
 
@@ -288,6 +307,92 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
             </div>
           </div>
 
+          {/* Phone OTP Verification */}
+          {showOTPInput && user?.phone && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-blue-600" />
+                <h3 className="font-semibold text-gray-900">Verify Phone Number</h3>
+              </div>
+              <p className="text-sm text-gray-700">
+                We'll send an OTP to {user.phone.substring(0, 3)}****{user.phone.substring(7)}
+              </p>
+              {!otpSent ? (
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    if (!user.phone) return;
+                    setSendingOTP(true);
+                    try {
+                      await authApi.sendPhoneOTP(user.phone);
+                      setOtpSent(true);
+                      toast.success('OTP sent to your phone number');
+                    } catch (error: any) {
+                      toast.error(error.response?.data?.error || 'Failed to send OTP');
+                    } finally {
+                      setSendingOTP(false);
+                    }
+                  }}
+                  disabled={sendingOTP}
+                  className="w-full"
+                >
+                  {sendingOTP ? 'Sending...' : 'Send OTP'}
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter 6-digit OTP"
+                    value={phoneOTP}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setPhoneOTP(value);
+                    }}
+                    maxLength={6}
+                    className="w-full"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        if (!user.phone || phoneOTP.length !== 6) {
+                          toast.error('Please enter a valid 6-digit OTP');
+                          return;
+                        }
+                        setVerifyingOTP(true);
+                        try {
+                          await authApi.verifyPhoneOTP(user.phone, phoneOTP);
+                          setPhoneVerified(true);
+                          setShowOTPInput(false);
+                          toast.success('Phone number verified successfully');
+                        } catch (error: any) {
+                          toast.error(error.response?.data?.error || 'Invalid OTP');
+                        } finally {
+                          setVerifyingOTP(false);
+                        }
+                      }}
+                      disabled={verifyingOTP || phoneOTP.length !== 6}
+                      className="flex-1"
+                    >
+                      {verifyingOTP ? 'Verifying...' : 'Verify OTP'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setOtpSent(false);
+                        setPhoneOTP('');
+                      }}
+                    >
+                      Resend
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -296,12 +401,29 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
             </label>
             <textarea
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                // Clear error when user types
+                if (addressError) {
+                  setAddressError(null);
+                }
+              }}
               required
               rows={3}
-              placeholder="Enter complete address where service is needed"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b35] focus:border-[#ff6b35]"
+              placeholder="Enter complete address with street, area, city, and pincode (e.g., 123 Main Street, Shivaji Nagar, Nanded, 431601)"
+              className={`w-full px-3 py-2 border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b35] focus:border-[#ff6b35] ${
+                addressError ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {addressError && (
+              <p className="text-sm text-red-500 mt-1">{addressError}</p>
+            )}
+            {address && !addressError && validateAddress(address).isValid && (
+              <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                <CheckCircle className="h-4 w-4" />
+                Address looks valid
+              </p>
+            )}
           </div>
 
           {/* Requirements */}

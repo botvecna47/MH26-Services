@@ -8,7 +8,7 @@ import { hashPassword, verifyPassword } from '../utils/security';
 import { generateAccessToken, generateRefreshToken, revokeRefreshToken, isRefreshTokenValid } from '../utils/jwt';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { generateSecureToken } from '../utils/security';
-import { generateOTP, storeEmailOTP, verifyEmailOTP, sendEmailOTP } from '../utils/otp';
+import { generateOTP, storeEmailOTP, verifyEmailOTP, sendEmailOTP, storeOTP, verifyOTP, sendOTP } from '../utils/otp';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../config/logger';
 
