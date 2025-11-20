@@ -37,7 +37,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Log provider data when modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       console.log('BookingModal opened with provider:', {
         providerId: provider.id,
