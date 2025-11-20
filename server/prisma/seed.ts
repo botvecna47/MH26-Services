@@ -428,6 +428,11 @@ async function main() {
         },
       });
 
+      // Delete existing services for this provider (to avoid duplicates on re-seed)
+      await prisma.service.deleteMany({
+        where: { providerId: provider.id },
+      });
+
       // Create multiple services for each provider with proper images
       const categoryServices = SERVICE_DATA[category as keyof typeof SERVICE_DATA];
       const servicesPerProvider = Math.min(3, categoryServices.length); // 3 services per provider
