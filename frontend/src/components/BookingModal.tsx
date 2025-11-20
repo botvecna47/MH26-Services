@@ -106,11 +106,15 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
     setAddressError(null);
 
     // Check if phone is verified (if user has phone)
-    if (user?.phone && !phoneVerified && !showOTPInput) {
+    // Only require verification if user has a phone number
+    if (user?.phone && user.phone.trim().length > 0 && !phoneVerified && !showOTPInput) {
       setShowOTPInput(true);
       toast.info('Please verify your phone number to continue');
       return;
     }
+    
+    // If user doesn't have a phone, allow booking to proceed
+    // (phone verification is optional but recommended)
 
     // Validate total amount
     if (!totalAmount || totalAmount <= 0) {
@@ -315,16 +319,28 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                 <h3 className="font-semibold text-gray-900">Verify Phone Number</h3>
               </div>
               <p className="text-sm text-gray-700">
-                We'll send an OTP to {user.phone.substring(0, 3)}****{user.phone.substring(7)}
+                We'll send an OTP to {user.phone && user.phone.length >= 10 
+                  ? `${user.phone.substring(0, 3)}****${user.phone.substring(user.phone.length - 3)}`
+                  : 'your phone number'}
               </p>
               {!otpSent ? (
                 <Button
                   type="button"
                   onClick={async () => {
                     if (!user.phone) return;
+                    // Extract only digits from phone number (in case it has formatting)
+                    const phoneDigits = user.phone.replace(/\D/g, '');
+                    // Take last 10 digits (in case country code is included)
+                    const phoneToSend = phoneDigits.slice(-10);
+                    
+                    if (phoneToSend.length !== 10) {
+                      toast.error('Invalid phone number format');
+                      return;
+                    }
+                    
                     setSendingOTP(true);
                     try {
-                      await authApi.sendPhoneOTP(user.phone);
+                      await authApi.sendPhoneOTP(phoneToSend);
                       setOtpSent(true);
                       toast.success('OTP sent to your phone number');
                     } catch (error: any) {
@@ -360,9 +376,19 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                           toast.error('Please enter a valid 6-digit OTP');
                           return;
                         }
+                        // Extract only digits from phone number (in case it has formatting)
+                        const phoneDigits = user.phone.replace(/\D/g, '');
+                        // Take last 10 digits (in case country code is included)
+                        const phoneToVerify = phoneDigits.slice(-10);
+                        
+                        if (phoneToVerify.length !== 10) {
+                          toast.error('Invalid phone number format');
+                          return;
+                        }
+                        
                         setVerifyingOTP(true);
                         try {
-                          await authApi.verifyPhoneOTP(user.phone, phoneOTP);
+                          await authApi.verifyPhoneOTP(phoneToVerify, phoneOTP);
                           setPhoneVerified(true);
                           setShowOTPInput(false);
                           toast.success('Phone number verified successfully');

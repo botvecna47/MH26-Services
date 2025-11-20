@@ -28,11 +28,13 @@ export function validateAddress(address: string): AddressValidationResult {
   const hasCity = /nanded|city/i.test(trimmedAddress);
   const hasPincode = /\b\d{6}\b/.test(trimmedAddress);
 
-  if (!hasStreet && trimmedAddress.length > 0) {
+  // Only show street/area warnings if address is reasonably long
+  // Don't be too strict for short addresses (user might still be typing)
+  if (trimmedAddress.length > 15 && !hasStreet) {
     errors.push('Address should include street name or house number');
   }
 
-  if (!hasArea && trimmedAddress.length > 20) {
+  if (trimmedAddress.length > 30 && !hasArea) {
     errors.push('Address should include area/locality name');
   }
 
