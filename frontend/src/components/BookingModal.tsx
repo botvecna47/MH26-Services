@@ -120,6 +120,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
     } catch (error: any) {
       console.error('Booking creation error:', error);
       console.error('Error response:', error.response?.data);
+      console.error('Error details:', JSON.stringify(error.response?.data?.details, null, 2));
       
       let errorMessage = 'Failed to create booking';
       
@@ -130,6 +131,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
           return `${field}: ${d.message}`;
         });
         errorMessage = errors.join('\n');
+        console.error('Validation errors:', errors);
         toast.error(errorMessage, { duration: 5000 });
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
