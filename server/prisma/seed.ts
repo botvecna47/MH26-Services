@@ -440,11 +440,9 @@ async function main() {
         const serviceIndex = (providerIndexInCategory * servicesPerProvider + i) % categoryServices.length;
         const selectedService = categoryServices[serviceIndex];
         
-        await prisma.service.upsert({
-          where: { id: `service-${provider.id}-${i}` },
-          update: {},
-          create: {
-            id: `service-${provider.id}-${i}`,
+        // Create service without custom ID - let Prisma generate UUID
+        await prisma.service.create({
+          data: {
             providerId: provider.id,
             title: selectedService.title,
             description: selectedService.description,
