@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../../hooks/useAuth';
-import Button from '../../components/ui/Button';
+import { Button } from '../../components/ui/button';
 import Input from '../../components/ui/Input';
 import { Eye, EyeOff } from 'lucide-react';
 

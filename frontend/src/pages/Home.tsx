@@ -4,7 +4,7 @@
 import { Link } from 'react-router-dom';
 import { useProviders } from '../api/providers';
 import ProviderCard from '../components/ProviderCard';
-import Button from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 
 export default function Home() {
   const { data, isLoading, error } = useProviders({ city: 'Nanded', limit: 6 });

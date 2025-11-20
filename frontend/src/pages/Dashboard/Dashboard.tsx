@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useBookings } from '../../api/bookings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import Button from '../../components/ui/Button';
+import { Button } from '../../components/ui/button';
 
 export default function Dashboard() {
   const { user } = useAuth();

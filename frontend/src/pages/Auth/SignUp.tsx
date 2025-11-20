@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { useAuth } from '../../hooks/useAuth';
 import { axiosClient } from '../../api/axiosClient';
 import { toast } from 'sonner';
-import Button from '../../components/ui/Button';
+import { Button } from '../../components/ui/button';
 import Input from '../../components/ui/Input';
 import { Eye, EyeOff, Mail } from 'lucide-react';
 
