@@ -45,11 +45,33 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
     '17:00', '18:00', '19:00'
   ];
 
+  // UUID validation helper
+  const isValidUUID = (str: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedServiceId || !selectedDate || !selectedTime || !address) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Validate serviceId is a valid UUID
+    if (!isValidUUID(selectedServiceId)) {
+      console.error('Invalid serviceId format:', selectedServiceId);
+      console.error('Selected service:', selectedService);
+      console.error('Provider services:', provider.services);
+      toast.error('Invalid service selected. Please select a service again.');
+      return;
+    }
+
+    // Validate providerId is a valid UUID
+    if (!isValidUUID(provider.id)) {
+      console.error('Invalid providerId format:', provider.id);
+      toast.error('Invalid provider information. Please refresh the page.');
       return;
     }
 
@@ -105,6 +127,10 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
         scheduledAt: typeof bookingData.scheduledAt,
         totalAmount: typeof bookingData.totalAmount,
         address: typeof bookingData.address,
+      });
+      console.log('UUID validation:', {
+        providerId: { value: bookingData.providerId, isValid: isValidUUID(bookingData.providerId) },
+        serviceId: { value: bookingData.serviceId, isValid: isValidUUID(bookingData.serviceId) },
       });
       
       await createBooking.mutateAsync(bookingData);
