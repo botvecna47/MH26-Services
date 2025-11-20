@@ -76,14 +76,18 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
         return;
       }
       
-      await createBooking.mutateAsync({
+      const bookingData = {
         providerId: provider.id,
         serviceId: selectedServiceId,
         scheduledAt: scheduledAt.toISOString(),
         totalAmount: Number(totalAmount),
         address: address.trim(),
-        requirements: requirements?.trim() || undefined,
-      });
+        ...(requirements?.trim() && { requirements: requirements.trim() }),
+      };
+      
+      console.log('Creating booking with data:', bookingData);
+      
+      await createBooking.mutateAsync(bookingData);
 
       toast.success('Booking created successfully!');
       onClose();
