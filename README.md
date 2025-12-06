@@ -100,6 +100,7 @@ We have detailed documentation if you want to dive deeper:
 - **[Database Schema](docs/DB.md)** 🗄️: See how our data connects.
 - **[Architecture](docs/ARCHITECTURE.md)** 🏗️: Understand the system design.
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** 🔧: Stuck? Check here.
+- **[UML Diagra,s](docs/archive/UML_DIAGRAMS.md)** 🔧: Stuck? Check here.
 
 ---
 *Made with ❤️ for Nanded.*
