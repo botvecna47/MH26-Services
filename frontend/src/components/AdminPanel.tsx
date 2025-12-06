@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { 
@@ -40,18 +40,26 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBookings } from '../api/bookings';
 import UserDetailsModal from './UserDetailsModal';
 import { useAppeals, useReviewAppeal } from '../api/appeals';
+import InvoicePreviewModal from './InvoicePreviewModal';
 
 export default function AdminPanel() {
   const { user, isAdmin } = useUser();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Initialize state from URL params if available
+  const initialTab = searchParams.get('tab') || 'overview';
+  const initialBookingStatus = searchParams.get('status') as any || 'all';
+
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
   const [providerFilter, setProviderFilter] = useState<'all' | 'pending' | 'rejected' | 'suspended'>('all');
-  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>(initialBookingStatus);
   const [appealFilter, setAppealFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
   // Fetch real data from API
@@ -853,6 +861,19 @@ export default function AdminPanel() {
                             >
                               <Eye className="h-4 w-4 text-gray-500" />
                             </Button>
+                            {booking.status === 'COMPLETED' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewInvoiceId(booking.id);
+                                }}
+                                title="View Invoice"
+                              >
+                                <FileText className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -1039,6 +1060,13 @@ export default function AdminPanel() {
             user={selectedUser}
           />
         )}
+
+        {/* Invoice Modal */}
+        <InvoicePreviewModal
+          isOpen={!!viewInvoiceId}
+          onClose={() => setViewInvoiceId(null)}
+          bookingId={viewInvoiceId}
+        />
 
 
       </div>

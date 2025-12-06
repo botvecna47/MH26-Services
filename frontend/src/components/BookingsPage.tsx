@@ -20,14 +20,18 @@ import {
 import { useUser } from "../context/UserContext";
 import { useBookings, useAcceptBooking, useRejectBooking } from "../api/bookings";
 import { format } from "date-fns";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
 
 export default function BookingsPage() {
   const { user, isProvider } = useUser();
-  const [activeTab, setActiveTab] = useState('all');
+  const [searchParams] = useSearchParams();
+  // Get initial tab from URL status param or default to 'all'
+  const initialStatus = searchParams.get('status');
+  
+  const [activeTab, setActiveTab] = useState(initialStatus || 'all');
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -65,7 +69,7 @@ export default function BookingsPage() {
 
   const getFilteredBookings = () => {
     if (activeTab === 'all') return allBookings;
-    return allBookings.filter(b => b.status === activeTab);
+    return allBookings.filter((b: any) => b.status === activeTab);
   };
 
   const filteredBookings = getFilteredBookings();
@@ -111,19 +115,19 @@ export default function BookingsPage() {
     },
     {
       label: 'Upcoming',
-      value: allBookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length.toString(),
+      value: allBookings.filter((b: any) => b.status === 'confirmed' || b.status === 'pending').length.toString(),
       icon: Clock,
       color: 'text-blue-600',
     },
     {
       label: 'Completed',
-      value: allBookings.filter(b => b.status === 'completed').length.toString(),
+      value: allBookings.filter((b: any) => b.status === 'completed').length.toString(),
       icon: CheckCircle,
       color: 'text-success',
     },
     {
       label: 'Cancelled',
-      value: allBookings.filter(b => b.status === 'cancelled').length.toString(),
+      value: allBookings.filter((b: any) => b.status === 'cancelled').length.toString(),
       icon: XCircle,
       color: 'text-destructive',
     },
@@ -244,7 +248,7 @@ export default function BookingsPage() {
                     </p>
                   </div>
                 ) : (
-                  filteredBookings.map((booking) => (
+                  filteredBookings.map((booking: any) => (
                     <Card key={booking.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-6">
                         <div className="flex flex-col md:flex-row md:items-center gap-4">

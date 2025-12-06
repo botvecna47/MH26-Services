@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -30,7 +30,7 @@ import {
   AlertCircle,
   XCircle
 } from 'lucide-react';
-import { useBookings, useAcceptBooking, useRejectBooking, Booking } from "../api/bookings";
+import { useBookings, useAcceptBooking, useRejectBooking, useUpdateBooking, Booking } from "../api/bookings";
 import { format } from "date-fns";
 
 import { User } from "../context/UserContext";
@@ -41,13 +41,23 @@ interface ProviderDashboardProps {
 }
 
 export function ProviderDashboard({ user, onNavigate }: ProviderDashboardProps) {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'dashboard';
+  // If status is provided in URL, we want to filter by it
+  const initialStatus = searchParams.get('status');
 
-  // Real data hooks
-  const { data: bookingsData, isLoading: isLoadingBookings } = useBookings({ limit: 20 });
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatus || 'all');
+
+  // Real data hooks - filter if status is provided and we are on orders tab
+  const { data: bookingsData, isLoading: isLoadingBookings } = useBookings({ 
+    limit: 50, // Increase limit to see more 
+    ...(statusFilter !== 'all' ? { status: statusFilter.toUpperCase() } : {})
+  });
   const acceptBooking = useAcceptBooking();
   const rejectBooking = useRejectBooking();
+  const updateBooking = useUpdateBooking();
 
   const handleAccept = async (id: string) => {
     try {
@@ -65,6 +75,18 @@ export function ProviderDashboard({ user, onNavigate }: ProviderDashboardProps) 
       await rejectBooking.mutateAsync({ id, reason });
     } catch (error) {
       console.error("Failed to reject booking", error);
+    }
+  };
+
+  const handleComplete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to mark this booking as completed?")) return;
+    try {
+      await updateBooking.mutateAsync({ 
+        id, 
+        data: { status: 'COMPLETED' } 
+      });
+    } catch (error) {
+      console.error("Failed to complete booking", error);
     }
   };
 
@@ -354,6 +376,13 @@ export function ProviderDashboard({ user, onNavigate }: ProviderDashboardProps) 
                                 </Button>
                             </div>
                           )}
+                          
+                          {/* Actions for Confirmed */}
+                          {order.status === 'CONFIRMED' && (
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleComplete(order.id)}>
+                                <CheckCircle className="w-4 h-4 mr-1" /> Complete
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))
@@ -371,7 +400,18 @@ export function ProviderDashboard({ user, onNavigate }: ProviderDashboardProps) 
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Booking Management</h2>
               <div className="flex space-x-2">
-                <Button variant="outline">Filter</Button>
+                <select 
+                  className="rounded-md border border-gray-300 px-3 py-1 bg-white text-sm"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="rejected">Rejected</option>
+                </select>
                 <Button variant="outline">Export</Button>
               </div>
             </div>
@@ -417,6 +457,10 @@ export function ProviderDashboard({ user, onNavigate }: ProviderDashboardProps) 
                                     <XCircle className="w-4 h-4" /> Reject
                                   </Button>
                                 </>
+                              ) : order.status === 'CONFIRMED' ? (
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1" onClick={() => handleComplete(order.id)}>
+                                    <CheckCircle className="w-4 h-4" /> Complete
+                                </Button>
                               ) : (
                                 <Link to={`/bookings/${order.id}`}>
                                   <Button variant="outline" size="sm">

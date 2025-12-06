@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { BookOpen, CheckCircle, Clock } from 'lucide-react';
 
 export default function UnifiedNavigation() {
   const location = useLocation();
@@ -28,6 +29,12 @@ export default function UnifiedNavigation() {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+  const getBookingsLink = (status: string) => {
+    if (isAdmin) return `/admin?tab=bookings&status=${status}`;
+    if (isProvider) return `/dashboard?tab=orders&status=${status}`;
+    return `/bookings?status=${status}`;
   };
 
   return (
@@ -63,6 +70,33 @@ export default function UnifiedNavigation() {
             >
               Services
             </Link>
+
+            {isAuthenticated && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-gray-600 hover:text-primary-500 transition-colors flex items-center gap-1">
+                    Bookings
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-white border border-gray-200 shadow-lg">
+                  <DropdownMenuItem asChild>
+                    <Link to={getBookingsLink('all')} className="cursor-pointer flex items-center">
+                      <BookOpen className="w-4 h-4 mr-2" /> All Bookings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={getBookingsLink('pending')} className="cursor-pointer flex items-center">
+                      <Clock className="w-4 h-4 mr-2" /> Pending
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={getBookingsLink('completed')} className="cursor-pointer flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2" /> Completed
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {isAuthenticated && (
               <Link
                 to="/dashboard"

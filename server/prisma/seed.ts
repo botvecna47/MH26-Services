@@ -25,23 +25,61 @@ const CATEGORIES = [
 
 const CATEGORY_IMAGES: Record<string, string[]> = {
   Plumbing: [
-    '/images/plumbing/plumber1.png',
-    '/images/plumbing/plumber2.png',
-    '/images/plumbing/plumber3.jpg',
+    'https://images.unsplash.com/photo-1581578731117-10d78438fbd8?q=80&w=800&auto=format&fit=crop', // Man fixing pipe
+    'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?q=80&w=800&auto=format&fit=crop', // Plumber with wrench
+    'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop', // Tools
+    'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?q=80&w=800&auto=format&fit=crop', // Sink repair
+    'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop', // Plumbing tools
   ],
-  Electrical: [],
-  Cleaning: [],
-  Salon: [],
-  Tutoring: [],
-  Fitness: [],
-  Catering: [],
+  Electrical: [
+    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800&auto=format&fit=crop', // Electrician working
+    'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?q=80&w=800&auto=format&fit=crop', // Wiring
+    'https://images.unsplash.com/photo-1544724569-5f546fd6dd2d?q=80&w=800&auto=format&fit=crop', // Electrical panel
+    'https://images.unsplash.com/photo-1518349619113-03114f06ac3a?q=80&w=800&auto=format&fit=crop', // Light bulb repair
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop', // Modern lighting
+  ],
+  Cleaning: [
+    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop', // Professional cleaner
+    'https://images.unsplash.com/photo-1527515673516-756386d36f0b?q=80&w=800&auto=format&fit=crop', // Polishing floor
+    'https://images.unsplash.com/photo-1584621645331-c77565315121?q=80&w=800&auto=format&fit=crop', // Spray bottle
+    'https://images.unsplash.com/photo-1563453392212-326f5e854473?q=80&w=800&auto=format&fit=crop', // Living room cleaning
+    'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=800&auto=format&fit=crop', // Kitchen cleaning
+  ],
+  Salon: [
+    'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800&auto=format&fit=crop', // Haircut
+    'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=800&auto=format&fit=crop', // Salon interior
+    'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?q=80&w=800&auto=format&fit=crop', // Facial
+    'https://images.unsplash.com/photo-1487412947132-232a6958a13e?q=80&w=800&auto=format&fit=crop', // Makeup
+    'https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=800&auto=format&fit=crop', // Hair washing
+  ],
+  Tutoring: [
+    'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=800&auto=format&fit=crop', // Student studying
+    'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop', // Classroom
+    'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop', // Math symbols
+    'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=800&auto=format&fit=crop', // Teaching online
+    'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop', // Books
+  ],
+  Fitness: [
+    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop', // Gym workout
+    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', // Weights
+    'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop', // Yoga
+    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=800&auto=format&fit=crop', // Cardio
+    'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=800&auto=format&fit=crop', // Group class
+  ],
+  Catering: [
+    'https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=800&auto=format&fit=crop', // Catering buffet
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800&auto=format&fit=crop', // Plated food
+    'https://images.unsplash.com/photo-1470337458703-46ad1756a187?q=80&w=800&auto=format&fit=crop', // Drinks and food
+    'https://images.unsplash.com/photo-1505935428862-770b6f24f629?q=80&w=800&auto=format&fit=crop', // Indian food
+    'https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=800&auto=format&fit=crop', // Cooking
+  ],
 };
 
 const SERVICE_DATA = {
   Plumbing: [
     {
       title: 'Pipe Repair & Installation', 
-      description: 'Expert pipe repair, replacement, and installation services. Fix leaks, blockages, and broken pipes with professional tools and techniques.',
+      description: 'Expert pipe repair, replacement, and installation services. Fix leaks, blockages, and broken pipes with professional tools.',
       price: 800,
       durationMin: 120,
       imageUrl: CATEGORY_IMAGES.Plumbing[0]
@@ -68,7 +106,7 @@ const SERVICE_DATA = {
       imageUrl: CATEGORY_IMAGES.Plumbing[3]
     },
     { 
-      title: 'Drain Cleaning & Unclogging', 
+      title: 'Drain Cleaning', 
       description: 'Professional drain cleaning services using advanced equipment. Clear blocked drains, sinks, and sewer lines effectively.',
       price: 1000,
       durationMin: 90,
@@ -81,35 +119,35 @@ const SERVICE_DATA = {
       description: 'Complete electrical wiring for homes and offices. Safe, code-compliant installations with quality materials.',
       price: 2000,
       durationMin: 300,
-      imageUrl: undefined // No image for Electrical
+      imageUrl: CATEGORY_IMAGES.Electrical[0]
     },
     { 
       title: 'Electrical Repairs', 
       description: 'Expert electrical repair services. Fix faulty switches, sockets, circuit breakers, and electrical appliances.',
       price: 600,
       durationMin: 60,
-      imageUrl: undefined // No image for Electrical
+      imageUrl: CATEGORY_IMAGES.Electrical[1]
     },
     { 
       title: 'Fan & Light Installation', 
       description: 'Professional installation of ceiling fans, lights, chandeliers, and electrical fixtures. Safe and reliable service.',
       price: 500,
       durationMin: 90,
-      imageUrl: undefined // No image for Electrical
+      imageUrl: CATEGORY_IMAGES.Electrical[2]
     },
     { 
       title: 'MCB & Fuse Box Repair', 
       description: 'MCB panel installation, repair, and maintenance. Fix tripping issues and upgrade electrical panels safely.',
       price: 1500,
       durationMin: 120,
-      imageUrl: undefined // No image for Electrical
+      imageUrl: CATEGORY_IMAGES.Electrical[3]
     },
     { 
       title: 'Home Electrical Safety Check', 
       description: 'Comprehensive electrical safety inspection. Identify hazards, check wiring, and ensure electrical safety compliance.',
       price: 800,
       durationMin: 120,
-      imageUrl: undefined // No image for Electrical
+      imageUrl: CATEGORY_IMAGES.Electrical[4]
     },
   ],
   Cleaning: [
