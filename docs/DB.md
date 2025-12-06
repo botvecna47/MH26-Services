@@ -1,52 +1,100 @@
-# Database Guide
+# Database Guide 🗄️
 
-This document explains how the database for **MH26 Services** is structured. We use **PostgreSQL** as our database and **Prisma** to interact with it.
+Welcome to the **Brain** of MH26 Services! 🧠
+This document explains how we store and manage data. We use **PostgreSQL** (a powerful relational database) and **Prisma** (a super handy tool to talk to the database).
 
-## 🗄️ Database Structure
+## 📊 Visual Schema (ER Diagram)
 
-Our database stores information in "tables". Here are the main ones:
+Here is a bird's-eye view of how our tables connect to each other:
 
-### 1. Users Table
-This is where we store everyone who signs up.
-- **ID**: A unique code for each user.
-- **Email**: The user's email address.
-- **Role**: Tells us if they are a `CUSTOMER`, `PROVIDER`, or `ADMIN`.
-- **Password**: Stored securely (hashed) so no one can read it.
+```mermaid
+erDiagram
+    User ||--o{ Booking : makes
+    User ||--o{ Review : writes
+    User ||--o| Provider : "can become"
+    Provider ||--o{ Service : offers
+    Provider ||--o{ Booking : receives
+    Provider ||--o{ Review : receives
+    Service ||--o{ Booking : "is for"
+    Booking ||--o| Transaction : "generates"
+    Booking ||--o| Review : "has"
 
-### 2. Providers Table
-This stores extra details for people who offer services.
-- **Business Name**: The name of their shop or service.
-- **Category**: What they do (e.g., Plumber, Electrician).
-- **Gallery**: Photos of their work.
+    User {
+        String id PK
+        String email
+        String role "CUSTOMER | PROVIDER | ADMIN"
+    }
 
-### 3. Services Table
-These are the specific jobs a provider can do.
-- **Title**: Name of the service (e.g., "Tap Repair").
-- **Price**: How much it costs.
+    Provider {
+        String id PK
+        String businessName
+        String category
+        String status "PENDING | APPROVED"
+    }
 
-### 4. Bookings Table
-This tracks appointments between customers and providers.
-- **Status**: Is it `PENDING`, `CONFIRMED`, or `COMPLETED`?
-- **OTP**: A code to verify the job is done.
+    Service {
+        String id PK
+        String title
+        Decimal price
+    }
 
-## 🛠️ How to View Data
+    Booking {
+        String id PK
+        DateTime scheduledAt
+        String status "PENDING | CONFIRMED | COMPLETED"
+    }
+```
 
-We use a tool called **Prisma Studio** to look at the data easily.
+## 🧱 The Building Blocks (Tables)
+
+### 1. Users 👤
+Stores everyone who interacts with the app.
+- **`role`**: Defines what they can do.
+    - `CUSTOMER`: The regular user looking for help.
+    - `PROVIDER`: The skilled worker offering services.
+    - `ADMIN`: The boss managing the platform.
+
+### 2. Providers 🛠️
+When a user wants to work, they get a "Provider" profile linked to their account.
+- **`businessName`**: What shows up on their card.
+- **`gallery`**: A list of photo URLs showing off their work.
+- **`status`**:
+    - `PENDING`: Waiting for admin approval.
+    - `APPROVED`: Live and ready to get bookings!
+    - `REJECTED`: Something was wrong with the application.
+
+### 3. Services 📋
+The actual jobs a provider offers (e.g., "Tap Repair", "Full House Wiring").
+- **`price`**: Cost of the service.
+- **`durationMin`**: Estimated time to finish.
+
+### 4. Bookings 📅
+The connection between a Customer and a Provider.
+- **`status`**:
+    - `PENDING`: Waiting for provider to accept.
+    - `CONFIRMED`: It's on!
+    - `COMPLETED`: Job done.
+    - `CANCELLED`: Didn't happen.
+
+## 📝 Exploring Data
+
+Want to peek inside the database without writing SQL? Use **Prisma Studio**!
 
 1.  Open your terminal.
-2.  Run this command:
+2.  Run:
     ```bash
     npx prisma studio
     ```
-3.  A website will open (usually at `http://localhost:5555`) where you can see all the tables and data.
+3.  Go to `http://localhost:5555` in your browser. It's like a spreadsheet for your DB!
 
-## 🔄 Resetting Data
+## 🔄 Resetting the World (Seeding)
 
-If you want to clear everything and load fresh sample data (like real Nanded providers), run:
+If you messed up the data or just want a fresh start with cool fake data:
 
 ```bash
 cd server
 npm run seed
 ```
 
-*Note: This deletes all old data!*
+> [!WARNING]
+> This will **DELETE** all existing data and replace it with fresh seed data. Be careful!

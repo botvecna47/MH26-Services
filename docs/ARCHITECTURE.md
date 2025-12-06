@@ -1,40 +1,68 @@
-# System Architecture
+# System Architecture 🏗️
 
-This document explains how the **MH26 Services** application is built and how its parts talk to each other.
+Curious how MH26 Services works under the hood? You're in the right place.
+We follow a standard **Client-Server** architecture.
 
-## 🏗️ High-Level Design
+## 🗺️ The Big Picture
 
-Think of the app in three layers:
+Here is how data flows through our system:
 
-1.  **Frontend (The User Interface)**:
-    - This is what you see in the browser.
-    - Built with **React** and **Tailwind CSS**.
-    - It sends requests to the backend (like "Log me in" or "Show me plumbers").
+```mermaid
+graph TD
+    User((User 👤))
+    Frontend[Frontend (React + Vite) 💻]
+    Backend[Backend API (Node.js + Express) ⚙️]
+    DB[(PostgreSQL Database 🗄️)]
 
-2.  **Backend (The Brain)**:
-    - This is the server logic.
-    - Built with **Node.js** and **Express**.
-    - It receives requests, checks if they are valid, and talks to the database.
+    User -- "Clicks 'Book Now'" --> Frontend
+    Frontend -- "POST /api/bookings" --> Backend
+    Backend -- "Saves Data" --> DB
+    DB -- "Confirmation" --> Backend
+    Backend -- "Success Response" --> Frontend
+    Frontend -- "Show 'Booking Confirmed'" --> User
+```
 
-3.  **Database (The Memory)**:
-    - This is where data lives.
-    - **PostgreSQL** stores users, bookings, and services.
-    - **Prisma** helps the backend read and write to the database easily.
+## 🧩 The Three Musketeers (Layers)
 
-## 🔄 How Data Flows
+### 1. The Frontend (What you see) 🎨
+- **Tech**: React, Typescript, Tailwind CSS.
+- **Job**: Shows the UI, handles clicks, animations, and formatting.
+- **Location**: `frontend/` folder.
 
-Here is an example of what happens when you book a service:
+### 2. The Backend (The Brains) 🧠
+- **Tech**: Node.js, Express.
+- **Job**: Validates requests ("Is this user logged in?"), calculates prices, and talks to the database.
+- **Location**: `server/src/` folder.
 
-1.  **User** clicks "Book Now" on the Frontend.
-2.  **Frontend** sends a `POST` request to the Backend API.
-3.  **Backend** checks if the user is logged in (Authentication).
-4.  **Backend** saves the booking in the **Database**.
-5.  **Database** confirms it's saved.
-6.  **Backend** tells the Frontend "Success!".
-7.  **Frontend** shows a "Booking Confirmed" message to the user.
+### 3. The Database (The Vault) 🔒
+- **Tech**: PostgreSQL.
+- **Job**: Safely stores your user info, booking history, and service details.
+- **ORM**: We use **Prisma** so we don't have to write raw SQL (mostly).
 
-## 📁 Folder Structure
+## 📁 Folder Structure Explained
 
-- `frontend/`: All the React code.
-- `server/`: All the Node.js API code.
-- `docs/`: These documentation files.
+```text
+MH26-Services/
+├── frontend/           # The User Interface
+│   ├── src/
+│   │   ├── components/ # Reusable buttons, forms, cards
+│   │   ├── pages/      # Full pages (Home, Login, Dashboard)
+│   │   └── services/   # API helper functions
+│   └── ...
+├── server/             # The API Server
+│   ├── prisma/         # Database schema & seeds
+│   ├── src/
+│   │   ├── controllers/ # Logic for each route
+│   │   ├── routes/      # API endpoints definitions
+│   │   └── middleware/  # Security checks (auth, logging)
+│   └── ...
+└── docs/               # You are here! 📖
+```
+
+## 🔄 How Booking Works (Step-by-Step)
+
+1.  **Selection**: User picks a service (e.g., "AC Repair") and a time.
+2.  **Request**: Frontend sends a JSON package to the server.
+3.  **Verification**: Server checks if the time slot is free.
+4.  **Creation**: Server asks Database to create a new `Booking` row.
+5.  **Response**: Server tells Frontend "Done!", and Frontend shows a success checkmark.
