@@ -160,15 +160,22 @@ export default function HomePage() {
                 className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
               >
                 <div className="aspect-[4/3] bg-gray-200 relative">
-                  {provider.user?.avatarUrl ? (
+                  {provider.gallery && provider.gallery[0] ? (
                     <ImageWithFallback
-                      src={provider.user.avatarUrl}
+                      src={provider.gallery[0]}
                       alt={provider.businessName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No Image
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                      <div className="text-center p-4">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span className="text-xl font-bold text-gray-400">
+                            {provider.businessName?.charAt(0) || 'P'}
+                          </span>
+                        </div>
+                        <span className="text-sm">No Image</span>
+                      </div>
                     </div>
                   )}
                   {provider.status === 'APPROVED' && (

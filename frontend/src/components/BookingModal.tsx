@@ -326,7 +326,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
             <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="text-gray-700 font-medium">Total Amount:</span>
-                <span className="text-2xl font-bold text-[#ff6b35]">₹{totalAmount.toFixed(2)}</span>
+                <span className="text-2xl font-bold text-[#ff6b35]">₹{Number(totalAmount).toFixed(2)}</span>
               </div>
               <p className="text-xs text-gray-500 mt-1">Payment will be processed after service completion</p>
             </div>

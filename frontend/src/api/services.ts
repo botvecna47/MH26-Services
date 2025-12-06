@@ -57,63 +57,15 @@ export const servicesApi = {
     const params: any = {};
     if (filters?.providerId) params.providerId = filters.providerId;
     if (filters?.q) params.q = filters.q;
+    if (filters?.category && filters.category !== 'all') params.category = filters.category;
+    if (filters?.minPrice !== undefined) params.minPrice = filters.minPrice;
+    if (filters?.maxPrice !== undefined) params.maxPrice = filters.maxPrice;
+    if (filters?.sortBy) params.sortBy = filters.sortBy;
     if (filters?.page) params.page = filters.page;
     if (filters?.limit) params.limit = filters.limit;
     
     const response = await axiosClient.get<PaginatedServices>('/services', { params });
-    
-    // Client-side filtering for category and price range
-    let filteredData = response.data.data;
-    
-    if (filters?.category) {
-      const categoryLower = filters.category.toLowerCase();
-      filteredData = filteredData.filter(
-        service => {
-          const providerCategory = service.provider.primaryCategory?.toLowerCase() || '';
-          // Match exact category or check if category is part of the provider category
-          return providerCategory === categoryLower || 
-                 providerCategory.includes(categoryLower) ||
-                 categoryLower.includes(providerCategory);
-        }
-      );
-    }
-    
-    if (filters?.minPrice !== undefined) {
-      filteredData = filteredData.filter(service => Number(service.price) >= filters.minPrice!);
-    }
-    
-    if (filters?.maxPrice !== undefined) {
-      filteredData = filteredData.filter(service => Number(service.price) <= filters.maxPrice!);
-    }
-    
-    // Client-side sorting
-    if (filters?.sortBy) {
-      filteredData = [...filteredData].sort((a, b) => {
-        switch (filters.sortBy) {
-          case 'price_asc':
-            return Number(a.price) - Number(b.price);
-          case 'price_desc':
-            return Number(b.price) - Number(a.price);
-          case 'rating':
-            return (b.provider.averageRating || 0) - (a.provider.averageRating || 0);
-          case 'name':
-            return a.title.localeCompare(b.title);
-          case 'newest':
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          default:
-            return 0;
-        }
-      });
-    }
-    
-    return {
-      data: filteredData,
-      pagination: {
-        ...response.data.pagination,
-        total: filteredData.length,
-        totalPages: Math.ceil(filteredData.length / (filters?.limit || 10)),
-      },
-    };
+    return response.data;
   },
 };
 

@@ -117,25 +117,26 @@ export default function ProviderDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Gallery */}
             <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="aspect-video bg-gray-200 relative">
-                {provider.user?.avatarUrl ? (
-                  <ImageWithFallback
-                    src={provider.user.avatarUrl}
-                    alt={provider.businessName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : provider.gallery && provider.gallery.length > 0 ? (
-                  <ImageWithFallback
-                    src={provider.gallery[0]}
-                    alt={provider.businessName}
-                    className="w-full h-full object-cover"
-                  />
+                {provider.gallery && provider.gallery[0] ? (
+                  <div className="aspect-video relative overflow-hidden group">
+                    <ImageWithFallback
+                      src={provider.gallery[0]}
+                      alt={provider.businessName}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                    <User className="w-20 h-20 text-gray-400" />
+                  <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-2xl font-bold text-gray-400">
+                          {provider.businessName?.charAt(0) || 'P'}
+                        </span>
+                      </div>
+                      <p className="text-gray-500">No images available</p>
+                    </div>
                   </div>
                 )}
-              </div>
 
             </div>
 
@@ -224,15 +225,7 @@ export default function ProviderDetailPage() {
                       className="border border-gray-200 rounded-lg p-4 hover:border-[#ff6b35] transition-colors"
                     >
                       <div className="flex gap-4">
-                        {service.imageUrl && (
-                          <div className="flex-shrink-0">
-                            <ImageWithFallback
-                              src={service.imageUrl}
-                              alt={service.title}
-                              className="w-24 h-24 rounded-lg object-cover"
-                            />
-                          </div>
-                        )}
+                        {/* Image removed as per request */}
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900 mb-1">{service.title}</h3>
                           {service.description && (
@@ -255,23 +248,7 @@ export default function ProviderDetailPage() {
               </div>
             )}
 
-            {/* Photo Gallery */}
-            {provider.gallery && provider.gallery.length > 0 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-gray-900 mb-4">Photo Gallery</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {provider.gallery.map((image, index) => (
-                    <div key={index} className="aspect-video rounded-lg overflow-hidden">
-                      <ImageWithFallback
-                        src={image}
-                        alt={`Gallery image ${index + 1}`}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Photo Gallery removed as per request */}
 
             {/* Reviews */}
             <div className="bg-white rounded-lg p-6 shadow-sm">

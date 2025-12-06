@@ -1,7 +1,7 @@
 import { useUser } from '../context/UserContext';
-import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import AnalyticsCharts from './AnalyticsCharts';
 import { useBookings } from '../api/bookings';
@@ -10,9 +10,11 @@ import { useProviders } from '../api/providers';
 import { useState } from 'react';
 import UnbanRequestForm from './UnbanRequestForm';
 import { useProvider } from '../api/providers';
+import { ProviderDashboard } from './ProviderDashboard';
 
 export default function DashboardPage() {
   const { user, isAdmin, isProvider } = useUser();
+  const navigate = useNavigate();
   const [showUnbanForm, setShowUnbanForm] = useState(false);
   
   // Fetch real data from API
@@ -35,11 +37,19 @@ export default function DashboardPage() {
     );
   }
 
+  // Use the dedicated ProviderDashboard component for providers
+  if (isProvider) {
+    return (
+      <ProviderDashboard 
+        user={user} 
+        onNavigate={(page) => navigate(page === 'home' ? '/' : page)} 
+      />
+    );
+  }
+
   // Transform API bookings data
   const allBookings = bookingsData?.data || [];
-  const userBookings = isProvider
-    ? allBookings.filter((b: any) => b.provider?.userId === user.id)
-    : allBookings.filter((b: any) => b.userId === user.id);
+  const userBookings = allBookings.filter((b: any) => b.userId === user.id);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -231,7 +241,9 @@ export default function DashboardPage() {
                           <Link to={`/invoices?bookingId=${booking.id}`}>
                               <Button variant="ghost" size="sm">View Invoice</Button>
                             </Link>
-                          <Button variant="outline" size="sm">View Details</Button>
+                          <Link to={`/bookings/${booking.id}`}>
+                            <Button variant="outline" size="sm">View Details</Button>
+                          </Link>
                         </div>
                       </div>
                     </div>

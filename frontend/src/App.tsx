@@ -1,7 +1,8 @@
-// Removed unused imports
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSocket } from './hooks/useSocket';
 import UnifiedNavigation from './components/UnifiedNavigation';
 import MobileBottomNav from './components/MobileBottomNav';
 import Footer from './components/Footer';
@@ -10,6 +11,7 @@ import ServicesPage from './components/ServicesPage';
 import ProviderDetailPage from './components/ProviderDetailPage';
 import ProviderOnboardingComplete from './components/ProviderOnboardingComplete';
 import DashboardPage from './components/DashboardPage';
+import BookingDetailsPage from './components/BookingDetailsPage';
 import AdminPanel from './components/AdminPanel';
 import AuthPage from './components/AuthPage';
 import Settings from './pages/Settings';
@@ -31,6 +33,32 @@ const LoadingFallback = () => (
 
 const AppContent = () => {
   const location = useLocation();
+  const socket = useSocket();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleBookingUpdate = (data: any) => {
+      console.log('Booking update received:', data);
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
+      // Also refresh notifications as status changes often trigger them
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    };
+
+    const handleNewNotification = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    };
+
+    socket.on('bookingUpdate', handleBookingUpdate);
+    socket.on('notification', handleNewNotification);
+
+    return () => {
+      socket.off('bookingUpdate', handleBookingUpdate);
+      socket.off('notification', handleNewNotification);
+    };
+  }, [socket, queryClient]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,6 +73,7 @@ const AppContent = () => {
               <Route path="/provider/:id" element={<PageTransition><ProviderDetailPage /></PageTransition>} />
               <Route path="/provider-onboarding" element={<PageTransition><ProviderOnboardingComplete /></PageTransition>} />
               <Route path="/dashboard" element={<PageTransition><DashboardPage /></PageTransition>} />
+              <Route path="/bookings/:id" element={<PageTransition><BookingDetailsPage /></PageTransition>} />
               <Route path="/admin" element={<PageTransition><AdminPanel /></PageTransition>} />
               <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
               {/* Catch-all route for 404s */}

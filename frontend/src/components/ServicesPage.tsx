@@ -197,9 +197,11 @@ export default function ServicesPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400">
                       <div className="text-center">
-                        <Building2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <Building2 className="h-6 w-6 text-gray-400" />
+                        </div>
                         <p className="text-sm">No Image</p>
                       </div>
                     </div>

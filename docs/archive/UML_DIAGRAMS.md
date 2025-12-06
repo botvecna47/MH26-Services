@@ -1006,7 +1006,6 @@ graph TB
 
 ### 9.1 Entity Relationship Diagram
 
-```mermaid
 erDiagram
     User ||--o{ Booking : creates
     User ||--o| Provider : has
@@ -1020,7 +1019,8 @@ erDiagram
     User ||--o{ PhoneOTP : has
     User ||--o{ SavedProvider : saves
     User ||--o{ AuditLog : "performs actions"
-    User ||--o{ ProviderAppeal : reviews
+    User ||--o{ Appeal : reviews
+    User ||--o{ Appeal : creates
     
     Provider ||--o{ Service : offers
     Provider ||--o{ Booking : receives
@@ -1029,8 +1029,9 @@ erDiagram
     Provider ||--o{ ProviderDocument : has
     Provider ||--o{ Payout : receives
     Provider ||--o{ SavedProvider : saved_by
-    Provider ||--o{ ProviderAppeal : appeals
+    Provider ||--o{ Appeal : involved_in
     
+    Service ||--o| ServiceCategory : "belongs to"
     Service ||--o{ Booking : booked_for
     
     Booking ||--o| BookingCancellation : has
@@ -1079,6 +1080,17 @@ erDiagram
         string description
         decimal price
         int durationMin
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    ServiceCategory {
+        string id PK
+        string name UK
+        string slug UK
+        string description
+        string icon
+        boolean isActive
         datetime createdAt
         datetime updatedAt
     }
@@ -1178,8 +1190,9 @@ erDiagram
         datetime uploadedAt
     }
     
-    ProviderAppeal {
+    Appeal {
         string id PK
+        string userId FK
         string providerId FK
         enum type
         string reason

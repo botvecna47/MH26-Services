@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 type UserRole = 'CUSTOMER' | 'PROVIDER' | 'ADMIN' | null;
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;

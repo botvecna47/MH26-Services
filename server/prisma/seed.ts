@@ -23,43 +23,56 @@ const CATEGORIES = [
   'Catering',
 ];
 
-// Service definitions with proper images for Nanded
+const CATEGORY_IMAGES: Record<string, string[]> = {
+  Plumbing: [
+    '/images/plumbing/plumber1.png',
+    '/images/plumbing/plumber2.png',
+    '/images/plumbing/plumber3.jpg',
+  ],
+  Electrical: [],
+  Cleaning: [],
+  Salon: [],
+  Tutoring: [],
+  Fitness: [],
+  Catering: [],
+};
+
 const SERVICE_DATA = {
   Plumbing: [
-    { 
+    {
       title: 'Pipe Repair & Installation', 
       description: 'Expert pipe repair, replacement, and installation services. Fix leaks, blockages, and broken pipes with professional tools and techniques.',
       price: 800,
       durationMin: 120,
-      imageUrl: 'https://loremflickr.com/800/600/plumber,pipe?lock=1'
+      imageUrl: CATEGORY_IMAGES.Plumbing[0]
     },
     { 
       title: 'Water Tank Cleaning', 
       description: 'Professional water tank cleaning and sanitization. Remove algae, sediment, and bacteria for clean, safe drinking water.',
       price: 1500,
       durationMin: 180,
-      imageUrl: 'https://loremflickr.com/800/600/watertank,cleaning?lock=2'
+      imageUrl: CATEGORY_IMAGES.Plumbing[1]
     },
     { 
       title: 'Bathroom Fitting & Installation', 
       description: 'Complete bathroom fitting services including taps, showers, toilets, and fixtures. Professional installation with warranty.',
       price: 2500,
       durationMin: 240,
-      imageUrl: 'https://loremflickr.com/800/600/bathroom,plumbing?lock=3'
+      imageUrl: CATEGORY_IMAGES.Plumbing[2]
     },
     { 
       title: 'Emergency Plumbing Service', 
       description: '24/7 emergency plumbing services. Quick response for burst pipes, severe leaks, and urgent repairs in Nanded.',
       price: 1200,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/plumber,emergency?lock=4'
+      imageUrl: CATEGORY_IMAGES.Plumbing[3]
     },
     { 
       title: 'Drain Cleaning & Unclogging', 
       description: 'Professional drain cleaning services using advanced equipment. Clear blocked drains, sinks, and sewer lines effectively.',
       price: 1000,
       durationMin: 90,
-      imageUrl: 'https://loremflickr.com/800/600/drain,cleaning?lock=5'
+      imageUrl: CATEGORY_IMAGES.Plumbing[4]
     },
   ],
   Electrical: [
@@ -68,35 +81,35 @@ const SERVICE_DATA = {
       description: 'Complete electrical wiring for homes and offices. Safe, code-compliant installations with quality materials.',
       price: 2000,
       durationMin: 300,
-      imageUrl: 'https://loremflickr.com/800/600/electrician,wiring?lock=6'
+      imageUrl: undefined // No image for Electrical
     },
     { 
       title: 'Electrical Repairs', 
       description: 'Expert electrical repair services. Fix faulty switches, sockets, circuit breakers, and electrical appliances.',
       price: 600,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/electrician,repair?lock=7'
+      imageUrl: undefined // No image for Electrical
     },
     { 
       title: 'Fan & Light Installation', 
       description: 'Professional installation of ceiling fans, lights, chandeliers, and electrical fixtures. Safe and reliable service.',
       price: 500,
       durationMin: 90,
-      imageUrl: 'https://loremflickr.com/800/600/ceilingfan,install?lock=8'
+      imageUrl: undefined // No image for Electrical
     },
     { 
       title: 'MCB & Fuse Box Repair', 
       description: 'MCB panel installation, repair, and maintenance. Fix tripping issues and upgrade electrical panels safely.',
       price: 1500,
       durationMin: 120,
-      imageUrl: 'https://loremflickr.com/800/600/fusebox,electrician?lock=9'
+      imageUrl: undefined // No image for Electrical
     },
     { 
       title: 'Home Electrical Safety Check', 
       description: 'Comprehensive electrical safety inspection. Identify hazards, check wiring, and ensure electrical safety compliance.',
       price: 800,
       durationMin: 120,
-      imageUrl: 'https://loremflickr.com/800/600/electrician,inspection?lock=10'
+      imageUrl: undefined // No image for Electrical
     },
   ],
   Cleaning: [
@@ -105,35 +118,35 @@ const SERVICE_DATA = {
       description: 'Complete deep cleaning service for homes. Kitchen, bathroom, bedroom cleaning with eco-friendly products.',
       price: 2000,
       durationMin: 240,
-      imageUrl: 'https://loremflickr.com/800/600/cleaning,home?lock=11'
+      imageUrl: CATEGORY_IMAGES.Cleaning[0]
     },
     { 
       title: 'Office Cleaning Service', 
       description: 'Professional office cleaning including desks, floors, windows, and restrooms. Regular or one-time service available.',
       price: 2500,
       durationMin: 300,
-      imageUrl: 'https://loremflickr.com/800/600/cleaning,office?lock=12'
+      imageUrl: CATEGORY_IMAGES.Cleaning[1]
     },
     { 
       title: 'Carpet & Sofa Cleaning', 
       description: 'Deep cleaning for carpets, rugs, and sofas. Remove stains, odors, and allergens with professional equipment.',
       price: 1500,
       durationMin: 180,
-      imageUrl: 'https://loremflickr.com/800/600/carpet,cleaning?lock=13'
+      imageUrl: CATEGORY_IMAGES.Cleaning[2]
     },
     { 
       title: 'Kitchen Deep Cleaning', 
       description: 'Thorough kitchen cleaning including appliances, cabinets, countertops, and exhaust. Sanitized and spotless.',
       price: 1200,
       durationMin: 150,
-      imageUrl: 'https://loremflickr.com/800/600/kitchen,cleaning?lock=14'
+      imageUrl: CATEGORY_IMAGES.Cleaning[3]
     },
     { 
       title: 'Bathroom Sanitization', 
       description: 'Complete bathroom cleaning and sanitization. Remove mold, stains, and ensure hygiene with professional products.',
       price: 800,
       durationMin: 90,
-      imageUrl: 'https://loremflickr.com/800/600/bathroom,cleaning?lock=15'
+      imageUrl: CATEGORY_IMAGES.Cleaning[4]
     },
   ],
   Salon: [
@@ -142,35 +155,35 @@ const SERVICE_DATA = {
       description: 'Professional haircut and styling services for men and women. Latest trends and techniques by experienced stylists.',
       price: 300,
       durationMin: 45,
-      imageUrl: 'https://loremflickr.com/800/600/haircut,salon?lock=16'
+      imageUrl: CATEGORY_IMAGES.Salon[0]
     },
     { 
       title: 'Hair Color & Highlights', 
       description: 'Expert hair coloring and highlighting services. Use premium products for vibrant, long-lasting color.',
       price: 1500,
       durationMin: 180,
-      imageUrl: 'https://loremflickr.com/800/600/haircolor,salon?lock=17'
+      imageUrl: CATEGORY_IMAGES.Salon[1]
     },
     { 
       title: 'Facial & Skin Care', 
       description: 'Rejuvenating facial treatments for glowing skin. Deep cleansing, exfoliation, and moisturizing therapy.',
       price: 800,
       durationMin: 90,
-      imageUrl: 'https://loremflickr.com/800/600/facial,spa?lock=18'
+      imageUrl: CATEGORY_IMAGES.Salon[2]
     },
     { 
       title: 'Bridal Makeup & Hair', 
       description: 'Complete bridal makeup and hairstyling packages. Traditional and modern looks for your special day.',
       price: 5000,
       durationMin: 300,
-      imageUrl: 'https://loremflickr.com/800/600/bridal,makeup?lock=19'
+      imageUrl: CATEGORY_IMAGES.Salon[3]
     },
     { 
       title: 'Hair Spa & Treatment', 
       description: 'Relaxing hair spa and treatment services. Repair damaged hair, reduce frizz, and add shine.',
       price: 1000,
       durationMin: 120,
-      imageUrl: 'https://loremflickr.com/800/600/hairspa,salon?lock=20'
+      imageUrl: CATEGORY_IMAGES.Salon[4]
     },
   ],
   Tutoring: [
@@ -179,35 +192,35 @@ const SERVICE_DATA = {
       description: 'Expert math tutoring for all classes. Clear concepts, solve problems, and improve grades with personalized attention.',
       price: 500,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/math,teacher?lock=21'
+      imageUrl: CATEGORY_IMAGES.Tutoring[0]
     },
     { 
       title: 'Science Classes', 
       description: 'Physics, Chemistry, and Biology tutoring. Concept clarity, practical knowledge, and exam preparation.',
       price: 600,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/science,chemistry?lock=22'
+      imageUrl: CATEGORY_IMAGES.Tutoring[1]
     },
     { 
       title: 'English Language Classes', 
       description: 'English speaking, writing, and grammar classes. Improve communication skills and language proficiency.',
       price: 400,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/english,teacher?lock=23'
+      imageUrl: CATEGORY_IMAGES.Tutoring[2]
     },
     { 
       title: 'Computer & Programming', 
       description: 'Computer basics, programming languages, and software training. Learn coding, web development, and IT skills.',
       price: 800,
       durationMin: 90,
-      imageUrl: 'https://loremflickr.com/800/600/coding,computer?lock=24'
+      imageUrl: CATEGORY_IMAGES.Tutoring[3]
     },
     { 
       title: 'Exam Preparation Classes', 
       description: 'Competitive exam preparation including JEE, NEET, and board exams. Expert guidance and practice tests.',
       price: 1000,
       durationMin: 120,
-      imageUrl: 'https://loremflickr.com/800/600/exam,student?lock=25'
+      imageUrl: CATEGORY_IMAGES.Tutoring[4]
     },
   ],
   Fitness: [
@@ -216,35 +229,35 @@ const SERVICE_DATA = {
       description: 'One-on-one personal training sessions. Customized workout plans, nutrition guidance, and fitness goals.',
       price: 800,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/fitness,trainer?lock=26'
+      imageUrl: CATEGORY_IMAGES.Fitness[0]
     },
     { 
       title: 'Yoga Classes', 
       description: 'Traditional yoga classes for flexibility, strength, and mental wellness. Beginner to advanced levels available.',
       price: 500,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/yoga,pose?lock=27'
+      imageUrl: CATEGORY_IMAGES.Fitness[1]
     },
     { 
       title: 'Gym Membership', 
       description: 'Full gym access with modern equipment. Cardio, strength training, and group fitness classes included.',
       price: 2000,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/gym,weights?lock=28'
+      imageUrl: CATEGORY_IMAGES.Fitness[2]
     },
     { 
       title: 'Weight Loss Program', 
       description: 'Structured weight loss program with diet plans and exercise routines. Achieve your fitness goals effectively.',
       price: 3000,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/diet,food?lock=29'
+      imageUrl: CATEGORY_IMAGES.Fitness[3]
     },
     { 
       title: 'Zumba & Dance Fitness', 
       description: 'Fun and energetic Zumba and dance fitness classes. Burn calories while enjoying music and movement.',
       price: 400,
       durationMin: 60,
-      imageUrl: 'https://loremflickr.com/800/600/zumba,dance?lock=30'
+      imageUrl: CATEGORY_IMAGES.Fitness[4]
     },
   ],
   Catering: [
@@ -253,46 +266,91 @@ const SERVICE_DATA = {
       description: 'Fresh, home-cooked daily tiffin service. Nutritious meals delivered to your doorstep in Nanded.',
       price: 2000,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/tiffinservice,food?lock=31'
+      imageUrl: CATEGORY_IMAGES.Catering[0]
     },
     { 
       title: 'Party Catering Service', 
       description: 'Complete party catering for weddings, birthdays, and events. Delicious food, professional service.',
       price: 15000,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/catering,buffet?lock=32'
+      imageUrl: CATEGORY_IMAGES.Catering[1]
     },
     { 
       title: 'Student Tiffin Service', 
       description: 'Affordable tiffin service for students. Healthy, balanced meals perfect for college and hostel students.',
       price: 1500,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/lunchbox,food?lock=33'
+      imageUrl: CATEGORY_IMAGES.Catering[2]
     },
     { 
       title: 'Office Lunch Service', 
       description: 'Corporate lunch catering for offices. Bulk orders with variety, delivered fresh to your workplace.',
       price: 3000,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/officelunch,food?lock=34'
+      imageUrl: CATEGORY_IMAGES.Catering[3]
     },
     { 
       title: 'Traditional Maharashtrian Thali', 
       description: 'Authentic Maharashtrian thali service. Traditional recipes with dal, rice, vegetables, and roti.',
       price: 2500,
       durationMin: 0,
-      imageUrl: 'https://loremflickr.com/800/600/indianthali,food?lock=35'
+      imageUrl: CATEGORY_IMAGES.Catering[4]
     },
   ],
 };
 
 const PROVIDER_DATA = {
   Plumbing: [
-    { name: 'Patil Plumbing Works', owner: 'Vijay Patil', phone: '+91-9876543210' },
-    { name: 'Nanded Plumbing Services', owner: 'Suresh Kale', phone: '+91-9887654321' },
-    { name: 'Pipe Doctor Services', owner: 'Santosh More', phone: '+91-9898765432' },
-    { name: 'Rapid Plumbing Solutions', owner: 'Ganesh Bhosale', phone: '+91-9809876543' },
-    { name: 'Master Plumbers Nanded', owner: 'Ramesh Pawar', phone: '+91-9810987654' },
+    {
+      name: 'Indian plumbers Ltd.',
+      owner: 'Rajesh Kumar',
+      phone: '+91-9890011101',
+      address: 'Irrigation Colony, Peer Burhan Nagar, Nanded, Maharashtra 431602, India',
+      lat: 19.1825906,
+      lng: 77.3080313,
+      rating: 4.3,
+      votes: 9
+    },
+    {
+      name: 'Daikin Airconditioning Solution Plaza',
+      owner: 'Amit Singh',
+      phone: '+91-9890011102',
+      address: 'Shop No 1, opposite Jija Mata Hospital, Chikhalwadi, Nanded, Maharashtra 431601, India',
+      lat: 19.1517643,
+      lng: 77.3165393,
+      rating: 4.7,
+      votes: 9
+    },
+    {
+      name: 'Indian Plumbers .',
+      owner: 'Sandeep Patil',
+      phone: '+91-9890011103',
+      address: 'Peer Burhan Nagar Rd, Irrigation Colony, Peer Burhan Nagar, Nanded, Maharashtra 431605, India',
+      lat: 19.180458,
+      lng: 77.3090813,
+      rating: 3.8,
+      votes: 4
+    },
+    {
+      name: 'Bombay Plumber Technician',
+      owner: 'Feroz Khan',
+      phone: '+91-9890011104',
+      address: 'Malegaon Road, Bodhisatva Nagar, Taroda Kh., near Gyaneshwari Hotel, Nanded, Maharashtra 431605, India',
+      lat: 19.1925869,
+      lng: 77.2971804,
+      rating: 3.5,
+      votes: 4
+    },
+    {
+      name: 'Safa Traders',
+      owner: 'Abdul Rahim',
+      phone: '+91-9890011105',
+      address: 'Opp Delux Function Hall, Mall Tekdi Road, Nanded, Maharashtra 431604, India',
+      lat: 19.1573809,
+      lng: 77.3345486,
+      rating: 4.8,
+      votes: 4
+    },
   ],
   Electrical: [
     { name: 'Shinde Electricals', owner: 'Anil Shinde', phone: '+91-9765432108' },
@@ -416,21 +474,23 @@ const BIO_TEMPLATES = [
 ];
 
 // Helper to get random gallery images for a category
+// Helper to get random gallery images for a category - now uses static high quality images
 function getGalleryImages(category: string, count: number = 3): string[] {
   const images = [];
-  const startLock = Math.floor(Math.random() * 1000) + 100; // Random start to ensure variety across providers
-  const keywords = {
-    Plumbing: 'plumber,repair',
-    Electrical: 'electrician,wiring',
-    Cleaning: 'cleaning,mop',
-    Salon: 'salon,haircut',
-    Tutoring: 'tutor,classroom',
-    Fitness: 'gym,workout',
-    Catering: 'catering,food'
-  }[category] || 'service,work';
+  const categoryImages = CATEGORY_IMAGES[category] || [
+    'https://images.unsplash.com/photo-1581578731117-10d78438fbd8?w=800&q=80',
+    'https://images.unsplash.com/photo-1527515673516-756386d36f0b?w=800&q=80'
+  ];
+
+  // If we have enough images, pick random unique ones
+  if (categoryImages.length >= count) {
+    const shuffled = [...categoryImages].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
   
+  // Otherwise duplicate loops
   for (let i = 0; i < count; i++) {
-    images.push(`https://loremflickr.com/800/600/${keywords.split(',').join(',')}?lock=${startLock + i}`);
+    images.push(categoryImages[i % categoryImages.length]);
   }
   return images;
 }
@@ -515,7 +575,9 @@ function getRandomAvatar() {
       const user = await prisma.user.upsert({
         where: { email: `provider${providerIndex}@example.com` },
         update: {
-          avatarUrl: getRandomAvatar(),
+          name: providerData.owner, // Update name
+          phone: providerData.phone, // Update phone
+          avatarUrl: undefined, // Remove avatar on update too
         },
         create: {
           name: providerData.owner,
@@ -525,7 +587,7 @@ function getRandomAvatar() {
           role: 'PROVIDER',
           emailVerified: true,
           phoneVerified: true,
-          avatarUrl: getRandomAvatar(),
+          avatarUrl: undefined, // No random avatar for providers
         },
       });
 
@@ -533,6 +595,13 @@ function getRandomAvatar() {
       const provider = await prisma.provider.upsert({
         where: { userId: user.id },
         update: {
+          businessName: providerData.name,
+          description: BIO_TEMPLATES[Math.floor(Math.random() * BIO_TEMPLATES.length)]
+            .replace('{category}', category)
+            .replace('{businessName}', providerData.name),
+          address: (providerData as any).address || `${Math.floor(Math.random() * 100)} Main Street, Nanded`,
+          lat: (providerData as any).lat || (19.15 + (Math.random() * 0.05)),
+          lng: (providerData as any).lng || (77.31 + (Math.random() * 0.05)),
           gallery: getGalleryImages(category),
         },
         create: {
@@ -542,14 +611,14 @@ function getRandomAvatar() {
             .replace('{category}', category)
             .replace('{businessName}', providerData.name),
           primaryCategory: category,
-          address: `${Math.floor(Math.random() * 100)} Main Street, Nanded`,
+          address: (providerData as any).address || `${Math.floor(Math.random() * 100)} Main Street, Nanded`,
           city: 'Nanded',
           state: 'Maharashtra',
           pincode: '431601',
-          lat: 19.15 + (Math.random() * 0.05),
-          lng: 77.31 + (Math.random() * 0.05),
-          averageRating: 0, // Will be updated by reviews
-          totalRatings: 0,
+          lat: (providerData as any).lat || (19.15 + (Math.random() * 0.05)),
+          lng: (providerData as any).lng || (77.31 + (Math.random() * 0.05)),
+          averageRating: (providerData as any).rating || 0, 
+          totalRatings: (providerData as any).votes || 0,
           status: 'APPROVED',
           phoneVisible: true,
           gallery: getGalleryImages(category),
@@ -662,7 +731,14 @@ function getRandomAvatar() {
   // Create Reviews
   console.log('📝 Creating reviews...');
   for (const provider of providers) {
-    const reviewCount = Math.floor(Math.random() * 5) + 1; // 1-5 reviews per provider
+    // If provider has predefined ratings (like our Plumbers), skip random review generation logic for rating calculation
+    // but still create some reviews to populate the table
+    const providerDataEntry = Object.values(PROVIDER_DATA).flat().find((p: any) => p.name === provider.businessName);
+    const predefinedVotes = (providerDataEntry as any)?.votes;
+    const predefinedRating = (providerDataEntry as any)?.rating;
+
+    const reviewCount = predefinedVotes || (Math.floor(Math.random() * 5) + 1); 
+    
     let totalRating = 0;
 
     for (let i = 0; i < reviewCount; i++) {
@@ -681,15 +757,16 @@ function getRandomAvatar() {
           comment: selectedComment,
         },
       });
+
       totalRating += rating;
     }
 
-    // Update provider rating
+    // Update provider rating - Use predefined if available, else calculated
     await prisma.provider.update({
       where: { id: provider.id },
       data: {
         totalRatings: reviewCount,
-        averageRating: totalRating / reviewCount,
+        averageRating: predefinedRating || (totalRating / reviewCount),
       },
     });
   }

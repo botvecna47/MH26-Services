@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { 
@@ -38,18 +39,17 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useBookings } from '../api/bookings';
 import UserDetailsModal from './UserDetailsModal';
-import BookingDetailsModal from './BookingDetailsModal';
 import { useAppeals, useReviewAppeal } from '../api/appeals';
 
 export default function AdminPanel() {
   const { user, isAdmin } = useUser();
+  const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [providerFilter, setProviderFilter] = useState<'all' | 'pending' | 'rejected' | 'suspended'>('all');
   const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
   const [appealFilter, setAppealFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
@@ -821,7 +821,7 @@ export default function AdminPanel() {
                       </tr>
                     ) : (
                       filteredBookings.map((booking: any) => (
-                        <tr key={booking.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedBooking(booking.id)}>
+                        <tr key={booking.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/bookings/${booking.id}`)}>
                           <td className="px-6 py-4 text-sm font-mono text-gray-700">{booking.id.slice(0, 8)}...</td>
                           <td className="px-6 py-4 text-sm text-gray-900">{booking.service?.title || 'N/A'}</td>
                           <td className="px-6 py-4 text-sm text-gray-700">{booking.provider?.businessName || booking.provider?.user?.name || 'N/A'}</td>
@@ -848,10 +848,10 @@ export default function AdminPanel() {
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedBooking(booking.id);
+                                navigate(`/bookings/${booking.id}`);
                               }}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4 text-gray-500" />
                             </Button>
                           </td>
                         </tr>
@@ -1040,13 +1040,7 @@ export default function AdminPanel() {
           />
         )}
 
-        {selectedBooking && (
-          <BookingDetailsModal
-            isOpen={!!selectedBooking}
-            onClose={() => setSelectedBooking(null)}
-            bookingId={selectedBooking}
-          />
-        )}
+
       </div>
     </div>
   );
