@@ -19,6 +19,7 @@ router.get('/:id', asyncHandler(providerController.getById));
 router.post('/', authenticate, requireRole('PROVIDER', 'ADMIN'), validate(createProviderSchema), asyncHandler(providerController.create));
 router.patch('/:id', authenticate, validate(updateProviderSchema), asyncHandler(providerController.update));
 router.post('/:id/documents', authenticate, upload.single('file'), asyncHandler(providerController.uploadDocument));
+router.post('/:id/qrcode', authenticate, upload.single('file'), asyncHandler(providerController.uploadQRCode));
 router.post('/:id/reveal-phone', authenticate, asyncHandler(providerController.revealPhone));
 
 // Admin routes

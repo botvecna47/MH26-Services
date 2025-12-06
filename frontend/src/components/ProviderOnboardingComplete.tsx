@@ -25,10 +25,12 @@ import {
   DollarSign,
   Image as ImageIcon,
   X,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SERVICE_CATEGORIES } from '../data/mockData';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { axiosClient } from '../api/axiosClient';
 
 interface OnboardingData {
   // Step 1: Business Information
@@ -130,6 +132,8 @@ export default function ProviderOnboardingComplete() {
       photos: [],
     },
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [documentPreviews, setDocumentPreviews] = useState<Record<string, string>>({});
@@ -283,17 +287,74 @@ export default function ProviderOnboardingComplete() {
       return;
     }
 
-    // In production: Upload files to S3, then submit form data
+    setIsSubmitting(true);
     toast.loading('Submitting your application...');
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // 1. Create Provider Profile
+      const providerData = {
+        businessName: formData.businessName,
+        description: formData.bio, // Mapping 'bio' to 'description'
+        primaryCategory: formData.primaryCategory,
+        experience: parseInt(formData.yearsExperience) || 0,
+        address: formData.address,
+        city: formData.city,
+        pincode: formData.pincode,
+        serviceRadius: parseInt(formData.serviceRadius) || 10,
+        availability: formData.availability,
+        pricing: formData.pricing,
+        // categories are stored as a list of strings if backend supports it, or just primary
+        // Assuming backend schema might need adjustment or we send extra data as JSON if supported
+        // For now, sending core fields that match likely schema
+      };
 
-    toast.success('Application submitted successfully!', {
-      description: 'Our team will review your application within 24-48 hours.',
-    });
+      const { data: provider } = await axiosClient.post('/providers', providerData);
+      const providerId = provider.id;
 
-    navigate('/dashboard');
+      // 2. Upload Documents
+      const uploadPromises = [];
+
+      // Aadhar
+      if (formData.documents.aadhar) {
+        const formDataAadhar = new FormData();
+        formDataAadhar.append('file', formData.documents.aadhar);
+        formDataAadhar.append('type', 'aadhar');
+        uploadPromises.push(
+          axiosClient.post(`/providers/${providerId}/documents`, formDataAadhar, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+        );
+      }
+
+      // Photos
+      if (formData.documents.photos.length > 0) {
+        formData.documents.photos.forEach((photo) => {
+          const formDataPhoto = new FormData();
+          formDataPhoto.append('file', photo);
+          formDataPhoto.append('type', 'gallery'); // or 'work_sample'
+          uploadPromises.push(
+            axiosClient.post(`/providers/${providerId}/documents`, formDataPhoto, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            })
+          );
+        });
+      }
+
+      await Promise.all(uploadPromises);
+
+      toast.dismiss();
+      toast.success('Application submitted successfully!', {
+        description: 'Our team will review your application within 24-48 hours.',
+      });
+
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      toast.dismiss();
+      toast.error(error.response?.data?.message || 'Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1008,7 +1069,7 @@ export default function ProviderOnboardingComplete() {
                 type="button"
                 variant="outline"
                 onClick={handlePrevious}
-                disabled={currentStep === 1}
+                disabled={currentStep === 1 || isSubmitting}
                 className="w-32"
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
@@ -1028,10 +1089,20 @@ export default function ProviderOnboardingComplete() {
                 <Button
                   type="button"
                   onClick={handleSubmit}
-                  className="w-48 bg-green-600 hover:bg-green-700"
+                  disabled={isSubmitting}
+                  className="w-48 bg-green-600 hover:bg-green-700 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Submit Application
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Submit Application
+                    </>
+                  )}
                 </Button>
               )}
             </div>

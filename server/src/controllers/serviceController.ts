@@ -24,7 +24,55 @@ export const serviceController = {
         where.OR = [
           { title: { contains: q as string, mode: 'insensitive' } },
           { description: { contains: q as string, mode: 'insensitive' } },
+          { provider: { businessName: { contains: q as string, mode: 'insensitive' } } },
         ];
+      }
+
+      // Category Filter
+      if (req.query.category && req.query.category !== 'all') {
+        where.provider = {
+          ...where.provider,
+          primaryCategory: {
+            equals: req.query.category as string,
+            mode: 'insensitive',
+          },
+        };
+      }
+
+      // Price Range Filter
+      if (req.query.minPrice || req.query.maxPrice) {
+        where.price = {};
+        if (req.query.minPrice) {
+          where.price.gte = Number(req.query.minPrice);
+        }
+        if (req.query.maxPrice) {
+          where.price.lte = Number(req.query.maxPrice);
+        }
+      }
+
+      // Sorting
+      let orderBy: any = { createdAt: 'desc' }; // Default
+      const sort = req.query.sortBy as string;
+
+      if (sort === 'price_asc') {
+        orderBy = { price: 'asc' };
+      } else if (sort === 'price_desc') {
+        orderBy = { price: 'desc' };
+      } else if (sort === 'newest') {
+        orderBy = { createdAt: 'desc' };
+      } else if (sort === 'name') {
+        orderBy = { title: 'asc' };
+      } else if (sort === 'rating') {
+        // Sorting by related field (provider rating) is tricky in Prisma without raw query or aggregate
+        // For now, we'll sort by createdAt if rating is selected, or we can try to sort in memory if dataset is small
+        // But better to keep it simple for now or use a different approach if strict rating sort is needed.
+        // Let's try to sort by provider's averageRating if possible.
+        // Prisma supports sorting by relation in newer versions.
+        orderBy = {
+          provider: {
+            averageRating: 'desc',
+          },
+        };
       }
 
       const [services, total] = await Promise.all([
@@ -32,7 +80,7 @@ export const serviceController = {
           where,
           skip,
           take: Number(limit),
-          orderBy: { createdAt: 'desc' },
+          orderBy,
           include: {
             provider: {
               include: {
@@ -71,7 +119,7 @@ export const serviceController = {
    */
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as any).user!.id;
       const { providerId, title, description, price, durationMin } = req.body;
 
       // Verify provider belongs to user
@@ -118,7 +166,7 @@ export const serviceController = {
    */
   async update(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as any).user!.id;
       const { id } = req.params;
       const { title, description, price, durationMin } = req.body;
 
@@ -168,7 +216,7 @@ export const serviceController = {
    */
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as any).user!.id;
       const { id } = req.params;
 
       // Verify service belongs to user's provider

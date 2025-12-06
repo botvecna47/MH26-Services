@@ -213,6 +213,53 @@ export const providerController = {
   },
 
   /**
+   * Upload QR Code (local storage)
+   */
+  async uploadQRCode(req: AuthRequest, res: Response): Promise<void> {
+    const { id } = req.params;
+    const file = req.file;
+
+    if (!file) {
+      throw new AppError('No file uploaded', 400);
+    }
+
+    const provider = await prisma.provider.findUnique({
+      where: { id },
+    });
+
+    if (!provider || provider.userId !== req.user!.id) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    // Save file to local storage
+    const fs = await import('fs');
+    const path = await import('path');
+    const uploadsDir = path.join(process.cwd(), 'server', 'uploads', 'qrcodes', id);
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, file.buffer);
+    
+    const url = `/uploads/qrcodes/${id}/${fileName}`;
+
+    // Update provider record
+    const updated = await prisma.provider.update({
+      where: { id },
+      data: { qrCodeUrl: url },
+    });
+
+    res.json({
+      message: 'QR Code uploaded successfully',
+      url,
+      provider: updated,
+    });
+  },
+
+  /**
    * Reveal phone number (with logging)
    */
   async revealPhone(req: AuthRequest, res: Response): Promise<void> {

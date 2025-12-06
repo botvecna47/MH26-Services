@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Menu, User, LogOut, Settings } from 'lucide-react';
+import { Bell, User, LogOut, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useUser } from '../context/UserContext';
@@ -71,16 +71,6 @@ export default function UnifiedNavigation() {
                 } transition-colors`}
               >
                 Dashboard
-              </Link>
-            )}
-            {isAuthenticated && (
-              <Link
-                to="/messages"
-                className={`${
-                  isActive('/messages') ? 'text-primary-500' : 'text-gray-600 hover:text-primary-500'
-                } transition-colors`}
-              >
-                Messages
               </Link>
             )}
             {isAdmin && (

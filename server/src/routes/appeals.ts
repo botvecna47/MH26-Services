@@ -8,14 +8,14 @@ import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
 
-// Provider routes
+// Public routes (none, user must be logged in to appeal)
+
+// Protected routes
 router.post('/', authenticate, asyncHandler(appealController.create));
-router.get('/my', authenticate, asyncHandler(appealController.getMyAppeals));
+router.get('/:id', authenticate, asyncHandler(appealController.getById));
 
 // Admin routes
 router.get('/', authenticate, requireRole('ADMIN'), asyncHandler(appealController.list));
-router.get('/:id', authenticate, requireRole('ADMIN'), asyncHandler(appealController.getById));
-router.patch('/:id/review', authenticate, requireRole('ADMIN'), asyncHandler(appealController.review));
+router.post('/:id/resolve', authenticate, requireRole('ADMIN'), asyncHandler(appealController.resolve));
 
 export default router;
-

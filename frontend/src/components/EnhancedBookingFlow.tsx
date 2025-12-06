@@ -318,12 +318,15 @@ export function EnhancedBookingFlow({
   // Complete booking
   const handleComplete = useCallback(async () => {
     if (validateStep()) {
-      const completeBookingData = {
+      const completeBookingData: any = {
         ...bookingData,
+        address: `${bookingData.address?.street}, ${bookingData.address?.area}`,
+        city: bookingData.address?.city,
+        pincode: bookingData.address?.pincode,
         estimatedPrice
-      } as BookingData;
+      };
       
-      const result = await createBooking(completeBookingData);
+      const result = await createBooking(completeBookingData as CreateBookingData);
       if (result) {
         onComplete(completeBookingData);
       }

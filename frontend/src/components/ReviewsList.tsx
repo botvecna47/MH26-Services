@@ -20,7 +20,7 @@ interface ReviewsListProps {
   providerId: string;
 }
 
-export default function ReviewsList({ reviews, providerId }: ReviewsListProps) {
+export default function ReviewsList({ reviews = [], providerId }: ReviewsListProps) {
   const { isAuthenticated } = useUser();
   const [showAddReview, setShowAddReview] = useState(false);
   const [newRating, setNewRating] = useState(5);
@@ -145,7 +145,7 @@ export default function ReviewsList({ reviews, providerId }: ReviewsListProps) {
                 </button>
               </div>
               <p className="text-gray-700 mb-2">{review.comment}</p>
-              {review.photos.length > 0 && (
+              {review.photos && review.photos.length > 0 && (
                 <div className="flex gap-2">
                   {review.photos.map((photo, idx) => (
                     <div

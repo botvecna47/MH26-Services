@@ -8,15 +8,11 @@ import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 import { Checkbox } from './ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { 
-  Filter, 
-  Search, 
-  MapPin, 
-  Star, 
-  DollarSign, 
-  Clock, 
-  Calendar,
+  Search,
+  MapPin,
+  Star,
+  DollarSign,
+  Clock,
   SlidersHorizontal,
   X,
   ChevronDown,
@@ -94,13 +90,13 @@ const CITIES = [
   'Beed'
 ];
 
-export function AdvancedFilters({ 
-  filters, 
-  onFiltersChange, 
-  onApply, 
+export function AdvancedFilters({
+  filters,
+  onFiltersChange,
+  onApply,
   onReset,
   isLoading = false,
-  resultCount 
+  resultCount
 }: AdvancedFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [tempFilters, setTempFilters] = useState(filters);
@@ -131,10 +127,10 @@ export function AdvancedFilters({
     setTempFilters(prev => {
       const currentFeatures = prev.features || [];
       const hasFeature = currentFeatures.includes(feature);
-      
+
       return {
         ...prev,
-        features: hasFeature 
+        features: hasFeature
           ? currentFeatures.filter(f => f !== feature)
           : [...currentFeatures, feature]
       };
@@ -158,7 +154,7 @@ export function AdvancedFilters({
       features: [],
       providerType: 'all'
     };
-    
+
     setTempFilters(resetFilters);
     onFiltersChange(resetFilters);
     onReset();
@@ -166,7 +162,7 @@ export function AdvancedFilters({
 
   const getActiveFilterCount = () => {
     let count = 0;
-    
+
     if (filters.query) count++;
     if (filters.category && filters.category !== 'all') count++;
     if (filters.location?.city !== 'Nanded') count++;
@@ -176,7 +172,7 @@ export function AdvancedFilters({
     if (filters.features && filters.features.length > 0) count++;
     if (filters.providerType && filters.providerType !== 'all') count++;
     if (filters.availability?.isAvailable) count++;
-    
+
     return count;
   };
 
@@ -193,7 +189,7 @@ export function AdvancedFilters({
               </Badge>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {resultCount !== undefined && (
               <span className="text-sm text-muted-foreground">
@@ -233,14 +229,14 @@ export function AdvancedFilters({
           {/* Category */}
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select 
-              value={tempFilters.category || 'all'} 
+            <Select
+              value={tempFilters.category || 'all'}
               onValueChange={(value) => updateFilter('category', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {CATEGORIES.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     <div className="flex items-center space-x-2">
@@ -256,14 +252,14 @@ export function AdvancedFilters({
           {/* Sort By */}
           <div className="space-y-2">
             <Label>Sort By</Label>
-            <Select 
-              value={tempFilters.sortBy || 'relevance'} 
+            <Select
+              value={tempFilters.sortBy || 'relevance'}
               onValueChange={(value) => updateFilter('sortBy', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {SORT_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -291,14 +287,14 @@ export function AdvancedFilters({
                     <MapPin className="w-4 h-4" />
                     <span>City</span>
                   </Label>
-                  <Select 
-                    value={tempFilters.location?.city || 'Nanded'} 
+                  <Select
+                    value={tempFilters.location?.city || 'Nanded'}
                     onValueChange={(value) => updateNestedFilter('location', 'city', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select city" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       {CITIES.map((city) => (
                         <SelectItem key={city} value={city}>
                           {city}
@@ -433,7 +429,7 @@ export function AdvancedFilters({
                         </Button>
                       </Badge>
                     )}
-                    
+
                     {tempFilters.category && tempFilters.category !== 'all' && (
                       <Badge variant="secondary" className="flex items-center space-x-1">
                         <span>Category: {CATEGORIES.find(c => c.id === tempFilters.category)?.name}</span>
@@ -447,7 +443,7 @@ export function AdvancedFilters({
                         </Button>
                       </Badge>
                     )}
-                    
+
                     {tempFilters.features?.map((feature) => (
                       <Badge key={feature} variant="secondary" className="flex items-center space-x-1">
                         <span>{feature}</span>
@@ -488,7 +484,7 @@ export function AdvancedFilters({
             >
               {isExpanded ? 'Hide Filters' : 'More Filters'}
             </Button>
-            
+
             <Button
               onClick={handleApply}
               disabled={isLoading}

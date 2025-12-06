@@ -2,6 +2,7 @@
  * User Controller
  */
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import logger from '../config/logger';
 
@@ -9,7 +10,7 @@ export const userController = {
   /**
    * Get current user
    */
-  async getMe(req: Request, res: Response): Promise<void> {
+  async getMe(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
 
@@ -50,7 +51,7 @@ export const userController = {
   /**
    * Update current user profile
    */
-  async updateMe(req: Request, res: Response): Promise<void> {
+  async updateMe(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
       const { name, phone } = req.body;
@@ -72,6 +73,7 @@ export const userController = {
         });
 
         if (existingUser) {
+          logger.warn(`Phone conflict detected for user ${userId}. Phone ${phone} is already used by ${existingUser.id}`);
           res.status(409).json({ error: 'Phone number is already registered to another account' });
           return;
         }
@@ -109,7 +111,7 @@ export const userController = {
    * Upload profile picture (direct upload through backend)
    * This avoids CORS issues by proxying through the backend
    */
-  async uploadAvatar(req: Request, res: Response): Promise<void> {
+  async uploadAvatar(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
       const file = req.file;
@@ -150,7 +152,6 @@ export const userController = {
 
       res.json({
         url,
-        key,
         message: 'Avatar uploaded successfully',
       });
     } catch (error) {
@@ -195,4 +196,3 @@ export const userController = {
     }
   },
 };
-

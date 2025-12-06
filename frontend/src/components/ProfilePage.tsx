@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { authApi } from "../api/auth";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
@@ -10,12 +12,7 @@ import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import {
   User,
-  Mail,
-  Phone,
   MapPin,
-  Lock,
-  Shield,
-  Bell,
   Eye,
   EyeOff,
   Camera,
@@ -37,6 +34,8 @@ interface User {
   role: 'user' | 'provider' | 'admin';
   avatar?: string;
   businessName?: string;
+  phone?: string;
+  phoneVerified?: boolean;
 }
 
 interface ProfilePageProps {
@@ -59,6 +58,65 @@ export function ProfilePage({ user, userRole }: ProfilePageProps) {
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  
+  // Phone verification state
+  const [phone, setPhone] = useState(user.phone || '');
+  const [isPhoneVerified, setIsPhoneVerified] = useState(user.phoneVerified || false);
+  const [showOTPInput, setShowOTPInput] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+
+  // Update local state when user prop changes
+  useEffect(() => {
+    if (user.phone) setPhone(user.phone);
+    if (user.phoneVerified !== undefined) setIsPhoneVerified(user.phoneVerified);
+  }, [user]);
+
+  const handleSendOTP = async () => {
+    if (!phone || phone.length < 10) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    setIsSendingOTP(true);
+    try {
+      // Extract only digits
+      const phoneDigits = phone.replace(/\D/g, '');
+      const phoneToSend = phoneDigits.slice(-10);
+      
+      await authApi.sendPhoneOTP(phoneToSend);
+      setShowOTPInput(true);
+      toast.success("OTP sent successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to send OTP");
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setIsVerifyingOTP(true);
+    try {
+      const phoneDigits = phone.replace(/\D/g, '');
+      const phoneToVerify = phoneDigits.slice(-10);
+
+      await authApi.verifyPhoneOTP(phoneToVerify, otp);
+      setIsPhoneVerified(true);
+      setShowOTPInput(false);
+      setOtp('');
+      toast.success("Phone number verified successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Invalid OTP");
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
 
   // Mock active sessions
   const activeSessions: ActiveSession[] = [
@@ -213,14 +271,72 @@ export function ProfilePage({ user, userRole }: ProfilePageProps) {
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input 
-                        id="phone" 
-                        type="tel"
-                        autoComplete="tel"
-                        inputMode="numeric"
-                        defaultValue="+91 9876543210"
-                        placeholder="Enter phone number"
-                      />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <Input 
+                            id="phone" 
+                            type="tel"
+                            autoComplete="tel"
+                            inputMode="numeric"
+                            value={phone}
+                            onChange={(e) => {
+                              setPhone(e.target.value);
+                              if (isPhoneVerified && e.target.value !== user.phone) {
+                                setIsPhoneVerified(false);
+                              }
+                            }}
+                            placeholder="Enter phone number"
+                            className="flex-1"
+                          />
+                          {isPhoneVerified ? (
+                            <Badge className="bg-success text-success-foreground h-10 px-3 flex items-center justify-center min-w-[100px]">
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Verified
+                            </Badge>
+                          ) : (
+                            !showOTPInput && (
+                              <Button 
+                                type="button" 
+                                variant="outline"
+                                onClick={handleSendOTP}
+                                disabled={isSendingOTP || !phone}
+                                className="min-w-[100px]"
+                              >
+                                {isSendingOTP ? "Sending..." : "Verify"}
+                              </Button>
+                            )
+                          )}
+                        </div>
+
+                        {showOTPInput && !isPhoneVerified && (
+                          <div className="flex gap-2 items-center bg-muted/30 p-3 rounded-lg border border-border mt-2">
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="Enter 6-digit OTP"
+                              value={otp}
+                              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              maxLength={6}
+                              className="w-32"
+                            />
+                            <Button 
+                              type="button"
+                              onClick={handleVerifyOTP}
+                              disabled={isVerifyingOTP || otp.length !== 6}
+                            >
+                              {isVerifyingOTP ? "Verifying..." : "Submit OTP"}
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setShowOTPInput(false)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">

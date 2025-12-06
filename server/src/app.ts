@@ -13,6 +13,7 @@ import logger from './config/logger';
 const app = express();
 
 // Security middleware
+// Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -26,9 +27,11 @@ app.use(helmet({
         "blob:",
         "http://localhost:3000", // Allow images from backend
         "http://127.0.0.1:3000", // Allow images from backend (alternative)
-      ], // Allow blob: for image previews and local backend images
-      connectSrc: ["'self'", "https:", "http://localhost:3000", "http://127.0.0.1:3000"], // Allow API calls
-      fontSrc: ["'self'", "data:"],
+        "https://images.unsplash.com",
+        "https://api.dicebear.com",
+      ], 
+      connectSrc: ["'self'", "https:", "ws:", "wss:", "http://localhost:3000", "http://127.0.0.1:3000"], // Allow API and WebSocket calls
+      fontSrc: ["'self'", "data:", "https:"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
     },
@@ -115,6 +118,34 @@ app.use((req, res, next) => {
 app.get('/healthz', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Import routes
+import authRoutes from './routes/auth';
+import providerRoutes from './routes/providers';
+import bookingRoutes from './routes/bookings';
+import serviceRoutes from './routes/services';
+import messageRoutes from './routes/messages';
+import notificationRoutes from './routes/notifications';
+import reviewRoutes from './routes/reviews';
+import reportRoutes from './routes/reports';
+import adminRoutes from './routes/admin';
+import userRoutes from './routes/users';
+import healthRoutes from './routes/health';
+import appealRoutes from './routes/appeals';
+
+// Register routes
+app.use('/api/auth', authRoutes);
+app.use('/api/providers', providerRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/appeals', appealRoutes);
 
 // API rate limiting
 app.use('/api', apiLimiter);

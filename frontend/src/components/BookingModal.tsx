@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, DollarSign, User, Phone, Mail, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone, Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
@@ -9,7 +9,6 @@ import { useCreateBooking } from '../api/bookings';
 import { authApi } from '../api/auth';
 import { validateAddress } from '../utils/addressValidation';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -34,57 +33,61 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [address, setAddress] = useState('');
+  const [addressFields, setAddressFields] = useState({
+    houseNo: '',
+    area: '',
+    pincode: ''
+  });
   const [requirements, setRequirements] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [phoneOTP, setPhoneOTP] = useState('');
   const [showOTPInput, setShowOTPInput] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [phoneOTP, setPhoneOTP] = useState('');
   const [sendingOTP, setSendingOTP] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
-  const [addressError, setAddressError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Log provider data when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      console.log('BookingModal opened with provider:', {
-        providerId: provider.id,
-        businessName: provider.businessName,
-        services: provider.services,
-        serviceIds: provider.services.map(s => ({ id: s.id, title: s.title })),
-      });
-    }
-  }, [isOpen, provider]);
+  // Helper validation
+  const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
+  // Derived state
   const selectedService = provider.services.find(s => s.id === selectedServiceId);
-  const totalAmount = selectedService ? Number(selectedService.price) : 0;
+  const totalAmount = selectedService?.price || 0;
 
+  // Mock time slots
   const timeSlots = [
-    '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00',
-    '17:00', '18:00', '19:00'
+    "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"
   ];
 
-  // UUID validation helper
-  const isValidUUID = (str: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(str);
-  };
+  // Construct full address for submission
+  const fullAddress = `${addressFields.houseNo}, ${addressFields.area}, Nanded - ${addressFields.pincode}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedServiceId || !selectedDate || !selectedTime || !address) {
+    if (!user) {
+      toast.error('Please login to book a service');
+      return;
+    }
+
+    if (!selectedServiceId || !selectedDate || !selectedTime) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!addressFields.houseNo || !addressFields.area || !addressFields.pincode) {
+      toast.error('Please fill in all address fields');
+      return;
+    }
+
+    if (addressFields.pincode.length !== 6) {
+      toast.error('Please enter a valid 6-digit pincode');
       return;
     }
 
     // Validate serviceId is a valid UUID
     if (!isValidUUID(selectedServiceId)) {
       console.error('Invalid serviceId format:', selectedServiceId);
-      console.error('Selected service:', selectedService);
-      console.error('Provider services:', provider.services);
       toast.error('Invalid service selected. Please select a service again.');
       return;
     }
@@ -96,26 +99,13 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       return;
     }
 
-    // Validate address
-    const addressValidation = validateAddress(address);
-    if (!addressValidation.isValid) {
-      setAddressError(addressValidation.errors[0]);
-      toast.error(addressValidation.errors[0] || 'Please enter a valid address');
-      return;
-    }
-    setAddressError(null);
-
-    // Check if phone is verified (if user has phone)
-    // Only require verification if user has a phone number
-    if (user?.phone && user.phone.trim().length > 0 && !phoneVerified && !showOTPInput) {
+    // Check if phone is verified
+    if (user?.phone && !phoneVerified && !showOTPInput) {
       setShowOTPInput(true);
       toast.info('Please verify your phone number to continue');
       return;
     }
     
-    // If user doesn't have a phone, allow booking to proceed
-    // (phone verification is optional but recommended)
-
     // Validate total amount
     if (!totalAmount || totalAmount <= 0) {
       toast.error('Invalid service price');
@@ -133,40 +123,16 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
         return;
       }
       
-      // Ensure totalAmount is a proper number
-      const finalTotalAmount = typeof totalAmount === 'string' 
-        ? parseFloat(totalAmount) 
-        : typeof totalAmount === 'number' 
-        ? totalAmount 
-        : Number(totalAmount);
-      
-      if (isNaN(finalTotalAmount) || finalTotalAmount <= 0) {
-        toast.error('Invalid service price. Please select a service.');
-        setIsSubmitting(false);
-        return;
-      }
-      
       const bookingData = {
         providerId: provider.id,
         serviceId: selectedServiceId,
         scheduledAt: scheduledAt.toISOString(),
-        totalAmount: finalTotalAmount,
-        address: address.trim(),
+        totalAmount: totalAmount,
+        address: fullAddress,
+        city: 'Nanded',
+        pincode: addressFields.pincode,
         ...(requirements?.trim() && { requirements: requirements.trim() }),
       };
-      
-      console.log('Creating booking with data:', bookingData);
-      console.log('Data types:', {
-        providerId: typeof bookingData.providerId,
-        serviceId: typeof bookingData.serviceId,
-        scheduledAt: typeof bookingData.scheduledAt,
-        totalAmount: typeof bookingData.totalAmount,
-        address: typeof bookingData.address,
-      });
-      console.log('UUID validation:', {
-        providerId: { value: bookingData.providerId, isValid: isValidUUID(bookingData.providerId) },
-        serviceId: { value: bookingData.serviceId, isValid: isValidUUID(bookingData.serviceId) },
-      });
       
       await createBooking.mutateAsync(bookingData);
 
@@ -176,30 +142,11 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
       setSelectedServiceId('');
       setSelectedDate('');
       setSelectedTime('');
-      setAddress('');
+      setAddressFields({ houseNo: '', area: '', pincode: '' });
       setRequirements('');
     } catch (error: any) {
       console.error('Booking creation error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error details:', JSON.stringify(error.response?.data?.details, null, 2));
-      
-      let errorMessage = 'Failed to create booking';
-      
-      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-        // Show all validation errors
-        const errors = error.response.data.details.map((d: any) => {
-          const field = d.path?.replace('body.', '') || 'field';
-          return `${field}: ${d.message}`;
-        });
-        errorMessage = errors.join('\n');
-        console.error('Validation errors:', errors);
-        toast.error(errorMessage, { duration: 5000 });
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-        toast.error(errorMessage);
-      } else {
-        toast.error(errorMessage);
-      }
+      toast.error(error.response?.data?.error || 'Failed to create booking');
     } finally {
       setIsSubmitting(false);
     }
@@ -229,10 +176,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                 <button
                   key={service.id}
                   type="button"
-                  onClick={() => {
-                    console.log('Service selected:', { id: service.id, title: service.title });
-                    setSelectedServiceId(service.id);
-                  }}
+                  onClick={() => setSelectedServiceId(service.id)}
                   className={`w-full p-4 border-2 rounded-lg text-left transition-colors ${
                     selectedServiceId === service.id
                       ? 'border-[#ff6b35] bg-orange-50 text-gray-900'
@@ -240,7 +184,6 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
                   }`}
                 >
                   <div className="flex gap-4">
-                    {/* Service Image */}
                     {service.imageUrl && (
                       <div className="flex-shrink-0">
                         <ImageWithFallback
@@ -311,145 +254,57 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
             </div>
           </div>
 
-          {/* Phone OTP Verification */}
-          {showOTPInput && user?.phone && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-900">Verify Phone Number</h3>
-              </div>
-              <p className="text-sm text-gray-700">
-                We'll send an OTP to {user.phone && user.phone.length >= 10 
-                  ? `${user.phone.substring(0, 3)}****${user.phone.substring(user.phone.length - 3)}`
-                  : 'your phone number'}
-              </p>
-              {!otpSent ? (
-                <Button
-                  type="button"
-                  onClick={async () => {
-                    if (!user.phone) return;
-                    // Extract only digits from phone number (in case it has formatting)
-                    const phoneDigits = user.phone.replace(/\D/g, '');
-                    // Take last 10 digits (in case country code is included)
-                    const phoneToSend = phoneDigits.slice(-10);
-                    
-                    if (phoneToSend.length !== 10) {
-                      toast.error('Invalid phone number format');
-                      return;
-                    }
-                    
-                    setSendingOTP(true);
-                    try {
-                      await authApi.sendPhoneOTP(phoneToSend);
-                      setOtpSent(true);
-                      toast.success('OTP sent to your phone number');
-                    } catch (error: any) {
-                      toast.error(error.response?.data?.error || 'Failed to send OTP');
-                    } finally {
-                      setSendingOTP(false);
-                    }
-                  }}
-                  disabled={sendingOTP}
-                  className="w-full"
-                >
-                  {sendingOTP ? 'Sending...' : 'Send OTP'}
-                </Button>
-              ) : (
-                <div className="space-y-2">
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Enter 6-digit OTP"
-                    value={phoneOTP}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                      setPhoneOTP(value);
-                    }}
-                    maxLength={6}
-                    className="w-full"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      onClick={async () => {
-                        if (!user.phone || phoneOTP.length !== 6) {
-                          toast.error('Please enter a valid 6-digit OTP');
-                          return;
-                        }
-                        // Extract only digits from phone number (in case it has formatting)
-                        const phoneDigits = user.phone.replace(/\D/g, '');
-                        // Take last 10 digits (in case country code is included)
-                        const phoneToVerify = phoneDigits.slice(-10);
-                        
-                        if (phoneToVerify.length !== 10) {
-                          toast.error('Invalid phone number format');
-                          return;
-                        }
-                        
-                        setVerifyingOTP(true);
-                        try {
-                          await authApi.verifyPhoneOTP(phoneToVerify, phoneOTP);
-                          setPhoneVerified(true);
-                          setShowOTPInput(false);
-                          toast.success('Phone number verified successfully');
-                        } catch (error: any) {
-                          toast.error(error.response?.data?.error || 'Invalid OTP');
-                        } finally {
-                          setVerifyingOTP(false);
-                        }
-                      }}
-                      disabled={verifyingOTP || phoneOTP.length !== 6}
-                      className="flex-1"
-                    >
-                      {verifyingOTP ? 'Verifying...' : 'Verify OTP'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setOtpSent(false);
-                        setPhoneOTP('');
-                      }}
-                    >
-                      Resend
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Address */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <MapPin className="inline h-4 w-4 mr-1" />
-              Service Address <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={address}
-              onChange={(e) => {
-                setAddress(e.target.value);
-                // Clear error when user types
-                if (addressError) {
-                  setAddressError(null);
-                }
-              }}
-              required
-              rows={3}
-              placeholder="Enter complete address with street, area, city, and pincode (e.g., 123 Main Street, Shivaji Nagar, Nanded, 431601)"
-              className={`w-full px-3 py-2 border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b35] focus:border-[#ff6b35] ${
-                addressError ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {addressError && (
-              <p className="text-sm text-red-500 mt-1">{addressError}</p>
-            )}
-            {address && !addressError && validateAddress(address).isValid && (
-              <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
-                <CheckCircle className="h-4 w-4" />
-                Address looks valid
-              </p>
-            )}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900 flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Service Address
+            </h3>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Flat / House No / Building <span className="text-red-500">*</span></label>
+                <Input
+                  value={addressFields.houseNo}
+                  onChange={(e) => setAddressFields(prev => ({ ...prev, houseNo: e.target.value }))}
+                  placeholder="e.g., Flat 101, Sai Residency"
+                  className="bg-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Area / Colony <span className="text-red-500">*</span></label>
+                <Input
+                  value={addressFields.area}
+                  onChange={(e) => setAddressFields(prev => ({ ...prev, area: e.target.value }))}
+                  placeholder="e.g., Shivaji Nagar"
+                  className="bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">City</label>
+                  <Input
+                    value="Nanded"
+                    disabled
+                    className="bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Pincode <span className="text-red-500">*</span></label>
+                  <Input
+                    value={addressFields.pincode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setAddressFields(prev => ({ ...prev, pincode: val }));
+                    }}
+                    placeholder="43160_"
+                    className="bg-white"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Requirements */}
@@ -465,31 +320,6 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ff6b35] focus:border-[#ff6b35]"
             />
           </div>
-
-          {/* Customer Info Display */}
-          {user && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Your Contact Information</h3>
-              <div className="space-y-1 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>{user.name}</span>
-                </div>
-                {user.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    <span>{user.email}</span>
-                  </div>
-                )}
-                {user.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>{user.phone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Total Amount */}
           {selectedService && (
@@ -516,7 +346,7 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
             <Button
               type="submit"
               className="flex-1 bg-[#ff6b35] hover:bg-[#ff5722]"
-              disabled={isSubmitting || !selectedServiceId || !selectedDate || !selectedTime || !address}
+              disabled={isSubmitting || !selectedServiceId || !selectedDate || !selectedTime || !addressFields.houseNo || !addressFields.area || !addressFields.pincode}
             >
               {isSubmitting ? 'Creating Booking...' : 'Confirm Booking'}
             </Button>
@@ -526,4 +356,3 @@ export default function BookingModal({ isOpen, onClose, provider }: BookingModal
     </Dialog>
   );
 }
-

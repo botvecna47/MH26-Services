@@ -393,7 +393,18 @@ classDiagram
     ReviewController ..> Review : manages
     AdminController ..> User : manages
     AdminController ..> Provider : manages
+    AdminController ..> Provider : manages
     ServiceController ..> Service : manages
+    
+    class AppealController {
+        +create()
+        +list()
+        +getById()
+        +resolve()
+    }
+    
+    AppealController ..> User : manages
+    AppealController ..> Provider : manages
 ```
 
 ### 2.3 Service Classes
@@ -439,6 +450,15 @@ classDiagram
     SocketService ..> Message : emits
     SocketService ..> Notification : emits
     OTPService ..> User : verifies
+
+    class AppealService {
+        +createAppeal()
+        +getAppeals()
+        +resolveAppeal()
+    }
+    
+    AppealService ..> User : manages ban status
+    AppealService ..> Provider : manages status
 ```
 
 ---

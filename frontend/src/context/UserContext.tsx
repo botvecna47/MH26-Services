@@ -9,6 +9,12 @@ interface User {
   phone?: string;
   role: UserRole;
   avatarUrl?: string;
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
+  provider?: {
+    businessName: string;
+    status: string;
+  };
 }
 
 interface UserContextType {
@@ -44,6 +50,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
               phone: userData.phone,
               role: (userData.role as UserRole) || null,
               avatarUrl: userData.avatarUrl,
+              phoneVerified: userData.phoneVerified,
+              emailVerified: userData.emailVerified,
+              provider: userData.provider,
             });
           } else {
             // Invalid user data, clear it

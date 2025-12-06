@@ -30,6 +30,8 @@ export interface Provider {
   };
   services?: Service[];
   documents?: ProviderDocument[];
+  gallery?: string[];
+  createdAt: string;
 }
 
 export interface Service {

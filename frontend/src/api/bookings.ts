@@ -53,6 +53,8 @@ export interface CreateBookingData {
   scheduledAt: string;
   totalAmount: number;
   address?: string;
+  city?: string;
+  pincode?: string;
   requirements?: string;
 }
 

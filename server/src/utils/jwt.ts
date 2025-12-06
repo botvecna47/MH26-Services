@@ -2,7 +2,7 @@
  * JWT Token Utilities
  * Access tokens (15m) + Refresh tokens (7d) with rotation
  */
-import jwt from 'jsonwebtoken';
+import { sign, verify, SignOptions } from 'jsonwebtoken';
 import { prisma } from '../config/db';
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
@@ -20,9 +20,9 @@ export interface TokenPayload {
  * Generate access token
  */
 export function generateAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, ACCESS_SECRET, {
+  return sign(payload, ACCESS_SECRET, {
     expiresIn: ACCESS_EXPIRES_IN,
-  });
+  } as SignOptions);
 }
 
 /**
@@ -35,9 +35,9 @@ export async function generateRefreshToken(userId: string): Promise<string> {
     role: '',
   };
 
-  const token = jwt.sign(payload, REFRESH_SECRET, {
+  const token = sign(payload, REFRESH_SECRET, {
     expiresIn: REFRESH_EXPIRES_IN,
-  });
+  } as SignOptions);
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
@@ -57,14 +57,14 @@ export async function generateRefreshToken(userId: string): Promise<string> {
  * Verify access token
  */
 export function verifyAccessToken(token: string): TokenPayload {
-  return jwt.verify(token, ACCESS_SECRET) as TokenPayload;
+  return verify(token, ACCESS_SECRET) as TokenPayload;
 }
 
 /**
  * Verify refresh token
  */
 export function verifyRefreshToken(token: string): TokenPayload {
-  return jwt.verify(token, REFRESH_SECRET) as TokenPayload;
+  return verify(token, REFRESH_SECRET) as TokenPayload;
 }
 
 /**

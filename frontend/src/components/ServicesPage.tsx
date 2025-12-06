@@ -264,8 +264,11 @@ export default function ServicesPage() {
 
                   {/* View Details Button */}
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <Button variant="outline" size="sm" className="w-full" asChild>
-                      <span>View Details & Book</span>
+                    <Button variant="outline" size="sm" className="w-full gap-1" asChild>
+                      <span>
+                        <Shield className="h-3 w-3 inline mr-1 text-green-600" />
+                        View Verified Details
+                      </span>
                     </Button>
                   </div>
                 </div>

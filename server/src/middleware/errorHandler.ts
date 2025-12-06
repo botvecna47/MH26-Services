@@ -82,11 +82,36 @@ export function errorHandler(
     return;
   }
 
+  // Handle Database Connection Errors
+  if (err.name === 'PrismaClientInitializationError') {
+    logger.error('Database connection failed:', err);
+    res.status(503).json({
+      error: 'Service unavailable. Database connection failed.',
+      ...(process.env.NODE_ENV === 'development' && { details: err.message }),
+    });
+    return;
+  }
+
   // Handle validation errors
   if (err.name === 'ZodError') {
     res.status(400).json({
       error: 'Validation error',
       details: (err as any).errors,
+    });
+    return;
+  }
+
+  // Handle JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    res.status(401).json({
+      error: 'Invalid token. Please log in again.',
+    });
+    return;
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    res.status(401).json({
+      error: 'Your token has expired. Please log in again.',
     });
     return;
   }

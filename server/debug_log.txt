@@ -1,0 +1,13 @@
+DEBUG: List Services Query Params: {"category":"Plumbing"}
+DEBUG: Prisma Where Clause: {
+  "provider": {
+    "primaryCategory": "Plumbing"
+  }
+}
+DEBUG: List Services Query Params: {"category":"Plumbing"}
+DEBUG: Prisma Where Clause: {
+  "provider": {
+    "primaryCategory": "Plumbing"
+  }
+}
+DEBUG: Found 10 services. Total: 15

@@ -1,5 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// Removed unused imports
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import UnifiedNavigation from './components/UnifiedNavigation';
 import MobileBottomNav from './components/MobileBottomNav';
 import Footer from './components/Footer';
@@ -8,16 +10,14 @@ import ServicesPage from './components/ServicesPage';
 import ProviderDetailPage from './components/ProviderDetailPage';
 import ProviderOnboardingComplete from './components/ProviderOnboardingComplete';
 import DashboardPage from './components/DashboardPage';
-import MessagingPage from './components/MessagingPage';
-import InvoicesPage from './components/InvoicesPage';
 import AdminPanel from './components/AdminPanel';
 import AuthPage from './components/AuthPage';
-import DemoForms from './components/DemoForms';
 import Settings from './pages/Settings';
 import { AuthProvider } from './hooks/useAuth';
 import { UserProvider } from './context/UserContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Toaster } from './components/ui/sonner';
+import { PageTransition } from './components/ui/PageTransition';
 
 // Simple loading fallback
 const LoadingFallback = () => (
@@ -28,6 +28,37 @@ const LoadingFallback = () => (
     </div>
   </div>
 );
+
+const AppContent = () => {
+  const location = useLocation();
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Suspense fallback={<LoadingFallback />}>
+        <UnifiedNavigation />
+        <main className="pb-20 md:pb-0">
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+              <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
+              <Route path="/services" element={<PageTransition><ServicesPage /></PageTransition>} />
+              <Route path="/provider/:id" element={<PageTransition><ProviderDetailPage /></PageTransition>} />
+              <Route path="/provider-onboarding" element={<PageTransition><ProviderOnboardingComplete /></PageTransition>} />
+              <Route path="/dashboard" element={<PageTransition><DashboardPage /></PageTransition>} />
+              <Route path="/admin" element={<PageTransition><AdminPanel /></PageTransition>} />
+              <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+              {/* Catch-all route for 404s */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
+        </main>
+        <Footer />
+        <MobileBottomNav />
+        <Toaster />
+      </Suspense>
+    </div>
+  );
+};
 
 export default function App() {
   return (
@@ -40,31 +71,7 @@ export default function App() {
       <AuthProvider>
         <UserProvider>
           <NotificationProvider>
-            <div className="min-h-screen bg-gray-50">
-              <Suspense fallback={<LoadingFallback />}>
-                <UnifiedNavigation />
-                <main className="pb-20 md:pb-0">
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/services" element={<ServicesPage />} />
-                    <Route path="/provider/:id" element={<ProviderDetailPage />} />
-                    <Route path="/provider-onboarding" element={<ProviderOnboardingComplete />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/messages" element={<MessagingPage />} />
-                        <Route path="/invoices" element={<InvoicesPage />} />
-                        <Route path="/admin" element={<AdminPanel />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/demo-forms" element={<DemoForms />} />
-                        {/* Catch-all route for 404s */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </main>
-                <Footer />
-                <MobileBottomNav />
-                <Toaster />
-              </Suspense>
-            </div>
+            <AppContent />
           </NotificationProvider>
         </UserProvider>
       </AuthProvider>

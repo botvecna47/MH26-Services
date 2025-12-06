@@ -13,7 +13,7 @@ export const bookingController = {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { providerId, serviceId, scheduledAt, totalAmount } = req.body;
+      const { providerId, serviceId, scheduledAt, totalAmount, address, city, pincode, requirements } = req.body;
 
       // Verify provider and service exist
       const provider = await prisma.provider.findUnique({
@@ -33,9 +33,16 @@ export const bookingController = {
       }
 
       // Calculate platform fee and provider earnings
+      const price = Number(service.price);
       const platformFeeRate = 0.05; // 5% platform fee
-      const platformFee = Number(totalAmount) * platformFeeRate;
-      const providerEarnings = Number(totalAmount) - platformFee;
+      const platformFee = price * platformFeeRate;
+      const providerEarnings = price - platformFee;
+      
+      // Use price from service to ensure accuracy, ignore client-sent totalAmount if mismatch?
+      // For now, let's trust the service price.
+      const finalAmount = price;
+
+      const scheduledDate = new Date(scheduledAt);
 
       // Create booking
       const booking = await prisma.booking.create({
@@ -43,13 +50,16 @@ export const bookingController = {
           userId,
           providerId,
           serviceId,
-          scheduledAt: new Date(scheduledAt),
-          totalAmount,
+          scheduledAt: scheduledDate,
+          totalAmount: finalAmount,
           platformFee,
           providerEarnings,
-          status: 'PENDING',
-          address: req.body.address,
-          requirements: req.body.requirements,
+          status: 'PENDING', // Default to PENDING until provider confirms
+          paymentStatus: 'PENDING', // Default to PENDING
+          address,
+          city: "Nanded", // Default to Nanded for now or extract from address if structured
+          pincode: "431601", // Default
+          requirements,
         },
         include: {
           user: {
@@ -73,7 +83,7 @@ export const bookingController = {
             userId: provider.userId,
             type: 'BOOKING_REQUEST',
             title: 'New Booking Request',
-            message: `${booking.user.name} has requested ${booking.service.title} on ${new Date(booking.scheduledAt).toLocaleDateString()}`,
+            message: `${booking.user.name} has requested ${booking.service.title} on ${scheduledDate.toLocaleDateString()}`,
             metadata: {
               bookingId: booking.id,
               serviceId: booking.serviceId,
@@ -83,13 +93,20 @@ export const bookingController = {
         });
       } catch (error) {
         logger.error('Failed to create booking notification:', error);
-        // Don't fail the booking creation if notification fails
       }
 
       // Emit socket event
       emitBookingUpdate(provider.userId, booking);
 
-      res.status(201).json(booking);
+      res.status(201).json({
+        message: 'Booking request sent successfully',
+        booking: {
+          ...booking,
+          qrCodeUrl: provider.qrCodeUrl, // Include QR code in response
+          providerPhone: provider.phone,
+        },
+        instructions: "Please pay the provider directly using the QR code or Cash. The provider will confirm your booking."
+      });
     } catch (error) {
       logger.error('Create booking error:', error);
       res.status(500).json({ error: 'Failed to create booking' });
@@ -219,7 +236,7 @@ export const bookingController = {
     try {
       const userId = req.user!.id;
       const { id } = req.params;
-      const { status } = req.body;
+      const { status, paymentStatus } = req.body;
 
       const booking = await prisma.booking.findUnique({
         where: { id },
@@ -244,9 +261,13 @@ export const bookingController = {
         return;
       }
 
+      const dataToUpdate: any = {};
+      if (status) dataToUpdate.status = status;
+      if (paymentStatus) dataToUpdate.paymentStatus = paymentStatus;
+
       const updated = await prisma.booking.update({
         where: { id },
-        data: { status },
+        data: dataToUpdate,
         include: {
           user: {
             select: { id: true, name: true, email: true, phone: true },
@@ -270,6 +291,12 @@ export const bookingController = {
         if (status === 'COMPLETED') {
           notificationTitle = 'Service Completed';
           notificationMessage = `Your booking for ${updated.service.title} has been marked as completed`;
+        } else if (status === 'CONFIRMED') {
+            notificationTitle = 'Booking Confirmed';
+            notificationMessage = `Your booking for ${updated.service.title} has been confirmed`;
+        } else if (status === 'REJECTED') {
+            notificationTitle = 'Booking Rejected';
+            notificationMessage = `Your booking for ${updated.service.title} has been rejected`;
         }
 
         if (notificationTitle) {
@@ -573,9 +600,9 @@ export const bookingController = {
         date: booking.createdAt,
         booking,
         subtotal: booking.totalAmount,
-        tax: booking.totalAmount * 0.18, // 18% GST
-        platformFee: booking.totalAmount * 0.05, // 5% platform fee
-        total: booking.totalAmount * 1.23, // subtotal + tax + fee
+        tax: Number(booking.totalAmount) * 0.18, // 18% GST
+        platformFee: Number(booking.totalAmount) * 0.05, // 5% platform fee
+        total: Number(booking.totalAmount) * 1.23, // subtotal + tax + fee
       };
 
       res.json(invoice);
@@ -585,4 +612,3 @@ export const bookingController = {
     }
   },
 };
-

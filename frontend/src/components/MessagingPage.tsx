@@ -31,7 +31,7 @@ export default function MessagingPage() {
 
   // Fetch conversations from API
   const queryClient = useQueryClient();
-  const { data: conversationsData, isLoading: conversationsLoading, refetch: refetchConversations } = useConversations();
+  const { data: conversationsData, isLoading: conversationsLoading, refetch: refetchConversations } = useConversations({ enabled: !!user });
   const { data: messagesData, isLoading: messagesLoading, refetch: refetchMessages, error: messagesError } = useMessages(selectedConversation || '');
   const sendMessageMutation = useSendMessage();
   const socket = useSocket();

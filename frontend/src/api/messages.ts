@@ -86,10 +86,11 @@ export const messagesApi = {
 };
 
 // React Query hooks
-export function useConversations() {
+export function useConversations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['conversations'],
     queryFn: messagesApi.getConversations,
+    enabled: options?.enabled,
   });
 }
 

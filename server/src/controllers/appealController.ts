@@ -2,40 +2,24 @@
  * Appeal Controller
  */
 import { Request, Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
-import { emitNotification } from '../socket';
+import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
 import logger from '../config/logger';
 
 export const appealController = {
   /**
-   * Create appeal (provider)
+   * Create an appeal
    */
   async create(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { type, reason, details } = req.body;
+      const { type, reason, details, providerId } = req.body;
 
-      // Get provider
-      const provider = await prisma.provider.findUnique({
-        where: { userId },
-      });
-
-      if (!provider) {
-        res.status(404).json({ error: 'Provider not found' });
-        return;
-      }
-
-      // Check if provider is banned/suspended/rejected
-      if (provider.status === 'APPROVED') {
-        res.status(400).json({ error: 'Provider is already approved' });
-        return;
-      }
-
-      // Check for existing pending appeal
-      const existingAppeal = await prisma.providerAppeal.findFirst({
+      // Check if there's already a pending appeal
+      const existingAppeal = await prisma.appeal.findFirst({
         where: {
-          providerId: provider.id,
+          userId,
           status: 'PENDING',
         },
       });
@@ -45,41 +29,15 @@ export const appealController = {
         return;
       }
 
-      // Create appeal
-      const appeal = await prisma.providerAppeal.create({
+      const appeal = await prisma.appeal.create({
         data: {
-          providerId: provider.id,
-          type: type || 'OTHER',
+          userId,
+          providerId, // Optional, if appealing for a provider profile
+          type,
           reason,
           details,
           status: 'PENDING',
         },
-        include: {
-          provider: {
-            include: {
-              user: {
-                select: { id: true, name: true, email: true },
-              },
-            },
-          },
-        },
-      });
-
-      // Notify admins
-      const admins = await prisma.user.findMany({
-        where: { role: 'ADMIN' },
-        select: { id: true },
-      });
-
-      admins.forEach((admin) => {
-        emitNotification(admin.id, {
-          type: 'appeal_created',
-          payload: {
-            appealId: appeal.id,
-            providerId: provider.id,
-            providerName: provider.businessName,
-          },
-        });
       });
 
       res.status(201).json(appeal);
@@ -90,38 +48,36 @@ export const appealController = {
   },
 
   /**
-   * List appeals (admin)
+   * List appeals (Admin only)
    */
-  async list(req: Request, res: Response): Promise<void> {
+  async list(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { status, type, page = 1, limit = 20 } = req.query;
-
+      const { status, type, page = 1, limit = 10 } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
-      const where: any = {};
 
+      const where: any = {};
       if (status) where.status = status;
       if (type) where.type = type;
 
       const [appeals, total] = await Promise.all([
-        prisma.providerAppeal.findMany({
+        prisma.appeal.findMany({
           where,
           skip,
           take: Number(limit),
           orderBy: { createdAt: 'desc' },
           include: {
+            user: {
+              select: { id: true, name: true, email: true, isBanned: true },
+            },
             provider: {
-              include: {
-                user: {
-                  select: { id: true, name: true, email: true },
-                },
-              },
+              select: { id: true, businessName: true, status: true },
             },
             reviewer: {
-              select: { id: true, name: true, email: true },
+              select: { id: true, name: true },
             },
           },
         }),
-        prisma.providerAppeal.count({ where }),
+        prisma.appeal.count({ where }),
       ]);
 
       res.json({
@@ -142,29 +98,35 @@ export const appealController = {
   /**
    * Get appeal by ID
    */
-  async getById(req: Request, res: Response): Promise<void> {
+  async getById(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
 
-      const appeal = await prisma.providerAppeal.findUnique({
+      const appeal = await prisma.appeal.findUnique({
         where: { id },
         include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true, isBanned: true },
+          },
           provider: {
-            include: {
-              user: {
-                select: { id: true, name: true, email: true, phone: true },
-              },
-              documents: true,
-            },
+            include: { services: true },
           },
           reviewer: {
-            select: { id: true, name: true, email: true },
+            select: { id: true, name: true },
           },
         },
       });
 
       if (!appeal) {
         res.status(404).json({ error: 'Appeal not found' });
+        return;
+      }
+
+      // Check authorization
+      if (userRole !== 'ADMIN' && appeal.userId !== userId) {
+        res.status(403).json({ error: 'Unauthorized' });
         return;
       }
 
@@ -176,28 +138,21 @@ export const appealController = {
   },
 
   /**
-   * Review appeal (admin)
+   * Resolve appeal (Admin only)
    */
-  async review(req: AuthRequest, res: Response): Promise<void> {
+  async resolve(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const adminId = req.user!.id;
       const { id } = req.params;
       const { status, adminNotes } = req.body;
+      const reviewerId = req.user!.id;
 
-      if (!['APPROVED', 'REJECTED', 'UNDER_REVIEW'].includes(status)) {
+      if (!['APPROVED', 'REJECTED'].includes(status)) {
         res.status(400).json({ error: 'Invalid status' });
         return;
       }
 
-      const appeal = await prisma.providerAppeal.findUnique({
+      const appeal = await prisma.appeal.findUnique({
         where: { id },
-        include: {
-          provider: {
-            include: {
-              user: { select: { id: true } },
-            },
-          },
-        },
       });
 
       if (!appeal) {
@@ -206,95 +161,42 @@ export const appealController = {
       }
 
       // Update appeal
-      const updated = await prisma.providerAppeal.update({
+      const updatedAppeal = await prisma.appeal.update({
         where: { id },
         data: {
           status,
           adminNotes,
-          reviewedBy: adminId,
+          reviewedBy: reviewerId,
           reviewedAt: new Date(),
-        },
-        include: {
-          provider: {
-            include: {
-              user: { select: { id: true, name: true, email: true } },
-            },
-          },
         },
       });
 
-      // If approved, update provider status
+      // Handle unban logic if approved
       if (status === 'APPROVED') {
-        if (appeal.type === 'UNBAN_REQUEST' || appeal.type === 'SUSPENSION_APPEAL') {
+        if (appeal.type === 'UNBAN_REQUEST' && appeal.userId) {
+          // Unban user
+          await prisma.user.update({
+            where: { id: appeal.userId },
+            data: { isBanned: false },
+          });
+        }
+        
+        if (appeal.type === 'SUSPENSION_APPEAL' && appeal.providerId) {
+          // Unsuspend provider
           await prisma.provider.update({
             where: { id: appeal.providerId },
             data: { status: 'APPROVED' },
           });
-        } else if (appeal.type === 'REJECTION_APPEAL') {
-          await prisma.provider.update({
-            where: { id: appeal.providerId },
-            data: { status: 'PENDING' },
-          });
         }
-
-        // Notify provider
-        emitNotification(appeal.provider.user.id, {
-          type: 'appeal_approved',
-          payload: {
-            appealId: id,
-            message: 'Your appeal has been approved',
-          },
-        });
-      } else if (status === 'REJECTED') {
-        // Notify provider
-        emitNotification(appeal.provider.user.id, {
-          type: 'appeal_rejected',
-          payload: {
-            appealId: id,
-            message: 'Your appeal has been rejected',
-            notes: adminNotes,
-          },
-        });
       }
 
-      res.json(updated);
+      // Send notification (optional, if we had a notification system for this)
+      // For now, just return the updated appeal
+
+      res.json(updatedAppeal);
     } catch (error) {
-      logger.error('Review appeal error:', error);
-      res.status(500).json({ error: 'Failed to review appeal' });
-    }
-  },
-
-  /**
-   * Get provider's appeals
-   */
-  async getMyAppeals(req: AuthRequest, res: Response): Promise<void> {
-    try {
-      const userId = req.user!.id;
-
-      const provider = await prisma.provider.findUnique({
-        where: { userId },
-      });
-
-      if (!provider) {
-        res.status(404).json({ error: 'Provider not found' });
-        return;
-      }
-
-      const appeals = await prisma.providerAppeal.findMany({
-        where: { providerId: provider.id },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          reviewer: {
-            select: { id: true, name: true, email: true },
-          },
-        },
-      });
-
-      res.json({ data: appeals });
-    } catch (error) {
-      logger.error('Get my appeals error:', error);
-      res.status(500).json({ error: 'Failed to fetch appeals' });
+      logger.error('Resolve appeal error:', error);
+      res.status(500).json({ error: 'Failed to resolve appeal' });
     }
   },
 };
-

@@ -4,9 +4,7 @@
  */
 import rateLimit from 'express-rate-limit';
 
-// Note: For production with Redis, install 'rate-limit-redis' package
-// For now, using in-memory store (works for single instance)
-// TODO: Add Redis store for distributed rate limiting:
+// TODO: Implement Redis store for distributed rate limiting
 // import RedisStore from 'rate-limit-redis';
 // import { getRedisClient } from '../config/redis';
 
@@ -36,6 +34,13 @@ export const authLimiter = rateLimit({
   // Custom handler to include retryAfter in response body
   handler: (req, res) => {
     const retryAfter = Math.ceil(15 * 60); // 15 minutes in seconds
+    const ip = req.ip || 'unknown';
+    
+    // Log the rate limit event
+    import('../config/logger').then(({ default: logger }) => {
+      logger.warn(`Rate limit exceeded for IP ${ip} on ${req.path}`);
+    });
+
     res.setHeader('Retry-After', retryAfter.toString());
     res.status(429).json({
       error: 'Too many authentication attempts, please try again later.',

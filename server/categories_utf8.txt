@@ -1,0 +1,702 @@
+[
+  {
+    "id": "b40ef7b6-27da-4d9c-a86a-7c268d2ae826",
+    "businessName": "Patil Plumbing Works",
+    "primaryCategory": "Plumbing",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "8ef9a562-dbdf-496c-9571-f4254f254e28",
+        "title": "Pipe Repair & Installation"
+      },
+      {
+        "id": "91fbea01-607d-4182-9035-f569d12b1968",
+        "title": "Water Tank Cleaning"
+      },
+      {
+        "id": "e986c2b3-1672-4066-84f8-9d6b03750b8b",
+        "title": "Bathroom Fitting & Installation"
+      }
+    ]
+  },
+  {
+    "id": "ced46624-ffa0-4329-867f-155a21386760",
+    "businessName": "Nanded Plumbing Services",
+    "primaryCategory": "Plumbing",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "cd78567a-2a73-4834-b675-a042117a0c2f",
+        "title": "Emergency Plumbing Service"
+      },
+      {
+        "id": "0c4a20f8-b4c7-477d-967e-c83e75eea857",
+        "title": "Drain Cleaning & Unclogging"
+      },
+      {
+        "id": "fbbc3c7c-5aec-465a-953c-41f096ede1d8",
+        "title": "Pipe Repair & Installation"
+      }
+    ]
+  },
+  {
+    "id": "29fb55ab-df0c-44e1-92c9-68adba627082",
+    "businessName": "Pipe Doctor Services",
+    "primaryCategory": "Plumbing",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "18e9856b-f4d0-45d3-9c4c-5ac27583aa46",
+        "title": "Water Tank Cleaning"
+      },
+      {
+        "id": "458802cd-01a7-4864-ad41-e316784eb399",
+        "title": "Bathroom Fitting & Installation"
+      },
+      {
+        "id": "9dac7bb6-4508-4fe8-9126-d4e9984489d6",
+        "title": "Emergency Plumbing Service"
+      }
+    ]
+  },
+  {
+    "id": "ec450e57-0357-41fc-b0fc-8bbe213e5c8f",
+    "businessName": "Rapid Plumbing Solutions",
+    "primaryCategory": "Plumbing",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "f660dace-4ba5-4dd2-80b0-451d80b5359e",
+        "title": "Drain Cleaning & Unclogging"
+      },
+      {
+        "id": "1cb20dc5-aca2-47ed-889e-476217082f5c",
+        "title": "Pipe Repair & Installation"
+      },
+      {
+        "id": "c6ce828e-0365-42e4-a08b-f80dfdb13698",
+        "title": "Water Tank Cleaning"
+      }
+    ]
+  },
+  {
+    "id": "10d7208e-9730-44aa-98b3-271b9c5633a8",
+    "businessName": "Master Plumbers Nanded",
+    "primaryCategory": "Plumbing",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "a32792fe-e91c-4d14-9b24-41d0662ce01b",
+        "title": "Bathroom Fitting & Installation"
+      },
+      {
+        "id": "4f7f02aa-e54c-429f-9c1d-f29772797503",
+        "title": "Emergency Plumbing Service"
+      },
+      {
+        "id": "645a0a96-0620-4113-913b-beab81e9a9d0",
+        "title": "Drain Cleaning & Unclogging"
+      }
+    ]
+  },
+  {
+    "id": "9026c965-02e6-4f16-8f05-617bc28f8b8b",
+    "businessName": "Shinde Electricals",
+    "primaryCategory": "Electrical",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "6cdf0668-ef65-4aaf-894e-4d3a1866bea4",
+        "title": "Electrical Wiring & Installation"
+      },
+      {
+        "id": "d7ca559c-38f3-47cd-9a00-d08b3ed09266",
+        "title": "Electrical Repairs"
+      },
+      {
+        "id": "c133af0b-246f-456c-bf98-db57b65ff0ad",
+        "title": "Fan & Light Installation"
+      }
+    ]
+  },
+  {
+    "id": "f1782c81-7ffd-4bd5-a44e-04793a2dae7d",
+    "businessName": "Bright Electricals",
+    "primaryCategory": "Electrical",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "bb3dbd51-3dc6-4970-9f7d-9d7594016c9c",
+        "title": "MCB & Fuse Box Repair"
+      },
+      {
+        "id": "70029e0c-48ea-49d1-a87a-488bfb514481",
+        "title": "Home Electrical Safety Check"
+      },
+      {
+        "id": "36781e55-5225-448c-b583-1ebf7909ff3e",
+        "title": "Electrical Wiring & Installation"
+      }
+    ]
+  },
+  {
+    "id": "08f869fe-4034-462c-8b86-17216394051a",
+    "businessName": "Voltage Solutions",
+    "primaryCategory": "Electrical",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "9544fd65-463f-42aa-ae90-d0d469a1dca2",
+        "title": "Electrical Repairs"
+      },
+      {
+        "id": "1d8c21e7-14ae-4962-adfe-adbcd4ff79e8",
+        "title": "Fan & Light Installation"
+      },
+      {
+        "id": "2d9f3be8-0cb9-42b8-8e35-a54c1d13f008",
+        "title": "MCB & Fuse Box Repair"
+      }
+    ]
+  },
+  {
+    "id": "daf61cb6-1a2d-4789-bb27-931e8ac5e4bb",
+    "businessName": "Current Tech Electricians",
+    "primaryCategory": "Electrical",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "99c11f55-9319-4f86-b6ac-6c64a58d36a1",
+        "title": "Home Electrical Safety Check"
+      },
+      {
+        "id": "1dd743f7-a874-4bf9-a655-3ece4e1f830f",
+        "title": "Electrical Wiring & Installation"
+      },
+      {
+        "id": "124170ee-a2ef-4373-9dd5-240b133b0c95",
+        "title": "Electrical Repairs"
+      }
+    ]
+  },
+  {
+    "id": "124fb371-8767-4ed3-aeb0-21daf829e6f3",
+    "businessName": "Safe Wire Electricals",
+    "primaryCategory": "Electrical",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "a5e7b641-3214-49b4-8326-fe7819d128f9",
+        "title": "Fan & Light Installation"
+      },
+      {
+        "id": "3c9f5bc9-95a1-4070-86b3-56bc2450f23f",
+        "title": "MCB & Fuse Box Repair"
+      },
+      {
+        "id": "9a6ed6b8-4b0a-41cd-8757-c35d06e2bc24",
+        "title": "Home Electrical Safety Check"
+      }
+    ]
+  },
+  {
+    "id": "1dd97f32-5bfc-4c18-a7b8-bf2c225a97c0",
+    "businessName": "Clean & Shine Services",
+    "primaryCategory": "Cleaning",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "92a044f0-202f-4b5b-b288-4393e95dcacf",
+        "title": "Home Deep Cleaning"
+      },
+      {
+        "id": "727f6c4f-5fe9-467b-864c-ec07f3ceb796",
+        "title": "Office Cleaning Service"
+      },
+      {
+        "id": "24f26b44-6391-441f-a2ba-b9cb0f74b372",
+        "title": "Carpet & Sofa Cleaning"
+      }
+    ]
+  },
+  {
+    "id": "ac2b5795-cdb0-42f4-9dab-0f0a9d61fd65",
+    "businessName": "Sparkle Cleaning",
+    "primaryCategory": "Cleaning",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "68790bff-5734-42e7-84ff-43d480b3b5ce",
+        "title": "Kitchen Deep Cleaning"
+      },
+      {
+        "id": "0e5e6e8e-8956-46e6-83c9-83b3ab1550ef",
+        "title": "Bathroom Sanitization"
+      },
+      {
+        "id": "78642cc9-469f-4c9f-bed4-4d906260e184",
+        "title": "Home Deep Cleaning"
+      }
+    ]
+  },
+  {
+    "id": "d612d995-eec7-42c0-9172-34e1d4048916",
+    "businessName": "Deep Clean Experts",
+    "primaryCategory": "Cleaning",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "3d169745-7bb1-4a47-92b2-d89970b5b6b4",
+        "title": "Office Cleaning Service"
+      },
+      {
+        "id": "a56af332-277c-453c-a586-296dfd638fa2",
+        "title": "Carpet & Sofa Cleaning"
+      },
+      {
+        "id": "fdf57214-34b8-4f30-a7cd-1a51488c15ee",
+        "title": "Kitchen Deep Cleaning"
+      }
+    ]
+  },
+  {
+    "id": "699ecd5d-3a75-49ea-be3f-5eb01246831e",
+    "businessName": "Green Cleaning Solutions",
+    "primaryCategory": "Cleaning",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "6034174c-e193-4b27-b493-8dc030b5db55",
+        "title": "Bathroom Sanitization"
+      },
+      {
+        "id": "397e2fe0-3123-4988-9e1e-acd6c0960b30",
+        "title": "Home Deep Cleaning"
+      },
+      {
+        "id": "44511443-c198-40f5-887a-5c2966877be7",
+        "title": "Office Cleaning Service"
+      }
+    ]
+  },
+  {
+    "id": "e609fdcb-3c0d-4621-9e59-1b3e5d6e8461",
+    "businessName": "Swift Clean Services",
+    "primaryCategory": "Cleaning",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "65e1c7f5-3be9-41b1-a72d-c33e151ae5c5",
+        "title": "Carpet & Sofa Cleaning"
+      },
+      {
+        "id": "e6333a2d-2b45-4b02-a064-4a9de28930b8",
+        "title": "Kitchen Deep Cleaning"
+      },
+      {
+        "id": "f9ac59b6-2d68-4337-ae17-82a15d882ac3",
+        "title": "Bathroom Sanitization"
+      }
+    ]
+  },
+  {
+    "id": "274affe9-cc1a-4535-b9e6-6484e00dbf4c",
+    "businessName": "Lakme Beauty Salon",
+    "primaryCategory": "Salon",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "6fac91cb-76a2-48ec-97eb-3e834332eb5d",
+        "title": "Haircut & Styling"
+      },
+      {
+        "id": "a19069bf-114b-4a4e-90a1-f03ded5a7784",
+        "title": "Hair Color & Highlights"
+      },
+      {
+        "id": "02f84609-d2c8-4f5e-9589-b71ca798ab2b",
+        "title": "Facial & Skin Care"
+      }
+    ]
+  },
+  {
+    "id": "16b29373-a04f-49c5-9316-1097810c8ff9",
+    "businessName": "Men's Grooming Studio",
+    "primaryCategory": "Salon",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "23652bb6-06b7-4505-aa4d-09c1b6804a66",
+        "title": "Bridal Makeup & Hair"
+      },
+      {
+        "id": "e58f5387-7e43-4d9a-8899-2ca26161999c",
+        "title": "Hair Spa & Treatment"
+      },
+      {
+        "id": "90dbd8be-297d-483a-8c9e-1ab4dcd0e697",
+        "title": "Haircut & Styling"
+      }
+    ]
+  },
+  {
+    "id": "061e0936-32d8-452e-a9f2-4fdae7ec656a",
+    "businessName": "Beauty Bliss Salon",
+    "primaryCategory": "Salon",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "1f20bce2-97a2-4b3f-a803-f6263c4a5bd2",
+        "title": "Hair Color & Highlights"
+      },
+      {
+        "id": "68fe764f-3253-444b-bae4-275136cf097e",
+        "title": "Facial & Skin Care"
+      },
+      {
+        "id": "3eca4d66-bc89-4937-9bc7-06c4c090d3bc",
+        "title": "Bridal Makeup & Hair"
+      }
+    ]
+  },
+  {
+    "id": "f872fb9b-dfa8-4418-93d0-9831bc2ee24f",
+    "businessName": "Quick Cuts Unisex",
+    "primaryCategory": "Salon",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "c42410f2-f890-45f7-90e1-6504ce6c5beb",
+        "title": "Hair Spa & Treatment"
+      },
+      {
+        "id": "431cc7f6-221b-4218-8925-378a44fc8c05",
+        "title": "Haircut & Styling"
+      },
+      {
+        "id": "93b743d8-6db9-4ec9-a505-fcd5449e7b43",
+        "title": "Hair Color & Highlights"
+      }
+    ]
+  },
+  {
+    "id": "9f18e71e-716a-487c-81ff-e68679c75c09",
+    "businessName": "Elite Hair & Beauty",
+    "primaryCategory": "Salon",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "b4148813-ffcd-4642-8da6-fa526db20dad",
+        "title": "Facial & Skin Care"
+      },
+      {
+        "id": "edaa5c37-b835-4976-928f-e8779eb054e6",
+        "title": "Bridal Makeup & Hair"
+      },
+      {
+        "id": "c7a760e2-dc4c-4118-8042-92221a6a9e7f",
+        "title": "Hair Spa & Treatment"
+      }
+    ]
+  },
+  {
+    "id": "0dd8c202-543a-4850-aba8-dbc548bd82e0",
+    "businessName": "Nanded Tutoring Center",
+    "primaryCategory": "Tutoring",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "dc9ed4eb-e5e3-42e0-bd16-9627bc85e6d2",
+        "title": "Mathematics Tutoring"
+      },
+      {
+        "id": "89b1bd0f-025e-4a27-a5b1-5b74a0b7357a",
+        "title": "Science Classes"
+      },
+      {
+        "id": "6b3b95ab-4ff6-4605-bd0e-e18b4332173a",
+        "title": "English Language Classes"
+      }
+    ]
+  },
+  {
+    "id": "f10f1362-53d2-4d5f-8d39-df49a8886f94",
+    "businessName": "Smart Learning Academy",
+    "primaryCategory": "Tutoring",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "461380b5-d97d-4beb-a15a-925e3cb1eee8",
+        "title": "Computer & Programming"
+      },
+      {
+        "id": "1787e2f6-ad07-4927-9815-fca7ddac536e",
+        "title": "Exam Preparation Classes"
+      },
+      {
+        "id": "429bfa13-7fae-4bb9-8aea-a2b504722e26",
+        "title": "Mathematics Tutoring"
+      }
+    ]
+  },
+  {
+    "id": "e474d5da-bf67-4776-be84-84f6a0c3681f",
+    "businessName": "Expert Tutors Nanded",
+    "primaryCategory": "Tutoring",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "d500074b-e932-4467-87d7-f21609f3b1dd",
+        "title": "Science Classes"
+      },
+      {
+        "id": "3c2935ae-f206-4eb4-aac4-cfc50e78992b",
+        "title": "English Language Classes"
+      },
+      {
+        "id": "948cf394-ee95-472a-9c00-93e6d49926d3",
+        "title": "Computer & Programming"
+      }
+    ]
+  },
+  {
+    "id": "bae1964c-08c7-4636-b297-73b744890dd3",
+    "businessName": "Study Hub Nanded",
+    "primaryCategory": "Tutoring",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "b927c699-b901-46b2-addc-9409f6c198ef",
+        "title": "Exam Preparation Classes"
+      },
+      {
+        "id": "fec40d6c-d50d-4563-9087-a3fc7785f65b",
+        "title": "Mathematics Tutoring"
+      },
+      {
+        "id": "bedbe2ab-1929-4e1c-acf0-d0a566215874",
+        "title": "Science Classes"
+      }
+    ]
+  },
+  {
+    "id": "77be7b49-9c42-4785-b9f6-6b32a39a825d",
+    "businessName": "Knowledge Point",
+    "primaryCategory": "Tutoring",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "b20c8a4a-3357-41ce-b8ea-fcbdc4a76247",
+        "title": "English Language Classes"
+      },
+      {
+        "id": "05979683-9961-4379-97bc-7339f8a7fd0b",
+        "title": "Computer & Programming"
+      },
+      {
+        "id": "e1feba1a-34e1-47ef-ba8c-458a8b477cc8",
+        "title": "Exam Preparation Classes"
+      }
+    ]
+  },
+  {
+    "id": "dc7fa86a-2366-47b2-a104-895f94beb50d",
+    "businessName": "Gold's Gym Nanded",
+    "primaryCategory": "Fitness",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "00838c4d-6b30-41f2-853f-cbecf75fde35",
+        "title": "Personal Training"
+      },
+      {
+        "id": "ce1c6c00-0f61-4a01-ae9c-0f6fcd75fbbb",
+        "title": "Yoga Classes"
+      },
+      {
+        "id": "ee8018bf-e191-4c87-9be2-873eaaf8a2f3",
+        "title": "Gym Membership"
+      }
+    ]
+  },
+  {
+    "id": "11d65d7c-fe1c-45f6-84bb-4b20eb312cb3",
+    "businessName": "Power Fitness Studio",
+    "primaryCategory": "Fitness",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "69439905-301b-4809-af2d-4590a10f02c8",
+        "title": "Weight Loss Program"
+      },
+      {
+        "id": "154f1080-ba73-483d-ae78-e0932e9cb1f1",
+        "title": "Zumba & Dance Fitness"
+      },
+      {
+        "id": "d399826c-3bc7-4c4a-a497-5101f76c39be",
+        "title": "Personal Training"
+      }
+    ]
+  },
+  {
+    "id": "19508df2-3ccb-4c8b-98a6-e65e21b91bbc",
+    "businessName": "Iron Gym Nanded",
+    "primaryCategory": "Fitness",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "7399f26a-6b81-490a-bc24-7074d2982bc0",
+        "title": "Yoga Classes"
+      },
+      {
+        "id": "7ee38058-2780-41ff-9538-f3641c62d788",
+        "title": "Gym Membership"
+      },
+      {
+        "id": "58bfbcc1-17d9-4bed-90d1-9cdc2c17c520",
+        "title": "Weight Loss Program"
+      }
+    ]
+  },
+  {
+    "id": "25d11b85-1c78-4331-9f83-8ae413ff577a",
+    "businessName": "Yoga & Wellness Center",
+    "primaryCategory": "Fitness",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "e2807ddb-9980-44ec-8ec0-ed938b3e8c52",
+        "title": "Zumba & Dance Fitness"
+      },
+      {
+        "id": "2ee9c5ff-2a06-4c9f-95c9-8cd01692b7b5",
+        "title": "Personal Training"
+      },
+      {
+        "id": "41cd842c-4810-4073-9780-6521de638f9a",
+        "title": "Yoga Classes"
+      }
+    ]
+  },
+  {
+    "id": "18f506b1-41a1-4f84-87c0-28ead2859a1e",
+    "businessName": "CrossFit Nanded",
+    "primaryCategory": "Fitness",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "0481be14-fffa-43d0-a72a-dd0bc462a07a",
+        "title": "Gym Membership"
+      },
+      {
+        "id": "297c1a32-9738-4030-a536-ac144c213ad6",
+        "title": "Weight Loss Program"
+      },
+      {
+        "id": "9deb3a89-0d3e-466a-8e6f-945e123ff694",
+        "title": "Zumba & Dance Fitness"
+      }
+    ]
+  },
+  {
+    "id": "a610ede1-6d90-4a83-a168-4f5ecc631c83",
+    "businessName": "Shri Sai Tiffin Service",
+    "primaryCategory": "Catering",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "cdca871a-1587-4d1d-a0a4-991e38b693d3",
+        "title": "Daily Tiffin Service"
+      },
+      {
+        "id": "55fd0348-9562-4dd9-b495-5f15d6b17ed5",
+        "title": "Party Catering Service"
+      },
+      {
+        "id": "de4f99d1-6e82-4cd1-ba26-e759eed13c36",
+        "title": "Student Tiffin Service"
+      }
+    ]
+  },
+  {
+    "id": "1610f21b-e448-4639-b554-12a503f905e8",
+    "businessName": "Maa Ki Rasoi Tiffin",
+    "primaryCategory": "Catering",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "fe37c9c5-2138-4cee-9d9d-defa6875558f",
+        "title": "Office Lunch Service"
+      },
+      {
+        "id": "04ceec99-7133-4300-ae29-0ea1ada5764e",
+        "title": "Traditional Maharashtrian Thali"
+      },
+      {
+        "id": "fa7d9598-db92-4914-ae13-5f9b405ac180",
+        "title": "Daily Tiffin Service"
+      }
+    ]
+  },
+  {
+    "id": "7786375c-78b6-45ff-9747-3b5a60c8e078",
+    "businessName": "Ghar Jaisa Khana",
+    "primaryCategory": "Catering",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "9d9d5e12-9821-4482-a474-49625850c60c",
+        "title": "Party Catering Service"
+      },
+      {
+        "id": "064033f3-27ad-401d-b2e3-bcc53f179253",
+        "title": "Student Tiffin Service"
+      },
+      {
+        "id": "ac18eae2-ca98-4487-8e50-1c10050baeb0",
+        "title": "Office Lunch Service"
+      }
+    ]
+  },
+  {
+    "id": "6e3e247c-0e88-47a9-a809-ae93822782c4",
+    "businessName": "Student Special Tiffin",
+    "primaryCategory": "Catering",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "6390ea05-dff0-4e86-8ee5-96394e97b2b5",
+        "title": "Traditional Maharashtrian Thali"
+      },
+      {
+        "id": "d87e48b2-ba9a-4cde-b3fc-039068ec2938",
+        "title": "Daily Tiffin Service"
+      },
+      {
+        "id": "655a8531-4fa2-48ae-9507-6895bba29c14",
+        "title": "Party Catering Service"
+      }
+    ]
+  },
+  {
+    "id": "016d8f6d-9835-46b7-afb5-393730596188",
+    "businessName": "Premium Tiffin Express",
+    "primaryCategory": "Catering",
+    "status": "APPROVED",
+    "services": [
+      {
+        "id": "5e2d6c2b-90e4-4c8f-b710-0bd1f55e59f1",
+        "title": "Student Tiffin Service"
+      },
+      {
+        "id": "7f76c9e3-6776-4d5b-bccf-4f4a52310064",
+        "title": "Office Lunch Service"
+      },
+      {
+        "id": "1c7509e8-3e07-4d02-bee4-8bf85c25926e",
+        "title": "Traditional Maharashtrian Thali"
+      }
+    ]
+  }
+]

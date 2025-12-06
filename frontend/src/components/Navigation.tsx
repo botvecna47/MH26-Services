@@ -20,7 +20,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
   ];
 
   return (
-    <motion.nav 
+    <motion.nav
       className="bg-white/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 shadow-lg"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -29,13 +29,13 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.div 
-            className="flex items-center space-x-2 cursor-pointer group" 
+          <motion.div
+            className="flex items-center space-x-2 cursor-pointer group"
             onClick={() => onPageChange('home')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <motion.div 
+            <motion.div
               className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow"
               whileHover={{ rotate: 10 }}
               transition={{ type: "spring", stiffness: 300 }}
@@ -43,7 +43,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
               <span className="text-white font-bold text-lg">M</span>
             </motion.div>
             <div className="flex flex-col">
-              <motion.span 
+              <motion.span
                 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -51,7 +51,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
               >
                 MH26 Services
               </motion.span>
-              <motion.span 
+              <motion.span
                 className="text-xs text-muted-foreground -mt-1"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -63,7 +63,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <motion.div 
+          <motion.div
             className="hidden md:flex items-center space-x-8"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -73,11 +73,10 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
               <motion.button
                 key={item.id}
                 onClick={() => onPageChange(item.id)}
-                className={`px-4 py-2 rounded-xl transition-all duration-300 relative overflow-hidden ${
-                  currentPage === item.id
+                className={`px-4 py-2 rounded-xl transition-all duration-300 relative overflow-hidden ${currentPage === item.id
                     ? 'text-primary bg-gradient-to-r from-primary/10 to-primary/5 shadow-md'
                     : 'text-foreground hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent'
-                }`}
+                  }`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + index * 0.1 }}
@@ -97,15 +96,15 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
           </motion.div>
 
           {/* Desktop Actions */}
-          <motion.div 
+          <motion.div
             className="hidden md:flex items-center space-x-4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => onPageChange('provider-login')}
                 className="border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all duration-300"
               >
@@ -113,7 +112,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
+              <Button
                 onClick={() => onPageChange('admin')}
                 className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
               >
@@ -138,7 +137,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
         {/* Mobile Menu */}
         <AnimatePresence>
           {isMenuOpen && (
-            <motion.div 
+            <motion.div
               className="md:hidden py-4 border-t border-border/50 bg-white/95 backdrop-blur-md"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -153,11 +152,10 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                       onPageChange(item.id);
                       setIsMenuOpen(false);
                     }}
-                    className={`px-4 py-3 rounded-xl text-left transition-all duration-300 ${
-                      currentPage === item.id
+                    className={`px-4 py-3 rounded-xl text-left transition-all duration-300 ${currentPage === item.id
                         ? 'text-primary bg-gradient-to-r from-primary/10 to-primary/5'
                         : 'text-foreground hover:text-primary hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent'
-                    }`}
+                      }`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -167,15 +165,15 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                     {item.label}
                   </motion.button>
                 ))}
-                <motion.div 
+                <motion.div
                   className="flex flex-col space-y-2 pt-4 border-t border-border/50"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
                 >
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => { onPageChange('provider-login'); setIsMenuOpen(false); }}
                       className="w-full border-2 border-primary/20 hover:border-primary hover:bg-primary/5"
                     >
@@ -183,7 +181,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button 
+                    <Button
                       onClick={() => { onPageChange('admin'); setIsMenuOpen(false); }}
                       className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     >

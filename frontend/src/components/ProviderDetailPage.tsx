@@ -11,7 +11,10 @@ import {
   ArrowLeft,
   Eye,
   Lock,
-  Clock
+  Clock,
+  User,
+  FileText,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -63,7 +66,8 @@ export default function ProviderDetailPage() {
 
   const handleRevealPhone = async () => {
     if (!isAuthenticated) {
-      setShowPhoneModal(true);
+      // Redirect to login/signup with return URL
+      window.location.href = '/auth?mode=signup&returnUrl=' + encodeURIComponent(window.location.pathname);
       return;
     }
     
@@ -120,25 +124,19 @@ export default function ProviderDetailPage() {
                     alt={provider.businessName}
                     className="w-full h-full object-cover"
                   />
+                ) : provider.gallery && provider.gallery.length > 0 ? (
+                  <ImageWithFallback
+                    src={provider.gallery[0]}
+                    alt={provider.businessName}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image Available
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <User className="w-20 h-20 text-gray-400" />
                   </div>
                 )}
               </div>
-              {provider.documents && provider.documents.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 p-4">
-                  {provider.documents.slice(0, 4).map((doc) => (
-                    <div key={doc.id} className="aspect-square bg-gray-100 rounded overflow-hidden">
-                      <ImageWithFallback
-                        src={doc.url}
-                        alt={doc.filename}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+
             </div>
 
             {/* Provider Info */}
@@ -148,9 +146,25 @@ export default function ProviderDetailPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-gray-900">{provider.businessName}</h1>
                     {provider.status === 'APPROVED' && (
-                      <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        <Shield className="h-4 w-4" />
-                        Verified
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                           <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 font-medium border border-green-200">
+                             <Shield className="h-3 w-3" />
+                             Verified
+                           </span>
+                           <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 font-medium border border-blue-200">
+                             <FileText className="h-3 w-3" />
+                             Documents Reviewed
+                           </span>
+                           <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-xs flex items-center gap-1 font-medium border border-orange-200">
+                             <Star className="h-3 w-3" />
+                             Rating History Visible
+                           </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3 text-green-600" />
+                          Approved by MH26 Admin on {new Date(provider.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -241,6 +255,24 @@ export default function ProviderDetailPage() {
               </div>
             )}
 
+            {/* Photo Gallery */}
+            {provider.gallery && provider.gallery.length > 0 && (
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h2 className="text-gray-900 mb-4">Photo Gallery</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {provider.gallery.map((image, index) => (
+                    <div key={index} className="aspect-video rounded-lg overflow-hidden">
+                      <ImageWithFallback
+                        src={image}
+                        alt={`Gallery image ${index + 1}`}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Reviews */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-gray-900 mb-4">Reviews & Ratings</h2>
@@ -251,12 +283,12 @@ export default function ProviderDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Card */}
-            <div className="bg-white rounded-lg p-6 shadow-sm sticky top-20">
+            <div className="bg-white rounded-lg p-6 shadow-sm sticky top-24 self-start">
               <h3 className="text-gray-900 mb-4">Contact Provider</h3>
 
-              {/* Phone Number */}
+                {/* Phone Number */}
               <div className="mb-4">
-                <label className="text-sm text-gray-600 mb-2 block">Phone Number</label>
+                <label className="text-sm text-gray-600 mb-2 block">Verified Contact</label>
                 {isAuthenticated && phoneRevealed && revealedPhone ? (
                   <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <Phone className="h-4 w-4 text-green-700" />
@@ -267,31 +299,31 @@ export default function ProviderDetailPage() {
                 ) : (
                   <button
                     onClick={handleRevealPhone}
-                    className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-gray-700"
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-gray-700 font-medium"
                   >
                     {isAuthenticated ? (
                       <>
                         <Eye className="h-4 w-4" />
-                        <span>Reveal Phone Number</span>
+                        <span>View Verified Details</span>
                       </>
                     ) : (
                       <>
                         <Lock className="h-4 w-4" />
-                        <span>Available for registered members</span>
+                        <span>View Verified Details</span>
                       </>
                     )}
                   </button>
                 )}
                 {!isAuthenticated && (
                   <p className="text-xs text-gray-500 mt-2">
-                    Join MH26 Services to view contact details and book services
+                    Official registry access requires authentication
                   </p>
                 )}
               </div>
 
               {/* Email */}
               <div className="mb-4">
-                <label className="text-sm text-gray-600 mb-2 block">Email</label>
+                <label className="text-sm text-gray-600 mb-2 block">Official Email</label>
                 <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                   <Mail className="h-4 w-4 text-gray-500" />
                   <a href={`mailto:${provider.user?.email}`} className="text-sm text-gray-700">
@@ -303,26 +335,11 @@ export default function ProviderDetailPage() {
               {/* Book Service Button */}
               <Button
                 onClick={() => setShowBookingModal(true)}
-                className="w-full bg-[#ff6b35] hover:bg-[#ff5722] mb-2"
+                className="w-full bg-[#ff6b35] hover:bg-[#ff5722] mb-2 font-medium"
               >
                 <Calendar className="h-4 w-4 mr-2" />
-                Book Service
+                Request Booking
               </Button>
-
-              {isAuthenticated && (
-                <Link to={`/messages?provider=${provider.id}`}>
-                  <Button variant="outline" className="w-full">
-                    Send Message
-                  </Button>
-                </Link>
-              )}
-              {!isAuthenticated && (
-                <Link to="/auth">
-                  <Button variant="outline" className="w-full">
-                    Sign In to Message
-                  </Button>
-                </Link>
-              )}
             </div>
 
             {/* Quick Info */}
@@ -359,12 +376,7 @@ export default function ProviderDetailPage() {
       </div>
 
       {/* Modals */}
-      {showPhoneModal && (
-        <PhoneRevealModal
-          providerName={provider.businessName || provider.user?.name || 'Provider'}
-          onClose={() => setShowPhoneModal(false)}
-        />
-      )}
+
 
       {showReportModal && (
         <ReportProviderModal
