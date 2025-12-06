@@ -158,7 +158,7 @@ INSERT INTO "Transaction" ("userId", "amount", "type", "status")
 VALUES ('user-456', 500.00, 'REFUND', 'SUCCESS');
 
 COMMIT; -- Save changes only if both steps succeeded
--- ROLLBACK; -- Reverts changes if any error occurred
+ROLLBACK; -- Reverts changes if any error occurred
 ```
 
 
