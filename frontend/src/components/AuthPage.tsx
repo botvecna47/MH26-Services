@@ -187,6 +187,15 @@ export default function AuthPage() {
         
         console.log('Signup response:', response); // DEBUG
         
+        // Check if OTP verification is required
+        if (response && (response as any).requiresOTP) {
+          toast.success('OTP sent to your email! Please check your inbox.');
+          // Switch to OTP verification mode
+          setMode('verify-otp');
+          setFormData(prev => ({ ...prev, email: (response as any).email || formData.email }));
+          return;
+        }
+        
         // Validate response - check if we have the data we need
         if (!response) {
           throw new Error('No response from server');
