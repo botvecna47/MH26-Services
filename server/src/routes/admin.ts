@@ -17,6 +17,7 @@ router.get('/analytics', asyncHandler(adminController.getAnalytics));
 
 // Providers
 router.get('/providers/pending', asyncHandler(adminController.getPendingProviders));
+router.get('/providers/:id/details', asyncHandler(adminController.getProviderDetails)); // Provider Details
 router.get('/providers', asyncHandler(adminController.getAllProviders));
 router.post('/providers/create', asyncHandler(adminController.createProvider)); // New Route
 router.post('/providers/:id/approve', asyncHandler(adminController.approveProvider));
