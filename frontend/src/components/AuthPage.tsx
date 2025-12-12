@@ -185,9 +185,21 @@ export default function AuthPage() {
             role: 'CUSTOMER'
         });
         
-        // Validate response
-        if (!response || !response.tokens || !response.tokens.accessToken) {
-          throw new Error('Invalid response from server');
+        console.log('Signup response:', response); // DEBUG
+        
+        // Validate response - check if we have the data we need
+        if (!response) {
+          throw new Error('No response from server');
+        }
+        
+        if (!response.tokens) {
+          console.error('Response missing tokens:', response);
+          throw new Error('Server response missing authentication tokens');
+        }
+        
+        if (!response.tokens.accessToken) {
+          console.error('Response missing accessToken:', response.tokens);
+          throw new Error('Server response missing access token');
         }
         
         // Save tokens
