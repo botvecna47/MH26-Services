@@ -1,5 +1,5 @@
-import { PrismaClient, UserRole } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
 
@@ -25,7 +25,7 @@ async function main() {
       email: 'admin@mh26services.com',
       phone: '+91-9000000000',
       passwordHash: adminPassword,
-      role: UserRole.ADMIN,
+      role: 'ADMIN',
       emailVerified: true,
     },
   });
@@ -37,6 +37,7 @@ async function main() {
     prisma.category.create({
       data: {
         name: 'Plumbing',
+        slug: 'plumbing',
         description: 'Professional plumbing services for homes and businesses',
         icon: '🔧',
         imageUrl: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800',
@@ -46,6 +47,7 @@ async function main() {
     prisma.category.create({
       data: {
         name: 'Electrical',
+        slug: 'electrical',
         description: 'Licensed electricians for all your electrical needs',
         icon: '⚡',
         imageUrl: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800',
@@ -55,6 +57,7 @@ async function main() {
     prisma.category.create({
       data: {
         name: 'Cleaning',
+        slug: 'cleaning',
         description: 'Professional cleaning services for homes and offices',
         icon: '🧹',
         imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
@@ -64,6 +67,7 @@ async function main() {
     prisma.category.create({
       data: {
         name: 'Catering',
+        slug: 'catering',
         description: 'Delicious catering services for all occasions',
         icon: '🍽️',
         imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800',
@@ -73,6 +77,7 @@ async function main() {
     prisma.category.create({
       data: {
         name: 'Salon',
+        slug: 'salon',
         description: 'Beauty and grooming services for everyone',
         icon: '💇',
         imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
@@ -306,7 +311,7 @@ async function main() {
         email: providerData.email,
         phone: providerData.phone,
         passwordHash: password,
-        role: UserRole.PROVIDER,
+        role: 'PROVIDER',
         emailVerified: true,
       },
     });
@@ -325,7 +330,6 @@ async function main() {
         lat: 19.1383 + (Math.random() - 0.5) * 0.1,
         lng: 77.3210 + (Math.random() - 0.5) * 0.1,
         status: 'APPROVED',
-        phoneVisible: true,
         gallery: providerData.gallery,
         averageRating: 4.0 + Math.random() * 0.9,
         totalRatings: Math.floor(Math.random() * 20) + 5,
