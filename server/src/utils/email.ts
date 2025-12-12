@@ -147,3 +147,119 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
   });
 }
 
+/**
+ * Send provider credentials email (for admin-created providers)
+ */
+export async function sendProviderCredentialsEmail(
+  email: string, 
+  businessName: string, 
+  password: string
+): Promise<void> {
+  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`;
+  
+  await sendEmail({
+    to: email,
+    subject: 'Welcome to MH26 Services - Your Provider Account',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ff6b35;">Welcome to MH26 Services!</h2>
+        <p>Dear ${businessName},</p>
+        <p>Your provider account has been created by our admin team. You can now start offering your services on our platform.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Your Login Credentials</h3>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Password:</strong> <code style="background-color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 16px;">${password}</code></p>
+        </div>
+        
+        <p>
+          <a href="${loginUrl}" style="display: inline-block; background-color: #ff6b35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Login to Your Account
+          </a>
+        </p>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+          <strong>Important:</strong> Please change your password after your first login for security purposes.
+        </p>
+        
+        <p>If you have any questions, please contact our support team.</p>
+        
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `
+Welcome to MH26 Services!
+
+Your provider account has been created.
+
+Login Credentials:
+Email: ${email}
+Password: ${password}
+
+Login here: ${loginUrl}
+
+Please change your password after your first login.
+
+Best regards,
+MH26 Services Team
+    `,
+  });
+}
+
+/**
+ * Send provider approval/rejection email
+ */
+export async function sendProviderApprovalEmail(
+  email: string,
+  businessName: string,
+  approved: boolean,
+  reason?: string
+): Promise<void> {
+  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`;
+  
+  if (approved) {
+    await sendEmail({
+      to: email,
+      subject: '✅ Your Provider Application has been Approved!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #10b981;">Congratulations, ${businessName}!</h2>
+          <p>Your provider application has been <strong>approved</strong>.</p>
+          <p>You can now start accepting bookings and offering your services on MH26 Services.</p>
+          
+          <p>
+            <a href="${loginUrl}" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Login to Your Dashboard
+            </a>
+          </p>
+          
+          <p>Best regards,<br>MH26 Services Team</p>
+        </div>
+      `,
+      text: `Congratulations! Your provider application has been approved. Login at: ${loginUrl}`,
+    });
+  } else {
+    await sendEmail({
+      to: email,
+      subject: 'Provider Application Status Update',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #ef4444;">Application Update</h2>
+          <p>Dear ${businessName},</p>
+          <p>We regret to inform you that your provider application has been <strong>${reason?.includes('suspend') ? 'suspended' : 'rejected'}</strong>.</p>
+          
+          ${reason ? `
+          <div style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #ef4444; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Reason:</strong> ${reason}</p>
+          </div>
+          ` : ''}
+          
+          <p>If you believe this is a mistake or would like to appeal this decision, please contact our support team.</p>
+          
+          <p>Best regards,<br>MH26 Services Team</p>
+        </div>
+      `,
+      text: `Your provider application status has been updated. ${reason ? `Reason: ${reason}` : ''} Contact support for more information.`,
+    });
+  }
+}
