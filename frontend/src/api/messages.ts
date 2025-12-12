@@ -1,137 +1,110 @@
-/**
- * Messages API
- */
 import { axiosClient } from './axiosClient';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 export interface Message {
   id: string;
-  conversationId: string;
+  text: string;
   senderId: string;
   receiverId: string;
-  text?: string;
-  attachments?: any;
-  read: boolean;
   createdAt: string;
+  read: boolean;
   sender: {
     id: string;
     name: string;
-    email: string;
-    avatarUrl?: string;
-  };
-  receiver: {
-    id: string;
-    name: string;
-    email: string;
-    avatarUrl?: string;
+    role: string;
   };
 }
 
 export interface Conversation {
-  id: string;
-  otherUser: {
-    id: string;
-    name: string;
-    email: string;
-    avatarUrl?: string;
-  };
-  lastMessage: Message;
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  lastMessage: string;
+  lastMessageTime: string;
   unreadCount: number;
-  updatedAt: string;
-}
-
-export interface SendMessageData {
-  conversationId?: string;
-  receiverId: string;
-  text: string;
-  attachments?: any;
 }
 
 export const messagesApi = {
-  getConversations: async () => {
-    const response = await axiosClient.get('/messages/conversations');
-    return response.data;
+  // Get all conversations (threads)
+  getConversations: async (): Promise<Conversation[]> => {
+    const response = await axiosClient.get<{ data: any[] }>('/messages/conversations');
+    
+    // Transform backend response to frontend interface
+    return response.data.data.map((item: any) => ({
+      userId: item.otherUser.id,
+      name: item.otherUser.businessName || item.otherUser.name || 'Unknown',
+      email: item.otherUser.email,
+      avatarUrl: item.otherUser.avatarUrl,
+      lastMessage: item.lastMessage?.text || 'Sent an attachment',
+      lastMessageTime: item.lastMessage?.createdAt || item.updatedAt,
+      unreadCount: item.unreadCount || 0
+    }));
   },
 
-  getMessages: async (conversationId: string) => {
-    const response = await axiosClient.get(`/messages/conversations/${conversationId}/messages`);
-    return response.data;
+  // Get messages for a specific conversation (user)
+  getMessages: async (otherUserId: string): Promise<Message[]> => {
+    const response = await axiosClient.get<{ data: Message[] }>(`/messages/${otherUserId}`);
+    return response.data.data;
   },
 
-  createConversation: async (receiverId: string, text?: string) => {
-    try {
-      const response = await axiosClient.post('/messages/conversations', { 
-        receiverId, 
-        text: text || 'Hello! I would like to inquire about your services.' 
-      });
-      return response.data;
-    } catch (error: any) {
-      // Re-throw 429 errors so they can be handled with retry logic
-      if (error.response?.status === 429) {
-        throw error;
-      }
-      throw error;
-    }
-  },
-
-  sendMessage: async (data: SendMessageData) => {
-    const response = await axiosClient.post('/messages', data);
+  // Send a message
+  sendMessage: async (receiverId: string, text: string): Promise<Message> => {
+    const response = await axiosClient.post<Message>('/messages', {
+      receiverId,
+      text,
+    });
     return response.data;
   },
-
-  markAsRead: async (messageId: string) => {
-    const response = await axiosClient.patch(`/messages/${messageId}/read`);
-    return response.data;
-  },
+  
+  // Mark messages as read
+  markAsRead: async (senderId: string): Promise<void> => {
+      await axiosClient.put(`/messages/${senderId}/read`);
+  }
 };
 
-// React Query hooks
-export function useConversations(options?: { enabled?: boolean }) {
+// React Query Hooks
+
+export const useConversations = () => {
   return useQuery({
     queryKey: ['conversations'],
     queryFn: messagesApi.getConversations,
-    enabled: options?.enabled,
+    // Refetch often for unread badges if socket fails, but socket should handle it
+    staleTime: 1000 * 60, 
   });
-}
+};
 
-export function useMessages(conversationId: string) {
+export const useMessages = (otherUserId: string | null) => {
   return useQuery({
-    queryKey: ['messages', conversationId],
-    queryFn: () => messagesApi.getMessages(conversationId),
-    enabled: !!conversationId,
-    staleTime: 2000, // Consider data fresh for 2 seconds to reduce unnecessary refetches
-    refetchOnMount: 'always', // Always refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    retry: 2, // Retry failed requests up to 2 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    queryKey: ['messages', otherUserId],
+    queryFn: () => messagesApi.getMessages(otherUserId!),
+    enabled: !!otherUserId,
+    placeholderData: keepPreviousData,
+    // Keep messages fresh
+    staleTime: 1000 * 5, 
   });
-}
+};
 
-export function useSendMessage() {
+export const useSendMessage = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: messagesApi.sendMessage,
-    onSuccess: (data, variables) => {
-      // Get conversation ID from response
-      const conversationId = data.conversationId || variables.conversationId;
-      
-      // Just invalidate queries - React Query will refetch automatically when needed
-      // Don't manually refetch to avoid rate limiting
-      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+    mutationFn: ({ receiverId, text }: { receiverId: string; text: string }) =>
+      messagesApi.sendMessage(receiverId, text),
+    onSuccess: (newMessage, variables) => {
+      // Optimistically update or invalidate
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.receiverId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
   });
-}
+};
 
-export function useMarkAsRead() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: messagesApi.markAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    },
-  });
+export const useMarkAsRead = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (senderId: string) => messagesApi.markAsRead(senderId),
+        onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        }
+    })
 }

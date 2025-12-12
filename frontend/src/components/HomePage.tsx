@@ -1,258 +1,134 @@
-import { Link } from 'react-router-dom';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Search, Star, Shield, Clock, ArrowRight, CheckCircle } from 'lucide-react';
-import { useProviders } from '../api/providers';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-
-// Categories - can be moved to API later
-const categories = [
-  { id: 'plumbing', name: 'Plumbing', icon: '🔧' },
-  { id: 'electrical', name: 'Electrical', icon: '⚡' },
-  { id: 'cleaning', name: 'Cleaning', icon: '🧹' },
-  { id: 'tiffin', name: 'Tiffin Service', icon: '🍱' },
-  { id: 'salon', name: 'Salon & Beauty', icon: '💇' },
-  { id: 'tutoring', name: 'Tutoring', icon: '📚' },
-  { id: 'fitness', name: 'Fitness', icon: '💪' },
-  { id: 'catering', name: 'Catering', icon: '🍽️' },
-];
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Search, 
+} from 'lucide-react';
+import { Button } from './ui/button';
 
 export default function HomePage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  
-  // Fetch featured providers (approved, with ratings)
-  const { data: providersData, isLoading, error } = useProviders({
-    limit: 4,
-    page: 1,
-  });
-  
-  // Safely extract featured providers with fallback
-  const featuredProviders = (providersData?.data || []).filter(
-    (p) => p.status === 'APPROVED' && (p.averageRating || 0) >= 4.0
-  ).slice(0, 4);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: any) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/services?q=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      navigate('/services');
+      navigate(`/services?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-50 to-white py-12 md:py-20">
+      <section className="relative py-16 md:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-gray-900 mb-4">
-                Find Trusted Local Service Providers in Nanded
-              </h1>
-              <p className="text-gray-600 mb-6">
-                Connect with verified professionals for plumbing, electrical, tiffin services, home cleaning, and more. Quality services at your doorstep.
-              </p>
+            {/* Left Column */}
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h1 className="tracking-tight text-gray-900 text-4xl md:text-5xl font-bold">
+                  Find Trusted Services in Nanded
+                </h1>
+                <p className="text-gray-600 text-lg">
+                  Connect with verified local professionals for all your service needs.
+                  Quality work, reliable service, fair prices.
+                </p>
+              </div>
 
               {/* Search Bar */}
-              <form onSubmit={handleSearch} className="flex gap-2 mb-8">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
-                  <Input
-                    type="text"
-                    placeholder="Search for services..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch(e);
-                      }
-                    }}
-                    className="w-full pl-10 pr-4 py-3"
-                  />
+              <form onSubmit={handleSearch} className="w-full">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <div className="glass-strong rounded-xl shadow-lg border border-white/60">
+                      <div className="flex items-center">
+                        <Search className="absolute left-4 h-5 w-5 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Search for services (e.g. 'AC Repair')..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-12 pr-4 py-4 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-[#ff6b35]/30 rounded-xl transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="bg-[#ff6b35] hover:bg-[#e85a2d] text-white shadow-lg shadow-orange-200/50 active:scale-95 transition-all px-8 h-auto"
+                    size="lg"
+                  >
+                    Search
+                  </Button>
                 </div>
-                <Button type="submit" variant="default" size="default" className="px-5">
-                  Search
-                </Button>
               </form>
 
-              {/* Quick Stats */}
+              {/* Trust Indicators */}
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <div className="text-orange-600 font-semibold mb-1">1200+</div>
-                  <div className="text-sm text-gray-600">Happy Customers</div>
+                <div className="glass rounded-xl p-4 text-center transition-all duration-300 hover:shadow-xl">
+                  <div className="text-[#ff6b35] mb-1 font-bold text-xl">100+</div>
+                  <p className="text-xs text-gray-600">Services</p>
                 </div>
-                <div>
-                  <div className="text-orange-600 font-semibold mb-1">87</div>
-                  <div className="text-sm text-gray-600">Service Providers</div>
+                <div className="glass rounded-xl p-4 text-center transition-all duration-300 hover:shadow-xl">
+                  <div className="text-[#ff6b35] mb-1 font-bold text-xl">4.8★</div>
+                  <p className="text-xs text-gray-600">Avg Rating</p>
                 </div>
-                <div>
-                  <div className="text-orange-600 font-semibold mb-1">4.8★</div>
-                  <div className="text-sm text-gray-600">Average Rating</div>
+                <div className="glass rounded-xl p-4 text-center transition-all duration-300 hover:shadow-xl">
+                  <div className="text-[#ff6b35] mb-1 font-bold text-xl">24/7</div>
+                  <p className="text-xs text-gray-600">Support</p>
                 </div>
               </div>
             </div>
 
-            <div className="relative">
-              <ImageWithFallback
-                src="https://images.unsplash.com/photo-1742535035610-c5865df05858?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBzZXJ2aWNlJTIwcHJvZmVzc2lvbmFscyUyMHdvcmtlcnxlbnwxfHx8fDE3NjI5MjQzNDB8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                alt="Service professionals"
-                className="rounded-2xl shadow-xl w-full"
-              />
+            {/* Right Column - Hero Image */}
+            <div className="hidden md:block">
+              <div className="glass-strong rounded-2xl p-3 shadow-xl">
+                <img
+                  src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80"
+                  alt="Professional services in Nanded"
+                  className="w-full h-auto rounded-xl object-cover"
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-12 md:py-16 bg-white">
+      {/* How It Works Section */}
+      <section className="py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-gray-900 mb-2">Popular Service Categories</h2>
-            <p className="text-gray-600">Find the right service provider for your needs</p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.slice(0, 8).map((category) => (
-              <Link
-                key={category.id}
-                to={`/services?category=${category.id}`}
-                className="p-6 border border-gray-200 rounded-lg hover:border-orange-500 hover:shadow-md transition-all text-center group"
-              >
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-orange-600 transition-colors">
-                  <span className="text-orange-600 group-hover:text-white text-xl">{category.icon}</span>
-                </div>
-                <p className="text-gray-900 group-hover:text-orange-600 transition-colors font-medium">
-                  {category.name}
-                </p>
-              </Link>
-            ))}
-          </div>
-
-          <div className="text-center mt-8">
-            <Link to="/services">
-              <Button variant="outline" className="gap-2">
-                View All Categories
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Providers */}
-      <section className="py-12 md:py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-gray-900 mb-2">Top Rated Providers</h2>
-            <p className="text-gray-600">Verified professionals you can trust</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProviders.map((provider) => (
-              <Link
-                key={provider.id}
-                to={`/provider/${provider.id}`}
-                className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
-              >
-                <div className="aspect-[4/3] bg-gray-200 relative">
-                  {provider.gallery && provider.gallery[0] ? (
-                    <ImageWithFallback
-                      src={provider.gallery[0]}
-                      alt={provider.businessName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                      <div className="text-center p-4">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                          <span className="text-xl font-bold text-gray-400">
-                            {provider.businessName?.charAt(0) || 'P'}
-                          </span>
-                        </div>
-                        <span className="text-sm">No Image</span>
-                      </div>
-                    </div>
-                  )}
-                  {provider.status === 'APPROVED' && (
-                    <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                      <Shield className="h-3 w-3" />
-                      Verified
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="text-gray-900 mb-1">{provider.businessName}</h3>
-                  <p className="text-sm text-gray-500 mb-2">
-                    {provider.primaryCategory}
-                    {provider.secondaryCategory && `, ${provider.secondaryCategory}`}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm">{provider.averageRating?.toFixed(1) || '0.0'}</span>
-                      <span className="text-xs text-gray-400">({provider.totalRatings || 0})</span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {provider.city || 'Nanded'}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="text-center mt-8">
-            <Link to="/services">
-              <Button variant="default" className="gap-2">
-                Browse All Providers
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-gray-900 mb-2">How MH26 Services Works</h2>
-            <p className="text-gray-600">Simple steps to connect with the best providers</p>
+          <div className="text-center mb-10">
+            <h2 className="text-gray-900 mb-2 text-3xl font-bold">How It Works</h2>
+            <p className="text-gray-600">Get started in three simple steps</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-orange-600" />
+            <div className="glass rounded-xl p-6 text-center space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <span className="text-2xl">🔍</span>
               </div>
-              <h3 className="text-gray-900 mb-2">1. Search Services</h3>
-              <p className="text-gray-600">
-                Browse categories or search for specific services you need in Nanded
+              <h3 className="text-gray-900 font-semibold">Search & Browse</h3>
+              <p className="text-sm text-gray-600">
+                Find the right service provider by browsing categories or searching for specific services
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-8 w-8 text-orange-600" />
+            <div className="glass rounded-xl p-6 text-center space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <span className="text-2xl">📅</span>
               </div>
-              <h3 className="text-gray-900 mb-2">2. Choose Provider</h3>
-              <p className="text-gray-600">
-                Compare ratings, reviews, and pricing. Contact verified providers directly
+              <h3 className="text-gray-900 font-semibold">Book Service</h3>
+              <p className="text-sm text-gray-600">
+                Select your preferred date and time, provide details, and confirm your booking instantly
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-orange-600" />
+            <div className="glass rounded-xl p-6 text-center space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <span className="text-2xl">✅</span>
               </div>
-              <h3 className="text-gray-900 mb-2">3. Get Service</h3>
-              <p className="text-gray-600">
-                Book instantly and get quality service at your convenience
+              <h3 className="text-gray-900 font-semibold">Get It Done</h3>
+              <p className="text-sm text-gray-600">
+                Sit back while our verified professionals deliver quality service at your doorstep
               </p>
             </div>
           </div>
@@ -260,18 +136,27 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-[#ff6b35] to-[#ff5722]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-white mb-4">Ready to Provide Your Services?</h2>
-          <p className="text-white/90 mb-6">
-            Join hundreds of service providers on MH26 Services and grow your business in Nanded
-          </p>
-          <Link to="/provider-onboarding">
-            <Button size="lg" variant="secondary" className="gap-2">
-              Start Provider Onboarding
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </Link>
+      <section className="py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="glass-strong rounded-2xl p-8 md:p-12 text-center space-y-6 shadow-xl">
+            <h2 className="text-gray-900 text-3xl font-bold">Are you a service provider?</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Join MH26 Services and connect with thousands of customers in Nanded.
+              Grow your business with our platform.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Link to="/provider-onboarding">
+                <Button className="bg-[#ff6b35] hover:bg-[#e85a2d] text-white shadow-lg shadow-orange-200/50 active:scale-95 transition-all h-12 px-8">
+                  Become a Provider
+                </Button>
+              </Link>
+              <Link to="/services">
+                <Button variant="outline" className="border-white/30 hover:bg-white/20 h-12 px-8">
+                  Browse Services
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

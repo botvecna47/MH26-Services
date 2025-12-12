@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { axiosClient } from '../api/axiosClient';
 
 type UserRole = 'CUSTOMER' | 'PROVIDER' | 'ADMIN' | null;
 
@@ -9,11 +10,15 @@ export interface User {
   phone?: string;
   role: UserRole;
   avatarUrl?: string;
-  phoneVerified?: boolean;
   emailVerified?: boolean;
+  address?: string;
+  city?: string;
+  walletBalance?: number;
+  totalSpending?: number;
   provider?: {
     businessName: string;
     status: string;
+    totalRevenue?: number;
   };
 }
 
@@ -23,6 +28,8 @@ interface UserContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isProvider: boolean;
+  isLoading: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -32,7 +39,18 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
  * This ensures UserContext stays in sync with the actual authentication state
  */
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUserState] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUserState] = useState<User | null>(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+    } catch (error) {
+      console.error('Error parsing stored user:', error);
+    }
+    return null;
+  });
 
   // Sync with localStorage (which is updated by AuthProvider)
   useEffect(() => {
@@ -41,21 +59,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          // Validate user data structure
-          if (userData && userData.id && userData.email) {
-            setUserState({
-              id: userData.id,
-              name: userData.name || 'User',
-              email: userData.email,
-              phone: userData.phone,
-              role: (userData.role as UserRole) || null,
-              avatarUrl: userData.avatarUrl,
-              phoneVerified: userData.phoneVerified,
-              emailVerified: userData.emailVerified,
-              provider: userData.provider,
-            });
+          // Validate user data structure - basic check
+          if (userData && userData.id) {
+             // Only update if different to avoid re-renders loop if deep equality fails?
+             // For now, straightforward set is safer than complex diffing here.
+             setUserState(userData);
           } else {
-            // Invalid user data, clear it
             localStorage.removeItem('user');
             setUserState(null);
           }
@@ -63,36 +72,59 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setUserState(null);
         }
       } catch (error) {
-        // If parsing fails, clear invalid data
         console.error('Error syncing user:', error);
         localStorage.removeItem('user');
         setUserState(null);
       }
     };
 
-    // Initial sync
-    syncUser();
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'user') syncUser();
+    });
 
-    // Listen for storage changes (when AuthProvider updates localStorage)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user') {
-        syncUser();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    // Use a custom event for same-tab updates (more efficient than polling)
-    const handleUserUpdate = () => {
-      syncUser();
-    };
-
+    const handleUserUpdate = () => syncUser();
     window.addEventListener('userUpdated', handleUserUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('userUpdated', handleUserUpdate);
     };
+  }, []);
+
+  // Verify session with backend on mount
+  useEffect(() => {
+    const verifySession = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Use axiosClient to leverage interceptors for token refresh
+        const response = await axiosClient.get('/users/me');
+        
+        const freshUser = response.data;
+        // Always update local storage with fresh data
+        localStorage.setItem('user', JSON.stringify(freshUser));
+        setUserState(freshUser);
+      } catch (error: any) {
+        console.error('Session verification error:', error);
+        
+        // If axios throws, it means response was not 2xx.
+        // Check if it was auth error that interceptor couldn't fix
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            console.warn('Session verification failed (401/403), logging out.');
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            setUserState(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifySession();
   }, []);
 
   const isAuthenticated = user !== null;
@@ -110,17 +142,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('refreshToken');
       }
       setUserState(newUser);
-      // Dispatch custom event for same-tab sync
       window.dispatchEvent(new Event('userUpdated'));
     } catch (error) {
       console.error('Error setting user:', error);
-      // If localStorage fails, still update state
       setUserState(newUser);
     }
   };
 
+  const refreshProfile = async () => {
+    window.dispatchEvent(new Event('userUpdated'));
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, isAuthenticated, isAdmin, isProvider }}>
+    <UserContext.Provider value={{ user, setUser, isAuthenticated, isAdmin, isProvider, isLoading, refreshProfile }}>
       {children}
     </UserContext.Provider>
   );

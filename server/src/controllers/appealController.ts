@@ -96,6 +96,32 @@ export const appealController = {
   },
 
   /**
+   * List my appeals (User)
+   */
+  async listMine(req: AuthRequest, res: Response): Promise<void> {
+    try {
+        const userId = req.user!.id;
+        const appeals = await prisma.appeal.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                type: true,
+                reason: true,
+                status: true,
+                details: true,
+                createdAt: true,
+                adminNotes: true
+            }
+        });
+        res.json(appeals);
+    } catch (error) {
+        logger.error('List my appeals error:', error);
+        res.status(500).json({ error: 'Failed to fetch your appeals' });
+    }
+  },
+
+  /**
    * Get appeal by ID
    */
   async getById(req: AuthRequest, res: Response): Promise<void> {

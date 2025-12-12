@@ -46,6 +46,9 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
         tls: {
           rejectUnauthorized: false, // Allow self-signed certificates (for development)
         },
+        connectionTimeout: 10000, // 10 seconds timeout
+        greetingTimeout: 5000,    // 5 seconds greeting timeout
+        socketTimeout: 10000,     // 10 seconds socket timeout
       });
 
       // Verify transporter configuration
@@ -80,8 +83,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       if (options.subject.includes('OTP') || options.subject.includes('verification')) {
         const otpMatch = options.html.match(/>(\d{6})</) || options.text?.match(/(\d{6})/);
         if (otpMatch) {
-          console.error(`\n❌ EMAIL SEND FAILED - OTP for ${options.to}: ${otpMatch[1]}\n`);
-          console.error('Error details:', error.message);
+          logger.error(`\n❌ EMAIL SEND FAILED - OTP for ${options.to}: ${otpMatch[1]}\n`);
+          logger.error(`Error details: ${error.message}`);
         }
       }
       
@@ -98,8 +101,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     if (options.subject.includes('OTP') || options.subject.includes('verification')) {
       const otpMatch = options.html.match(/>(\d{6})</) || options.text?.match(/(\d{6})/);
       if (otpMatch) {
-        console.log(`\n📧 EMAIL OTP for ${options.to}: ${otpMatch[1]}\n`);
-        console.log('⚠️  Note: SMTP not configured. Email was not actually sent. Check your .env file for SMTP settings.');
+        logger.info(`\n📧 EMAIL OTP for ${options.to}: ${otpMatch[1]}\n`);
+        logger.warn('⚠️  Note: SMTP not configured. Email was not actually sent. Check your .env file for SMTP settings.');
       }
     }
   }
@@ -109,7 +112,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
  * Send verification email
  */
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {
-  const verificationUrl = `${process.env.API_BASE_URL}/api/auth/verify-email?token=${token}`;
+  const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
   
   await sendEmail({
     to: email,

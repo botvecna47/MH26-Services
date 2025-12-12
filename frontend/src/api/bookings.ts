@@ -9,11 +9,16 @@ export interface Booking {
   userId: string;
   providerId: string;
   serviceId: string;
-  scheduledAt: string;
+  scheduledAt?: string; // Legacy/Optional
+  scheduledDate: string;
+  scheduledTime: string;
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
-  totalAmount: number;
+  totalAmount?: number; // Legacy
+  estimatedPrice: number;
+  actualPrice?: number;
   address?: string;
   requirements?: string;
+  completionOtp?: string;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -25,6 +30,9 @@ export interface Booking {
   provider: {
     id: string;
     businessName: string;
+    primaryCategory?: string;
+    city?: string;
+    state?: string;
     user: {
       id: string;
       name: string;
@@ -43,6 +51,12 @@ export interface Booking {
     id: string;
     cancelledBy: string;
     reason?: string;
+    createdAt: string;
+  };
+  review?: {
+    id: string;
+    rating: number;
+    comment?: string;
     createdAt: string;
   };
 }
@@ -100,6 +114,16 @@ export const bookingsApi = {
 
   rejectBooking: async (id: string, reason?: string) => {
     const response = await axiosClient.post(`/bookings/${id}/reject`, { reason });
+    return response.data;
+  },
+
+  initiateCompletion: async (id: string) => {
+    const response = await axiosClient.post(`/bookings/${id}/completion-initiate`);
+    return response.data;
+  },
+
+  verifyCompletion: async (id: string, otp: string) => {
+    const response = await axiosClient.post(`/bookings/${id}/completion-verify`, { otp });
     return response.data;
   },
 };
@@ -186,5 +210,39 @@ export function useRejectBooking() {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
     },
+  });
+}
+export function useInvoice(id: string | null) {
+  return useQuery({
+    queryKey: ['invoice', id],
+    queryFn: () => bookingsApi.getInvoice(id!),
+    enabled: !!id,
+    retry: false,
+  });
+}
+
+export function useInitiateCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => bookingsApi.initiateCompletion(id),
+    onSuccess: (data, variables) => {
+       // Ideally we might want to update the booking logic or invalidate
+       // But actually initiate doesn't change status, just adds OTP
+       // We might not need to invalidate 'bookings' if we don't show the OTP there for provider
+       // But for customer we do.
+       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+       queryClient.invalidateQueries({ queryKey: ['booking', variables] }); 
+    }
+  });
+}
+
+export function useVerifyCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, otp }: { id: string, otp: string }) => bookingsApi.verifyCompletion(id, otp),
+    onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
+    }
   });
 }

@@ -1,29 +1,69 @@
-/**
- * Admin API
- */
 import { axiosClient } from './axiosClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-export interface Analytics {
-  stats: {
-    totalUsers: number;
-    totalProviders: number;
-    pendingProviders: number;
-    totalBookings: number;
-    completedBookings: number;
-    totalRevenue: number;
+// Types
+export interface PlatformStats {
+  totalUsers: number;
+  totalProviders: number;
+  pendingProviders: number;
+  totalBookings: number;
+  completedBookings: number;
+  totalRevenue: number;
+}
+
+export interface RecentBooking {
+  id: string;
+  createdAt: string;
+  status: string;
+  totalAmount: number;
+  user: {
+    id: string;
+    name: string;
   };
-  recentBookings: any[];
-  topProviders: any[];
+  provider: {
+    businessName: string;
+  };
+}
+
+export interface AnalyticsData {
+  stats: PlatformStats;
+  recentBookings: RecentBooking[];
+  userGrowth: Array<{ month: string; users: number }>;
+  revenueGrowth: Array<{ month: string; revenue: number }>;
+  categoryDistribution: Array<{ name: string; value: number }>;
+}
+
+export interface PendingProvider {
+  id: string;
+  businessName: string;
+  primaryCategory: string;
+  address: string;
+  city: string;
+  createdAt: string;
+  user: {
+    name: string;
+    email: string;
+    phone: string;
+    avatarUrl?: string;
+  };
+  documents: Array<{ id: string; type: string; url: string }>;
+  services: Array<{ title: string; price: number }>;
+}
+
+export interface UserListParams {
+  role?: string;
+  page?: number;
+  limit?: number;
+  q?: string;
 }
 
 export const adminApi = {
-  getAnalytics: async () => {
+  getAnalytics: async (): Promise<AnalyticsData> => {
     const response = await axiosClient.get('/admin/analytics');
     return response.data;
   },
 
-  getPendingProviders: async () => {
+  getPendingProviders: async (): Promise<{ data: PendingProvider[] }> => {
     const response = await axiosClient.get('/admin/providers/pending');
     return response.data;
   },
@@ -38,38 +78,29 @@ export const adminApi = {
     return response.data;
   },
 
-  rejectProvider: async (id: string, reason?: string) => {
+  rejectProvider: async (id: string, reason: string) => {
     const response = await axiosClient.post(`/admin/providers/${id}/reject`, { reason });
     return response.data;
   },
 
-  getUsers: async (params?: { role?: string; page?: number; limit?: number }) => {
+  getUsers: async (params?: UserListParams) => {
     const response = await axiosClient.get('/admin/users', { params });
     return response.data;
   },
 
-  getUser: async (id: string) => {
-    const response = await axiosClient.get(`/admin/users/${id}`);
-    return response.data;
-  },
-
-  banUser: async (id: string, reason?: string) => {
+  suspendUser: async (id: string, reason?: string) => {
+    // Assuming ban endpoint is what we want for suspend
     const response = await axiosClient.patch(`/admin/users/${id}/ban`, { reason });
     return response.data;
   },
 
-  getReports: async (params?: { status?: string; page?: number; limit?: number }) => {
-    const response = await axiosClient.get('/admin/reports', { params });
+  unsuspendUser: async (id: string, reason?: string) => {
+    const response = await axiosClient.patch(`/admin/users/${id}/unban`, { reason });
     return response.data;
   },
 
-  updateSettings: async (settings: any) => {
-    const response = await axiosClient.patch('/admin/settings', settings);
-    return response.data;
-  },
-
-  exportProviders: async (format: 'json' | 'csv' = 'json') => {
-    const response = await axiosClient.get('/admin/export/providers', { params: { format } });
+  getBookings: async (params?: { status?: string; page?: number; limit?: number }) => {
+    const response = await axiosClient.get('/admin/bookings', { params });
     return response.data;
   },
 
@@ -83,129 +114,215 @@ export const adminApi = {
     return response.data;
   },
 
-  updateReport: async (id: string, data: { status: string; adminNotes?: string }) => {
-    const response = await axiosClient.patch(`/reports/${id}`, data);
+  getAppeals: async (params?: { status?: string; type?: string; page?: number; limit?: number }) => {
+    const response = await axiosClient.get('/admin/appeals', { params });
+    return response.data;
+  },
+
+  getReports: async (params?: { status?: string; page?: number; limit?: number }) => {
+    const response = await axiosClient.get('/admin/reports', { params });
+    return response.data;
+  },
+
+  getAuditLogs: async (params: { entityId: string; entityType: string; limit?: number }) => {
+    const response = await axiosClient.get('/admin/audit-logs', { params });
+    return response.data;
+  },
+
+  createCategory: async (data: { name: string; slug: string; icon?: string }) => {
+    const response = await axiosClient.post('/services/categories', data);
+    return response.data;
+  },
+
+  updateCategory: async ({ id, data }: { id: string; data: { name: string; slug: string; icon?: string } }) => {
+    const response = await axiosClient.put(`/services/categories/${id}`, data);
+    return response.data;
+  },
+
+  deleteCategory: async (id: string) => {
+    const response = await axiosClient.delete(`/services/categories/${id}`);
+    return response.data;
+  },
+
+  createProvider: async (data: any) => {
+    const response = await axiosClient.post('/admin/providers/create', data);
     return response.data;
   },
 };
 
-// React Query hooks
-export function useAdminAnalytics() {
+export function useCreateProvider() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.createProvider,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
+    },
+  });
+}
+
+// Hooks
+// ... (omitted hooks, assuming they are fine or I update specific hook below)
+// Wait, I need to update useUnbanUser which is further down.
+// I will just replace the API function first.
+// Actually, I can replace the hook in a separate block or same block if close.
+// `useUnbanUser` is at the end.
+// I will do two edits or one large edit.
+// Let's do `unsuspendUser` definition first.
+
+// Hooks
+export function useAnalytics(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ['admin', 'analytics'],
+    queryKey: ['admin-analytics'],
     queryFn: adminApi.getAnalytics,
+    staleTime: 60000, // 1 minute
+    enabled: options?.enabled,
   });
 }
 
 export function usePendingProviders() {
   return useQuery({
-    queryKey: ['admin', 'providers', 'pending'],
+    queryKey: ['pending-providers'],
     queryFn: adminApi.getPendingProviders,
   });
 }
 
 export function useAllProviders(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery({
-    queryKey: ['admin', 'providers', 'all', params],
+    queryKey: ['all-providers', params],
     queryFn: () => adminApi.getAllProviders(params),
+  });
+}
+
+export function useAdminUsers(params?: UserListParams) {
+  return useQuery({
+    queryKey: ['admin-users', params],
+    queryFn: () => adminApi.getUsers(params),
+  });
+}
+
+export function useAdminUser(id: string | null) {
+  return useQuery({
+    queryKey: ['admin-user', id],
+    queryFn: async () => {
+      const response = await axiosClient.get(`/admin/users/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useAdminBookings(params?: { status?: string; page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['admin-bookings', params],
+    queryFn: () => adminApi.getBookings(params),
+  });
+}
+
+export function useAppeals(params?: { status?: string; type?: string; page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['admin-appeals', params],
+    queryFn: () => adminApi.getAppeals(params),
   });
 }
 
 export function useApproveProvider() {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: adminApi.approveProvider,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'providers', 'pending'] });
-      queryClient.invalidateQueries({ queryKey: ['providers'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 }
 
 export function useRejectProvider() {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      adminApi.rejectProvider(id, reason),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => adminApi.rejectProvider(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'providers', 'pending'] });
-      queryClient.invalidateQueries({ queryKey: ['providers'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-providers'] });
     },
-  });
-}
-
-export function useAdminUsers(params?: { role?: string; page?: number; limit?: number }) {
-  return useQuery({
-    queryKey: ['admin', 'users', params],
-    queryFn: () => adminApi.getUsers(params),
-  });
-}
-
-export function useAdminUser(id: string) {
-  return useQuery({
-    queryKey: ['admin', 'user', id],
-    queryFn: () => adminApi.getUser(id),
-    enabled: !!id,
-  });
-}
-
-export function useBanUser() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      adminApi.banUser(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-    },
-  });
-}
-
-export function useAdminReports(params?: { status?: string; page?: number; limit?: number }) {
-  return useQuery({
-    queryKey: ['admin', 'reports', params],
-    queryFn: () => adminApi.getReports(params),
   });
 }
 
 export function useSuspendProvider() {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: adminApi.suspendProvider,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'providers', 'pending'] });
-      queryClient.invalidateQueries({ queryKey: ['providers'] });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'providers', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
+      // Invalidate provider list if we have one
     },
   });
 }
 
 export function useUnsuspendProvider() {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: adminApi.unsuspendProvider,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'providers', 'pending'] });
-      queryClient.invalidateQueries({ queryKey: ['providers'] });
-      queryClient.invalidateQueries({ queryKey: ['admin', 'providers', 'all'] });
-      queryClient.invalidateQueries({ queryKey: ['appeals'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 }
 
-export function useUpdateReport() {
+export function useBanUser() {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string; status: string; adminNotes?: string }) =>
-      adminApi.updateReport(id, data),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => adminApi.suspendUser(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
-      queryClient.invalidateQueries({ queryKey: ['reports'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+}
+
+export function useUnbanUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => adminApi.unsuspendUser(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+}
+
+export function useAuditLogs(params: { entityId: string; entityType: string; limit?: number }) {
+  return useQuery({
+    queryKey: ['audit-logs', params.entityId, params.entityType],
+    queryFn: () => adminApi.getAuditLogs(params),
+    enabled: !!params.entityId,
+  });
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.createCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      // Also might want to invalidate 'services' if filters depend on it, but categories is main one.
+    },
+  });
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.updateCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.deleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
   });
 }

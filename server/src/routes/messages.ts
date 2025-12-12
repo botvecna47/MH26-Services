@@ -16,8 +16,8 @@ router.use(authenticate);
 // List conversations
 router.get('/conversations', asyncHandler(messageController.listConversations));
 
-// Get messages for a conversation
-router.get('/conversations/:id/messages', asyncHandler(messageController.getMessages));
+// Get messages for a conversation (by Conversation ID or User ID)
+router.get('/:id', asyncHandler(messageController.getMessages));
 
 // Start new conversation
 router.post('/conversations', asyncHandler(messageController.createConversation));
@@ -25,8 +25,8 @@ router.post('/conversations', asyncHandler(messageController.createConversation)
 // Send message
 router.post('/', validate(sendMessageSchema), asyncHandler(messageController.sendMessage));
 
-// Mark message as read
-router.patch('/:id/read', asyncHandler(messageController.markAsRead));
+// Mark messages as read (by Sender ID - bulk)
+router.put('/:id/read', asyncHandler(messageController.markAsRead));
 
 export default router;
 

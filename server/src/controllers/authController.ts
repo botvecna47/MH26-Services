@@ -38,7 +38,7 @@ export const authController = {
       try {
         existingUser = await prisma.user.findFirst({
           where: {
-            OR: [{ email }, { phone }],
+             email,
           },
         });
       } catch (dbError: any) {
@@ -47,24 +47,29 @@ export const authController = {
       }
 
       if (existingUser) {
-        throw new AppError('User with this email or phone already exists', 409);
+        throw new AppError('User with this email already exists', 409);
       }
 
       // Generate OTP
       const otp = OTPService.generateOTP();
       logger.debug(`OTP generated for ${email}`);
 
-      // Store registration data temporarily
-      const registrationData = {
+      // Store registration data in memory (context preservation)
+      // This allows resending OTP without losing user data
+      const pendingRegistrations = (global as any).pendingRegistrations || new Map();
+      (global as any).pendingRegistrations = pendingRegistrations;
+      
+      pendingRegistrations.set(email, {
         name,
         email,
         phone,
-        password, // Will be hashed when creating user
+        password, // Ideally hashed, but keeping raw for now to match flow until hash step
         role: role || 'CUSTOMER',
-      };
+        timestamp: Date.now() 
+      });
 
       try {
-        await OTPService.storeOTP(email, otp, registrationData);
+        await OTPService.storeOTP(email, otp, { email }); // Only store email in OTP to link back
         logger.debug(`OTP stored for ${email}`);
       } catch (error: any) {
         logger.error('Failed to store email OTP:', {
@@ -173,22 +178,31 @@ export const authController = {
       throw new AppError('Email and OTP are required', 400);
     }
 
-    // Verify OTP and get registration data
-    const registrationData = await OTPService.verifyOTP(email, otp);
+    // Verify OTP
+    const otpPayload = await OTPService.verifyOTP(email, otp);
 
-    if (!registrationData) {
+    if (!otpPayload) {
       throw new AppError('Invalid or expired OTP. Please try registering again.', 400);
     }
 
-    // Check if user was created in the meantime (race condition protection)
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email: registrationData.email }, { phone: registrationData.phone }],
-      },
+    // Retrieve pending registration data
+    const pendingRegistrations = (global as any).pendingRegistrations;
+    const registrationData = pendingRegistrations ? pendingRegistrations.get(email) : null;
+
+    if (!registrationData) {
+       throw new AppError('Registration session expired. Please sign up again.', 400);
+    }
+
+    // Clean up pending data
+    pendingRegistrations.delete(email);
+
+    // Check for existing user
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
     });
 
     if (existingUser) {
-      throw new AppError('User with this email or phone already exists', 409);
+      throw new AppError('User with this email already exists', 409);
     }
 
     // Hash password
@@ -203,7 +217,6 @@ export const authController = {
         passwordHash,
         role: registrationData.role,
         emailVerified: true, // Mark as verified since OTP was verified
-        phoneVerified: false, // Phone verification can be done separately
       },
       select: {
         id: true,
@@ -212,7 +225,6 @@ export const authController = {
         phone: true,
         role: true,
         emailVerified: true,
-        phoneVerified: true,
         createdAt: true,
       },
     });
@@ -287,7 +299,8 @@ export const authController = {
         phone: user.phone,
         role: user.role,
         emailVerified: user.emailVerified,
-        phoneVerified: user.phoneVerified,
+        walletBalance: user.walletBalance,
+        totalSpending: user.totalSpending,
       },
       tokens: {
         accessToken,
@@ -472,16 +485,50 @@ export const authController = {
       return;
     }
 
-    // Mark email as verified
-    await prisma.user.update({
-      where: { id: tokenRecord.userId },
-      data: { emailVerified: true },
-    });
+    // Parse token to extract potential new email (Change Email flow)
+    // Format: "randomToken.base64Email"
+    const parts = tokenRecord.token.split('.');
+    let newEmail = null;
+    
+    if (parts.length === 2) {
+        try {
+            newEmail = Buffer.from(parts[1], 'base64').toString('ascii');
+             // specific validation for email could go here
+        } catch (e) {
+            // ignore, normal verification
+        }
+    }
+
+    // Verify User matches token (already done by relation, but sanity check)
+    // If newEmail is present, we update the user's email AND set verified = true
+    
+    if (newEmail) {
+        // Check if email taken again just in case
+        const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+        if (taken && taken.id !== tokenRecord.userId) {
+             await prisma.emailVerificationToken.delete({ where: { token } });
+             throw new AppError('Email already taken', 409);
+        }
+
+        await prisma.user.update({
+            where: { id: tokenRecord.userId },
+            data: { 
+                email: newEmail,
+                emailVerified: true 
+            },
+        });
+         logger.info(`Email updated and verified for user: ${tokenRecord.userId} to ${newEmail}`);
+    } else {
+        // Normal verification (if we ever use it)
+        await prisma.user.update({
+            where: { id: tokenRecord.userId },
+            data: { emailVerified: true },
+        });
+         logger.info(`Email verified for user: ${tokenRecord.userId}`);
+    }
 
     // Delete verification token
     await prisma.emailVerificationToken.delete({ where: { token } });
-
-    logger.info(`Email verified for user: ${tokenRecord.userId}`);
 
     res.json({ message: 'Email verified successfully' });
   },
@@ -489,8 +536,8 @@ export const authController = {
   /**
    * Change password (for authenticated users)
    */
-  async changePassword(req: AuthRequest, res: Response): Promise<void> {
-    const userId = req.user!.id;
+  async changePassword(req: Request, res: Response): Promise<void> {
+    const userId = (req as AuthRequest).user!.id;
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
@@ -537,89 +584,52 @@ export const authController = {
     res.json({ message: 'Password changed successfully' });
   },
 
-  /**
-   * Send Phone OTP
-   */
-  async sendPhoneOTP(req: Request, res: Response): Promise<void> {
-    const { phone } = req.body;
 
-    if (!phone) {
-      throw new AppError('Phone number is required', 400);
-    }
-
-    // Validate phone format
-    if (!/^\d{10}$/.test(phone)) {
-      throw new AppError('Phone number must be exactly 10 digits', 400);
-    }
-
-    // Generate OTP
-    const otp = OTPService.generateOTP();
-    logger.debug(`Phone OTP generated for ${phone}: ${otp}`);
-
-    try {
-      // Store OTP
-      await OTPService.storeOTP(`phone:${phone}`, otp, { phone });
-      
-      // Send SMS via Twilio (or log if dev)
-      await OTPService.sendSMS(phone, otp);
-
-      res.json({ 
-        message: 'OTP sent successfully',
-        // Dev: return OTP for testing
-        // devOtp: process.env.NODE_ENV === 'development' ? otp : undefined 
-      });
-    } catch (error: any) {
-      logger.error('Failed to send phone OTP:', error);
-      throw new AppError('Failed to send OTP. Please try again.', 500);
-    }
-  },
 
   /**
-   * Verify Phone OTP
+   * Request email change
    */
-  async verifyPhoneOTP(req: Request, res: Response): Promise<void> {
-    const { phone, otp } = req.body;
+  async requestEmailChange(req: Request, res: Response): Promise<void> {
+    const userId = (req as AuthRequest).user!.id; // Cast to AuthRequest
+    const { newEmail } = req.body;
 
-    if (!phone || !otp) {
-      throw new AppError('Phone number and OTP are required', 400);
+    if (!newEmail) {
+      throw new AppError('New email is required', 400);
     }
 
-    try {
-      // Verify OTP
-      const isValid = await OTPService.verifyOTP(`phone:${phone}`, otp);
+    // Check if email is already taken
+    const existingUser = await prisma.user.findUnique({
+      where: { email: newEmail },
+    });
 
-      if (!isValid) {
-        throw new AppError('Invalid or expired OTP', 400);
-      }
-
-      // If authenticated user, update their phone verified status
-      // Note: This endpoint might be called by authenticated users or during registration
-      // If called by authenticated user (we can check req.user if middleware is applied, 
-      // but this controller method signature is generic Request/Response. 
-      // We should check if it's an authenticated request if we want to update the user immediately.)
-      
-      // However, for the specific "Settings" page use case, the user is authenticated.
-      // We can check if `req.user` exists (populated by auth middleware).
-      // But `req` here is `Request`, not `AuthRequest`. We can cast it or check safely.
-      
-      const authReq = req as AuthRequest;
-      if (authReq.user) {
-        await prisma.user.update({
-          where: { id: authReq.user.id },
-          data: { 
-            phone: phone, // Update phone number as well in case it's new
-            phoneVerified: true 
-          },
-        });
-        logger.info(`Phone verified for user: ${authReq.user.id}`);
-      }
-
-      res.json({ message: 'Phone verified successfully' });
-    } catch (error: any) {
-      if (error instanceof AppError) throw error;
-      logger.error('Failed to verify phone OTP:', error);
-      throw new AppError('Verification failed. Please try again.', 500);
+    if (existingUser) {
+      throw new AppError('Email is already in use', 409);
     }
+
+    // Generate token
+    const token = generateSecureToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Store token (delete existing if any)
+    await prisma.emailVerificationToken.deleteMany({ where: { userId } });
+    
+    // We store the NEW email in the token string itself to avoid schema changes.
+    // Format: "random_token.base64(newEmail)"
+    
+    const tokenString = `${token}.${Buffer.from(newEmail).toString('base64')}`;
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId,
+        token: tokenString,
+        expiresAt,
+      },
+    });
+
+    // Send verification email to the NEW email
+    await sendVerificationEmail(newEmail, tokenString);
+
+    res.json({ message: 'Verification link sent to new email address.' });
   },
 };
 

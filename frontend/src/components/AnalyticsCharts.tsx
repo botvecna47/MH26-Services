@@ -1,8 +1,19 @@
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { mockAnalytics } from '../data/mockData';
 
-export default function AnalyticsCharts() {
+interface AnalyticsChartsProps {
+  data?: {
+    userGrowth: Array<{ month: string; users: number }>;
+    revenueGrowth: Array<{ month: string; revenue: number }>;
+    categoryDistribution: Array<{ name: string; value: number }>;
+  };
+}
+
+export default function AnalyticsCharts({ data }: AnalyticsChartsProps) {
   const COLORS = ['#ff6b35', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#607D8B'];
+
+  if (!data) {
+    return <div className="text-center p-4 text-gray-500">Loading charts...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -10,7 +21,7 @@ export default function AnalyticsCharts() {
       <div>
         <h3 className="text-gray-900 mb-3">User Growth</h3>
         <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={mockAnalytics.userGrowth}>
+          <LineChart data={data.userGrowth}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
@@ -25,7 +36,7 @@ export default function AnalyticsCharts() {
       <div>
         <h3 className="text-gray-900 mb-3">Revenue Trend</h3>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={mockAnalytics.revenueGrowth}>
+          <BarChart data={data.revenueGrowth}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
@@ -42,7 +53,7 @@ export default function AnalyticsCharts() {
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
-              data={mockAnalytics.categoryDistribution}
+              data={data.categoryDistribution}
               cx="50%"
               cy="50%"
               labelLine={false}
@@ -51,7 +62,7 @@ export default function AnalyticsCharts() {
               fill="#8884d8"
               dataKey="value"
             >
-              {mockAnalytics.categoryDistribution.map((entry, index) => (
+              {data.categoryDistribution.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

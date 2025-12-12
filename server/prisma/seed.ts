@@ -1,9 +1,8 @@
 /**
- * Database Seed Script
- * Creates 35 providers (5 per category), users, bookings, transactions
+ * Database Seed Script - UPDATED with Real Just Dial Nanded Data
  * Run: npm run seed or npx prisma db seed
  */
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ProviderStatus } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const BCRYPT_ROUNDS = 12;
@@ -13,828 +12,562 @@ async function hashPassword(password: string): Promise<string> {
 
 const prisma = new PrismaClient();
 
-const CATEGORIES = [
-  'Plumbing',
-  'Electrical',
-  'Cleaning',
-  'Salon',
-  'Tutoring',
-  'Fitness',
-  'Catering',
-];
-
+// Data from design_assets/src/data/mockData.ts
 const CATEGORY_IMAGES: Record<string, string[]> = {
-  Plumbing: [
-    'https://images.unsplash.com/photo-1581578731117-10d78438fbd8?q=80&w=800&auto=format&fit=crop', // Man fixing pipe
-    'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?q=80&w=800&auto=format&fit=crop', // Plumber with wrench
-    'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop', // Tools
-    'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?q=80&w=800&auto=format&fit=crop', // Sink repair
-    'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=800&auto=format&fit=crop', // Plumbing tools
+  tiffin: [
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
+    'https://images.unsplash.com/photo-1594998893017-3614795c2e90?w=800',
+    'https://images.unsplash.com/photo-1626804475297-411dbe6373b3?w=800'
   ],
-  Electrical: [
-    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800&auto=format&fit=crop', // Electrician working
-    'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?q=80&w=800&auto=format&fit=crop', // Wiring
-    'https://images.unsplash.com/photo-1544724569-5f546fd6dd2d?q=80&w=800&auto=format&fit=crop', // Electrical panel
-    'https://images.unsplash.com/photo-1518349619113-03114f06ac3a?q=80&w=800&auto=format&fit=crop', // Light bulb repair
-    'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop', // Modern lighting
+  plumbing: [
+    'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=800',
+    'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800', 
+    'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800'
   ],
-  Cleaning: [
-    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=800&auto=format&fit=crop', // Professional cleaner
-    'https://images.unsplash.com/photo-1527515673516-756386d36f0b?q=80&w=800&auto=format&fit=crop', // Polishing floor
-    'https://images.unsplash.com/photo-1584621645331-c77565315121?q=80&w=800&auto=format&fit=crop', // Spray bottle
-    'https://images.unsplash.com/photo-1563453392212-326f5e854473?q=80&w=800&auto=format&fit=crop', // Living room cleaning
-    'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=800&auto=format&fit=crop', // Kitchen cleaning
+  electrical: [
+    'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800',
+    'https://images.unsplash.com/photo-1505775561242-727b7fba20f0?w=800',
+    'https://images.unsplash.com/photo-1558402529-d2638a7023e9?w=800'
   ],
-  Salon: [
-    'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800&auto=format&fit=crop', // Haircut
-    'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=800&auto=format&fit=crop', // Salon interior
-    'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?q=80&w=800&auto=format&fit=crop', // Facial
-    'https://images.unsplash.com/photo-1487412947132-232a6958a13e?q=80&w=800&auto=format&fit=crop', // Makeup
-    'https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=800&auto=format&fit=crop', // Hair washing
+  tourism: [
+    'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800',
+    'https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?w=800',
+    'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800'
   ],
-  Tutoring: [
-    'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=800&auto=format&fit=crop', // Student studying
-    'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop', // Classroom
-    'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=800&auto=format&fit=crop', // Math symbols
-    'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=800&auto=format&fit=crop', // Teaching online
-    'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop', // Books
+  fitness: [
+    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
+    'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800',
+    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800'
   ],
-  Fitness: [
-    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop', // Gym workout
-    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', // Weights
-    'https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop', // Yoga
-    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=800&auto=format&fit=crop', // Cardio
-    'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=800&auto=format&fit=crop', // Group class
+  salon: [
+    'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+    'https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=800',
+    'https://images.unsplash.com/photo-1595476103518-9c3a2f5ae47d?w=800'
   ],
-  Catering: [
-    'https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=800&auto=format&fit=crop', // Catering buffet
-    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800&auto=format&fit=crop', // Plated food
-    'https://images.unsplash.com/photo-1470337458703-46ad1756a187?q=80&w=800&auto=format&fit=crop', // Drinks and food
-    'https://images.unsplash.com/photo-1505935428862-770b6f24f629?q=80&w=800&auto=format&fit=crop', // Indian food
-    'https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=800&auto=format&fit=crop', // Cooking
-  ],
+  cleaning: [
+    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
+    'https://images.unsplash.com/photo-1527515637-62ea2a9bfee0?w=800',
+    'https://images.unsplash.com/photo-1584621645331-c27a0f1d4b6b?w=800'
+  ]
 };
 
-const SERVICE_DATA = {
-  Plumbing: [
-    {
-      title: 'Pipe Repair & Installation', 
-      description: 'Expert pipe repair, replacement, and installation services. Fix leaks, blockages, and broken pipes with professional tools.',
-      price: 800,
-      durationMin: 120,
-      imageUrl: CATEGORY_IMAGES.Plumbing[0]
-    },
-    { 
-      title: 'Water Tank Cleaning', 
-      description: 'Professional water tank cleaning and sanitization. Remove algae, sediment, and bacteria for clean, safe drinking water.',
-      price: 1500,
-      durationMin: 180,
-      imageUrl: CATEGORY_IMAGES.Plumbing[1]
-    },
-    { 
-      title: 'Bathroom Fitting & Installation', 
-      description: 'Complete bathroom fitting services including taps, showers, toilets, and fixtures. Professional installation with warranty.',
-      price: 2500,
-      durationMin: 240,
-      imageUrl: CATEGORY_IMAGES.Plumbing[2]
-    },
-    { 
-      title: 'Emergency Plumbing Service', 
-      description: '24/7 emergency plumbing services. Quick response for burst pipes, severe leaks, and urgent repairs in Nanded.',
-      price: 1200,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Plumbing[3]
-    },
-    { 
-      title: 'Drain Cleaning', 
-      description: 'Professional drain cleaning services using advanced equipment. Clear blocked drains, sinks, and sewer lines effectively.',
-      price: 1000,
-      durationMin: 90,
-      imageUrl: CATEGORY_IMAGES.Plumbing[4]
-    },
-  ],
-  Electrical: [
-    { 
-      title: 'Electrical Wiring & Installation', 
-      description: 'Complete electrical wiring for homes and offices. Safe, code-compliant installations with quality materials.',
-      price: 2000,
-      durationMin: 300,
-      imageUrl: CATEGORY_IMAGES.Electrical[0]
-    },
-    { 
-      title: 'Electrical Repairs', 
-      description: 'Expert electrical repair services. Fix faulty switches, sockets, circuit breakers, and electrical appliances.',
-      price: 600,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Electrical[1]
-    },
-    { 
-      title: 'Fan & Light Installation', 
-      description: 'Professional installation of ceiling fans, lights, chandeliers, and electrical fixtures. Safe and reliable service.',
-      price: 500,
-      durationMin: 90,
-      imageUrl: CATEGORY_IMAGES.Electrical[2]
-    },
-    { 
-      title: 'MCB & Fuse Box Repair', 
-      description: 'MCB panel installation, repair, and maintenance. Fix tripping issues and upgrade electrical panels safely.',
-      price: 1500,
-      durationMin: 120,
-      imageUrl: CATEGORY_IMAGES.Electrical[3]
-    },
-    { 
-      title: 'Home Electrical Safety Check', 
-      description: 'Comprehensive electrical safety inspection. Identify hazards, check wiring, and ensure electrical safety compliance.',
-      price: 800,
-      durationMin: 120,
-      imageUrl: CATEGORY_IMAGES.Electrical[4]
-    },
-  ],
-  Cleaning: [
-    { 
-      title: 'Home Deep Cleaning', 
-      description: 'Complete deep cleaning service for homes. Kitchen, bathroom, bedroom cleaning with eco-friendly products.',
-      price: 2000,
-      durationMin: 240,
-      imageUrl: CATEGORY_IMAGES.Cleaning[0]
-    },
-    { 
-      title: 'Office Cleaning Service', 
-      description: 'Professional office cleaning including desks, floors, windows, and restrooms. Regular or one-time service available.',
-      price: 2500,
-      durationMin: 300,
-      imageUrl: CATEGORY_IMAGES.Cleaning[1]
-    },
-    { 
-      title: 'Carpet & Sofa Cleaning', 
-      description: 'Deep cleaning for carpets, rugs, and sofas. Remove stains, odors, and allergens with professional equipment.',
-      price: 1500,
-      durationMin: 180,
-      imageUrl: CATEGORY_IMAGES.Cleaning[2]
-    },
-    { 
-      title: 'Kitchen Deep Cleaning', 
-      description: 'Thorough kitchen cleaning including appliances, cabinets, countertops, and exhaust. Sanitized and spotless.',
-      price: 1200,
-      durationMin: 150,
-      imageUrl: CATEGORY_IMAGES.Cleaning[3]
-    },
-    { 
-      title: 'Bathroom Sanitization', 
-      description: 'Complete bathroom cleaning and sanitization. Remove mold, stains, and ensure hygiene with professional products.',
-      price: 800,
-      durationMin: 90,
-      imageUrl: CATEGORY_IMAGES.Cleaning[4]
-    },
-  ],
-  Salon: [
-    { 
-      title: 'Haircut & Styling', 
-      description: 'Professional haircut and styling services for men and women. Latest trends and techniques by experienced stylists.',
-      price: 300,
-      durationMin: 45,
-      imageUrl: CATEGORY_IMAGES.Salon[0]
-    },
-    { 
-      title: 'Hair Color & Highlights', 
-      description: 'Expert hair coloring and highlighting services. Use premium products for vibrant, long-lasting color.',
-      price: 1500,
-      durationMin: 180,
-      imageUrl: CATEGORY_IMAGES.Salon[1]
-    },
-    { 
-      title: 'Facial & Skin Care', 
-      description: 'Rejuvenating facial treatments for glowing skin. Deep cleansing, exfoliation, and moisturizing therapy.',
-      price: 800,
-      durationMin: 90,
-      imageUrl: CATEGORY_IMAGES.Salon[2]
-    },
-    { 
-      title: 'Bridal Makeup & Hair', 
-      description: 'Complete bridal makeup and hairstyling packages. Traditional and modern looks for your special day.',
-      price: 5000,
-      durationMin: 300,
-      imageUrl: CATEGORY_IMAGES.Salon[3]
-    },
-    { 
-      title: 'Hair Spa & Treatment', 
-      description: 'Relaxing hair spa and treatment services. Repair damaged hair, reduce frizz, and add shine.',
-      price: 1000,
-      durationMin: 120,
-      imageUrl: CATEGORY_IMAGES.Salon[4]
-    },
-  ],
-  Tutoring: [
-    { 
-      title: 'Mathematics Tutoring', 
-      description: 'Expert math tutoring for all classes. Clear concepts, solve problems, and improve grades with personalized attention.',
-      price: 500,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Tutoring[0]
-    },
-    { 
-      title: 'Science Classes', 
-      description: 'Physics, Chemistry, and Biology tutoring. Concept clarity, practical knowledge, and exam preparation.',
-      price: 600,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Tutoring[1]
-    },
-    { 
-      title: 'English Language Classes', 
-      description: 'English speaking, writing, and grammar classes. Improve communication skills and language proficiency.',
-      price: 400,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Tutoring[2]
-    },
-    { 
-      title: 'Computer & Programming', 
-      description: 'Computer basics, programming languages, and software training. Learn coding, web development, and IT skills.',
-      price: 800,
-      durationMin: 90,
-      imageUrl: CATEGORY_IMAGES.Tutoring[3]
-    },
-    { 
-      title: 'Exam Preparation Classes', 
-      description: 'Competitive exam preparation including JEE, NEET, and board exams. Expert guidance and practice tests.',
-      price: 1000,
-      durationMin: 120,
-      imageUrl: CATEGORY_IMAGES.Tutoring[4]
-    },
-  ],
-  Fitness: [
-    { 
-      title: 'Personal Training', 
-      description: 'One-on-one personal training sessions. Customized workout plans, nutrition guidance, and fitness goals.',
-      price: 800,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Fitness[0]
-    },
-    { 
-      title: 'Yoga Classes', 
-      description: 'Traditional yoga classes for flexibility, strength, and mental wellness. Beginner to advanced levels available.',
-      price: 500,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Fitness[1]
-    },
-    { 
-      title: 'Gym Membership', 
-      description: 'Full gym access with modern equipment. Cardio, strength training, and group fitness classes included.',
-      price: 2000,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Fitness[2]
-    },
-    { 
-      title: 'Weight Loss Program', 
-      description: 'Structured weight loss program with diet plans and exercise routines. Achieve your fitness goals effectively.',
-      price: 3000,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Fitness[3]
-    },
-    { 
-      title: 'Zumba & Dance Fitness', 
-      description: 'Fun and energetic Zumba and dance fitness classes. Burn calories while enjoying music and movement.',
-      price: 400,
-      durationMin: 60,
-      imageUrl: CATEGORY_IMAGES.Fitness[4]
-    },
-  ],
-  Catering: [
-    { 
-      title: 'Daily Tiffin Service', 
-      description: 'Fresh, home-cooked daily tiffin service. Nutritious meals delivered to your doorstep in Nanded.',
-      price: 2000,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Catering[0]
-    },
-    { 
-      title: 'Party Catering Service', 
-      description: 'Complete party catering for weddings, birthdays, and events. Delicious food, professional service.',
-      price: 15000,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Catering[1]
-    },
-    { 
-      title: 'Student Tiffin Service', 
-      description: 'Affordable tiffin service for students. Healthy, balanced meals perfect for college and hostel students.',
-      price: 1500,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Catering[2]
-    },
-    { 
-      title: 'Office Lunch Service', 
-      description: 'Corporate lunch catering for offices. Bulk orders with variety, delivered fresh to your workplace.',
-      price: 3000,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Catering[3]
-    },
-    { 
-      title: 'Traditional Maharashtrian Thali', 
-      description: 'Authentic Maharashtrian thali service. Traditional recipes with dal, rice, vegetables, and roti.',
-      price: 2500,
-      durationMin: 0,
-      imageUrl: CATEGORY_IMAGES.Catering[4]
-    },
-  ],
-};
+const DESIGN_PROVIDERS = [
+  // TIFFIN SERVICE (2)
+  {
+    id: 'p1',
+    businessName: 'Shree Sai Bhojanalay',
+    ownerName: 'Rameshwar Shinde',
+    email: 'contact@shreesaibhojanalay.com',
+    phone: '9822334455',
+    phoneVisible: true,
+    bio: 'Authentic Maharashtrian Thali and Tiffin Services. Serving delicious homemade food in Vazirabad for over 10 years.',
+    primaryCategory: 'tiffin',
+    address: 'Near Gurudwara, Vazirabad, Nanded, Maharashtra 431601',
+    city: 'Nanded',
+    lat: 19.1550,
+    lng: 77.3112,
+    gallery: CATEGORY_IMAGES.tiffin,
+    ratingAverage: 4.8,
+    ratingCount: 142,
+    status: 'APPROVED', 
+  },
+  {
+    id: 'p2',
+    businessName: 'Sainath Tiffin Services',
+    ownerName: 'Geeta Patil',
+    email: 'orders@sainathtiffins.com',
+    phone: '9988776655',
+    phoneVisible: true,
+    bio: 'Healthy and hygienic tiffin delivery service. Specialized in student meal plans and corporate lunch boxes.',
+    primaryCategory: 'tiffin',
+    address: 'Shivaji Nagar, Nanded, Maharashtra 431602',
+    city: 'Nanded',
+    lat: 19.1385,
+    lng: 77.3215,
+    gallery: CATEGORY_IMAGES.tiffin,
+    ratingAverage: 4.6,
+    ratingCount: 95,
+    status: 'APPROVED',
+  },
 
-const PROVIDER_DATA = {
-  Plumbing: [
-    {
-      name: 'Indian plumbers Ltd.',
-      owner: 'Rajesh Kumar',
-      phone: '+91-9890011101',
-      address: 'Irrigation Colony, Peer Burhan Nagar, Nanded, Maharashtra 431602, India',
-      lat: 19.1825906,
-      lng: 77.3080313,
-      rating: 4.3,
-      votes: 9
-    },
-    {
-      name: 'Daikin Airconditioning Solution Plaza',
-      owner: 'Amit Singh',
-      phone: '+91-9890011102',
-      address: 'Shop No 1, opposite Jija Mata Hospital, Chikhalwadi, Nanded, Maharashtra 431601, India',
-      lat: 19.1517643,
-      lng: 77.3165393,
-      rating: 4.7,
-      votes: 9
-    },
-    {
-      name: 'Indian Plumbers .',
-      owner: 'Sandeep Patil',
-      phone: '+91-9890011103',
-      address: 'Peer Burhan Nagar Rd, Irrigation Colony, Peer Burhan Nagar, Nanded, Maharashtra 431605, India',
-      lat: 19.180458,
-      lng: 77.3090813,
-      rating: 3.8,
-      votes: 4
-    },
-    {
-      name: 'Bombay Plumber Technician',
-      owner: 'Feroz Khan',
-      phone: '+91-9890011104',
-      address: 'Malegaon Road, Bodhisatva Nagar, Taroda Kh., near Gyaneshwari Hotel, Nanded, Maharashtra 431605, India',
-      lat: 19.1925869,
-      lng: 77.2971804,
-      rating: 3.5,
-      votes: 4
-    },
-    {
-      name: 'Safa Traders',
-      owner: 'Abdul Rahim',
-      phone: '+91-9890011105',
-      address: 'Opp Delux Function Hall, Mall Tekdi Road, Nanded, Maharashtra 431604, India',
-      lat: 19.1573809,
-      lng: 77.3345486,
-      rating: 4.8,
-      votes: 4
-    },
-  ],
-  Electrical: [
-    { name: 'Shinde Electricals', owner: 'Anil Shinde', phone: '+91-9765432108' },
-    { name: 'Bright Electricals', owner: 'Prakash Gaikwad', phone: '+91-9776543210' },
-    { name: 'Voltage Solutions', owner: 'Sanjay Khedkar', phone: '+91-9787654321' },
-    { name: 'Current Tech Electricians', owner: 'Madhav Bhandari', phone: '+91-9798765432' },
-    { name: 'Safe Wire Electricals', owner: 'Dinesh Kamble', phone: '+91-9809876540' },
-  ],
-  Cleaning: [
-    { name: 'Clean & Shine Services', owner: 'Mangesh More', phone: '+91-9889012347' },
-    { name: 'Sparkle Cleaning', owner: 'Rekha Bhosale', phone: '+91-9890123458' },
-    { name: 'Deep Clean Experts', owner: 'Vishal Pawar', phone: '+91-9801234569' },
-    { name: 'Green Cleaning Solutions', owner: 'Sunita Kamble', phone: '+91-9812345680' },
-    { name: 'Swift Clean Services', owner: 'Amit Gaikwad', phone: '+91-9823456781' },
-  ],
-  Salon: [
-    { name: 'Lakme Beauty Salon', owner: 'Pooja Sharma', phone: '+91-9834567891' },
-    { name: 'Men\'s Grooming Studio', owner: 'Akash Patil', phone: '+91-9845678903' },
-    { name: 'Beauty Bliss Salon', owner: 'Neha Deshmukh', phone: '+91-9856789014' },
-    { name: 'Quick Cuts Unisex', owner: 'Sachin Kale', phone: '+91-9867890125' },
-    { name: 'Elite Hair & Beauty', owner: 'Kavita Jadhav', phone: '+91-9878901236' },
-  ],
-  Tutoring: [
-    { name: 'Nanded Tutoring Center', owner: 'Rajesh Deshmukh', phone: '+91-9901234567' },
-    { name: 'Smart Learning Academy', owner: 'Priya Kulkarni', phone: '+91-9912345678' },
-    { name: 'Expert Tutors Nanded', owner: 'Amit Jadhav', phone: '+91-9923456789' },
-    { name: 'Study Hub Nanded', owner: 'Sneha Patil', phone: '+91-9934567890' },
-    { name: 'Knowledge Point', owner: 'Vikram More', phone: '+91-9945678901' },
-  ],
-  Fitness: [
-    { name: 'Gold\'s Gym Nanded', owner: 'Rahul Chavan', phone: '+91-9889012346' },
-    { name: 'Power Fitness Studio', owner: 'Sneha Patil', phone: '+91-9890123457' },
-    { name: 'Iron Gym Nanded', owner: 'Vikram Salunkhe', phone: '+91-9801234568' },
-    { name: 'Yoga & Wellness Center', owner: 'Anjali Bhosale', phone: '+91-9812345679' },
-    { name: 'CrossFit Nanded', owner: 'Abhijeet Jadhav', phone: '+91-9823456780' },
-  ],
-  Catering: [
-    { name: 'Shri Sai Tiffin Service', owner: 'Sunita Patil', phone: '+91-9823456789' },
-    { name: 'Maa Ki Rasoi Tiffin', owner: 'Rajesh Sharma', phone: '+91-9834567890' },
-    { name: 'Ghar Jaisa Khana', owner: 'Anita Deshmukh', phone: '+91-9845678901' },
-    { name: 'Student Special Tiffin', owner: 'Prakash Jadhav', phone: '+91-9856789012' },
-    { name: 'Premium Tiffin Express', owner: 'Meera Kulkarni', phone: '+91-9867890123' },
-  ],
-};
+  // PLUMBING (2)
+  {
+    id: 'p3',
+    businessName: 'Patawar Plumbing Solutions',
+    ownerName: 'Santosh Patawar',
+    email: 'service@patawarplumbing.com',
+    phone: '9890123456',
+    phoneVisible: true,
+    bio: 'Expert plumbing contractor. Material supply and fitting services. Reliable and quick response.',
+    primaryCategory: 'plumbing',
+    address: 'Near Latur Phata, Cidco, Nanded, Maharashtra 431603',
+    city: 'Nanded',
+    lat: 19.1220,
+    lng: 77.3000,
+    gallery: CATEGORY_IMAGES.plumbing,
+    ratingAverage: 4.7,
+    ratingCount: 88,
+    status: 'APPROVED',
+  },
+  {
+    id: 'p4',
+    businessName: 'Panchal Plumbing Works',
+    ownerName: 'Vijay Panchal',
+    email: 'vijay@panchalplumbing.com',
+    phone: '9850678901',
+    phoneVisible: true,
+    bio: 'All types of plumbing repair and maintenance. Specializing in leak detection and bathroom fittings.',
+    primaryCategory: 'plumbing',
+    address: 'Shree Nagar, Nanded, Maharashtra 431605',
+    city: 'Nanded',
+    lat: 19.1650,
+    lng: 77.2950,
+    gallery: CATEGORY_IMAGES.plumbing,
+    ratingAverage: 4.5,
+    ratingCount: 65,
+    status: 'APPROVED',
+  },
 
-const REVIEW_DATA = {
-  Plumbing: [
-    "Fixed the leak quickly. Very professional.",
-    "Arrived on time and did a clean job.",
-    "Price was a bit high but work was quality.",
-    "Very knowledgeable plumber. Solved our drainage issue.",
-    "Emergency service was a lifesaver! Thanks.",
-    "Changed the taps efficiently. Good behavior.",
-  ],
-  Electrical: [
-    "Solved the short circuit issue immediately.",
-    "Installed fans perfectly. Precise work.",
-    "Very safe and professional electrician.",
-    "Checked all wiring thoroughly. Recommended.",
-    "Good service for the price.",
-    "Fixed the tripping MCB. Very skilled.",
-  ],
-  Cleaning: [
-    "House looks brand new! Amazing deep cleaning.",
-    "Very thorough and polite staff.",
-    "Removed all stains from the sofa. Great job.",
-    "Kitchen cleaning was spotless.",
-    "Punctual and efficient team.",
-    "Best cleaning service in Nanded.",
-  ],
-  Salon: [
-    "Great haircut! Exactly what I wanted.",
-    "Very relaxing facial. Good ambiance.",
-    "Professional stylists and clean equipment.",
-    "Loved the hair color. Highly recommended.",
-    "Hygienic and safe salon services.",
-    "Good value for money.",
-  ],
-  Tutoring: [
-    "My son's math grades improved significantly.",
-    "Excellent teaching method. Very patient.",
-    "Helped me prepare for JEE. Great guidance.",
-    "Clear concepts and regular tests.",
-    "Very supportive teacher.",
-    "Best English classes in town.",
-  ],
-  Fitness: [
-    "Lost 5kg in 2 months! Great trainer.",
-    "Gym equipment is top notch.",
-    "Yoga classes are very relaxing.",
-    "Personal attention helped me reach my goals.",
-    "Good environment for workout.",
-    "Trainer is very motivating.",
-  ],
-  Catering: [
-    "Food was delicious! Guests loved it.",
-    "On time delivery and hot food.",
-    "Tiffin service is like home cooked food.",
-    "Great variety in the menu.",
-    "Hygienic and tasty catering.",
-    "Best puran poli in Nanded!",
-  ],
-};
+  // ELECTRICAL (2)
+  {
+    id: 'p5',
+    businessName: 'Shravan Electrical Contractor',
+    ownerName: 'Shravan Kumar',
+    email: 'info@shravanelectricals.com',
+    phone: '9764512389',
+    phoneVisible: true,
+    bio: 'Government licensed electrical contractor. Residential and commercial wiring, panel installation, and maintenance.',
+    primaryCategory: 'electrical',
+    address: 'Main Road, Vazirabad, Nanded, Maharashtra 431601',
+    city: 'Nanded',
+    lat: 19.1530,
+    lng: 77.3150,
+    gallery: CATEGORY_IMAGES.electrical,
+    ratingAverage: 4.9,
+    ratingCount: 156,
+    status: 'APPROVED',
+  },
+  {
+    id: 'p6',
+    businessName: 'FR Electricals',
+    ownerName: 'Fairoz Khan',
+    email: 'support@frelectricals.com',
+    phone: '9960543210',
+    phoneVisible: true,
+    bio: 'Authorized service center for major electrical brands. Repairing of motors, inverters, and home appliances.',
+    primaryCategory: 'electrical',
+    address: 'Degloor Naka, Nanded, Maharashtra 431604',
+    city: 'Nanded',
+    lat: 19.1400,
+    lng: 77.3300,
+    gallery: CATEGORY_IMAGES.electrical,
+    ratingAverage: 4.6,
+    ratingCount: 112,
+    status: 'APPROVED',
+  },
 
-const GENERIC_REVIEWS = [
-  "Great experience, would hire again.",
-  "Professional and polite behavior.",
-  "Five star service!",
-  "Reasonable rates for Nanded.",
-  "Very satisfied with the work.",
-  "Prompt response and good service.",
+  // TOURISM (2)
+  {
+    id: 'p7',
+    businessName: 'National Travels',
+    ownerName: 'Rajesh Sharma',
+    email: 'book@nationaltravelsnanded.com',
+    phone: '9823123456',
+    phoneVisible: true,
+    bio: 'Daily luxury bus services to Pune, Mumbai, Nagpur. AC Sleeper and Seater coaches available.',
+    primaryCategory: 'tourism',
+    address: 'Old Mondha, Nanded, Maharashtra 431602',
+    city: 'Nanded',
+    lat: 19.1480,
+    lng: 77.3100,
+    gallery: CATEGORY_IMAGES.tourism,
+    ratingAverage: 4.5,
+    ratingCount: 230,
+    status: 'APPROVED',
+  },
+  {
+    id: 'p8',
+    businessName: 'Royal Tours & Travels',
+    ownerName: 'Amit Deshmukh',
+    email: 'amit@royaltoursnanded.com',
+    phone: '9922334455',
+    phoneVisible: true,
+    bio: 'Specialized tour packages for Hazur Sahib Darshan and local sightseeing. Car rentals available.',
+    primaryCategory: 'tourism',
+    address: 'Vazirabad, Nanded, Maharashtra 431601',
+    city: 'Nanded',
+    lat: 19.1560,
+    lng: 77.3120,
+    gallery: CATEGORY_IMAGES.tourism,
+    ratingAverage: 4.7,
+    ratingCount: 145,
+    status: 'APPROVED',
+  },
+
+  // FITNESS (2)
+  {
+    id: 'p9',
+    businessName: 'GNX Fitness',
+    ownerName: 'Rahul Chavan',
+    email: 'rahul@gnxfitness.com',
+    phone: '9890989090',
+    phoneVisible: true,
+    bio: 'Premium fitness center with modern equipment. Certified trainers for weight loss and bodybuilding.',
+    primaryCategory: 'fitness',
+    address: 'Vazirabad, Nanded, Maharashtra 431601',
+    city: 'Nanded',
+    lat: 19.1540,
+    lng: 77.3130,
+    gallery: CATEGORY_IMAGES.fitness,
+    ratingAverage: 4.8,
+    ratingCount: 189,
+    status: 'APPROVED',
+  },
+  {
+    id: 'p10',
+    businessName: 'Deshmukh Health Club',
+    ownerName: 'Sanjay Deshmukh',
+    email: 'join@deshmukhhealthclub.com',
+    phone: '9822456789',
+    phoneVisible: true,
+    bio: 'Traditional gym and health club. Yoga sessions and separate batches for ladies available.',
+    primaryCategory: 'fitness',
+    address: 'Taroda Naka, Nanded, Maharashtra 431605',
+    city: 'Nanded',
+    lat: 19.1620,
+    lng: 77.3050,
+    gallery: CATEGORY_IMAGES.fitness,
+    ratingAverage: 4.6,
+    ratingCount: 76,
+    status: 'APPROVED',
+  },
+
+  // SALON (2)
+  {
+    id: 'p11',
+    businessName: 'Signate Beauty Salon',
+    ownerName: 'Pooja Singh',
+    email: 'booking@signatesalon.com',
+    phone: '9960112233',
+    phoneVisible: true,
+    bio: 'Luxury unisex salon offering hair, skin, and makeup services. Expert stylists and premium products.',
+    primaryCategory: 'salon',
+    address: 'Vazirabad, Nanded, Maharashtra 431601',
+    city: 'Nanded',
+    lat: 19.1555,
+    lng: 77.3145,
+    gallery: CATEGORY_IMAGES.salon,
+    ratingAverage: 4.9,
+    ratingCount: 205,
+    status: 'APPROVED',
+  },
+  {
+    id: 'p12',
+    businessName: 'Glitz Womens Saloon',
+    ownerName: 'Kalyani Hurne',
+    email: 'kalyani@glitzsalon.com',
+    phone: '9970889900',
+    phoneVisible: true,
+    bio: 'Exclusive ladies beauty parlour. Bridal makeup specialists and advanced skin treatments.',
+    primaryCategory: 'salon',
+    address: 'Shivaji Nagar, Nanded, Maharashtra 431602',
+    city: 'Nanded',
+    lat: 19.1390,
+    lng: 77.3220,
+    gallery: CATEGORY_IMAGES.salon,
+    ratingAverage: 4.7,
+    ratingCount: 134,
+    status: 'APPROVED',
+  },
+
+  // CLEANING (2)
+  {
+    id: 'p13',
+    businessName: 'Sidh Home Cleaning',
+    ownerName: 'Mangesh More',
+    email: 'info@sidhcleaning.com',
+    phone: '9850123123',
+    phoneVisible: true,
+    bio: 'Complete home cleaning solutions. Sofa cleaning, tank cleaning, and sanitization services.',
+    primaryCategory: 'cleaning',
+    address: 'Anand Nagar, Nanded, Maharashtra 431602',
+    city: 'Nanded',
+    lat: 19.1450,
+    lng: 77.3180,
+    gallery: CATEGORY_IMAGES.cleaning,
+    ratingAverage: 4.6,
+    ratingCount: 67,
+    status: 'APPROVED',
+  },
+  {
+    id: 'p14',
+    businessName: 'Samarth Housekeeping',
+    ownerName: 'Ganesh Jadhav',
+    email: 'service@samarthhousekeeping.com',
+    phone: '9922112211',
+    phoneVisible: true,
+    bio: 'Professional housekeeping staff for residential and commercial properties. Reliable and verified staff.',
+    primaryCategory: 'cleaning',
+    address: 'Itwara, Nanded, Maharashtra 431604',
+    city: 'Nanded',
+    lat: 19.1510,
+    lng: 77.3250,
+    gallery: CATEGORY_IMAGES.cleaning,
+    ratingAverage: 4.5,
+    ratingCount: 54,
+    status: 'APPROVED',
+  }
 ];
 
-const BIO_TEMPLATES = [
-  "Expert {category} services provided by verified professionals. We ensure quality and safety in every job.",
-  "Serving Nanded for over 5 years. {businessName} is your trusted partner for all {category} needs.",
-  "Specialized in residential and commercial {category} solutions. Customer satisfaction is our priority.",
-  "Professional, punctual, and reliable {category} service provider. We use modern tools and techniques.",
-  "Your local {category} experts. Quick response and affordable rates guaranteed.",
-  "Dedicated to providing top-notch {category} services. We take pride in our workmanship.",
-];
-
-// Helper to get random gallery images for a category
-// Helper to get random gallery images for a category - now uses static high quality images
-function getGalleryImages(category: string, count: number = 3): string[] {
-  const images = [];
-  const categoryImages = CATEGORY_IMAGES[category] || [
-    'https://images.unsplash.com/photo-1581578731117-10d78438fbd8?w=800&q=80',
-    'https://images.unsplash.com/photo-1527515673516-756386d36f0b?w=800&q=80'
-  ];
-
-  // If we have enough images, pick random unique ones
-  if (categoryImages.length >= count) {
-    const shuffled = [...categoryImages].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  }
-  
-  // Otherwise duplicate loops
-  for (let i = 0; i < count; i++) {
-    images.push(categoryImages[i % categoryImages.length]);
-  }
-  return images;
-}
-
-const GALLERY_IMAGES = {} as any; // Kept for type safety if needed, though unused now
+const SERVICE_TEMPLATES = {
+  tiffin: [
+    { title: 'Monthly Veg Tiffin', price: 3000, description: 'Lunch and Dinner (6 days/week)' },
+    { title: 'Non-Veg Sunday Special', price: 250, description: 'Special Chicken/Mutton Thali' },
+    { title: 'Student Mini Meal', price: 1800, description: 'Budget friendly meal plan' }
+  ],
+  plumbing: [
+    { title: 'Leak Repair', price: 350, description: 'Fixing taps and pipes' },
+    { title: 'Bathroom Fitting Install', price: 1200, description: 'Tap, shower, and accessories' },
+    { title: 'Drain Cleaning', price: 600, description: 'Unclogging drains' }
+  ],
+  electrical: [
+    { title: 'Fan Installation', price: 250, description: 'Ceiling fan install' },
+    { title: 'Wiring Inspection', price: 800, description: 'Full house safety check' },
+    { title: 'Inverter Repair', price: 450, description: 'Service and maintenance' }
+  ],
+  tourism: [
+    { title: 'Gurudwara Darshan', price: 800, description: 'Full day guided tour' },
+    { title: 'Full Day Taxi Rental', price: 2200, description: 'Sedan (80km/8hrs)' },
+    { title: 'Bus Booking', price: 500, description: 'Ticket booking service' }
+  ],
+  fitness: [
+    { title: 'Gym Membership (Monthly)', price: 1000, description: 'Cardio and Weights access' },
+    { title: 'Personal Training', price: 4000, description: 'One-on-one coaching' },
+    { title: 'Yoga Session', price: 300, description: 'Per session drop-in' }
+  ],
+  salon: [
+    { title: 'Haircut & Styling', price: 200, description: 'Professional haircut' },
+    { title: 'Facial Treatment', price: 800, description: 'Fruit/Gold facial' },
+    { title: 'Bridal Package', price: 8000, description: 'Complete makeup and styling' }
+  ],
+  cleaning: [
+    { title: 'Full Home Cleaning', price: 3500, description: '2 BHK Deep Cleaning' },
+    { title: 'Sofa Cleaning', price: 600, description: 'Per seat shampoo cleaning' },
+    { title: 'Bathroom Deep Clean', price: 500, description: 'Acid wash and sanitization' }
+  ]
+};
 
 async function main() {
-  console.log('🌱 Starting seed...');
-  console.log('📝 Credentials will be created:');
-  console.log('   Admin: admin@mh26services.com / admin123');
-  console.log('   Providers: provider1@example.com to provider35@example.com / provider123');
-  console.log('   Customers: customer1@example.com to customer5@example.com / customer123');
+  console.log('🌱 Starting seed with Real Just Dial Nanded Data...');
 
-  // Create admin user
+  // Create Admin
   const adminPassword = await hashPassword('admin123');
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'admin@mh26services.com' },
     update: {},
     create: {
       name: 'Admin User',
       email: 'admin@mh26services.com',
-      phone: '+91-9000000000',
+      phone: '9000000000',
       passwordHash: adminPassword,
       role: 'ADMIN',
       emailVerified: true,
-      phoneVerified: true,
-    },
+      // phoneVerified: true, // REMOVED
+      isBanned: false,
+      totalSpending: 0,
+    }
   });
-  console.log('✅ Created admin user');
+  console.log('✅ Admin created');
 
-  // Create 5 customer users
+  // Create Real-world Customers
   const customers = [];
-  for (let i = 1; i <= 5; i++) {
+  // Data from Wikimedia Commons (Real Representative Images)
+const CATEGORY_IMAGES: Record<string, string[]> = {
+  tiffin: [
+    'https://upload.wikimedia.org/wikipedia/commons/8/87/South_Indian_Tiffin_Items_1.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/e/e0/The_South_Indian_Tiffin%28Breakfast%29.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/4/4c/Indian_homemade_thali.jpg'
+  ],
+  plumbing: [
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Plumber_at_work.jpg/640px-Plumber_at_work.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Plumbing_tools.jpg/640px-Plumbing_tools.jpg', 
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Plumber_at_work.jpg/640px-Plumber_at_work.jpg' // Reuse
+  ],
+  electrical: [
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Electrician_at_work.jpg/640px-Electrician_at_work.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/1/1d/Electrician_fixing_wires.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Electrician_at_work.jpg/640px-Electrician_at_work.jpg' // Reuse
+  ],
+  tourism: [
+    'https://upload.wikimedia.org/wikipedia/commons/8/86/South_Indian_Bus.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/e/e3/A_Indian_Bus_Stand_.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/8/86/South_Indian_Bus.jpg' // Reuse
+  ],
+  fitness: [
+    'https://upload.wikimedia.org/wikipedia/commons/8/8a/Gym_at_IIT_Dhanbad.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Gym_at_IIT_Dhanbad.jpg/800px-Gym_at_IIT_Dhanbad.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/8/8a/Gym_at_IIT_Dhanbad.jpg' // Reuse
+  ],
+  salon: [
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Beauty_salon_in_Kolkata_08.jpg/800px-Beauty_salon_in_Kolkata_08.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/f/f6/Beauty_salon_in_Kolkata_08.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Beauty_salon_in_Kolkata_08.jpg/800px-Beauty_salon_in_Kolkata_08.jpg' // Reuse
+  ],
+  cleaning: [
+    'https://upload.wikimedia.org/wikipedia/commons/8/86/Indian_home_made_brooms_for_cleaning_outdoor%2C_2011-1.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Indian_home_made_brooms_for_cleaning_outdoor%2C_2011-1.jpg/800px-Indian_home_made_brooms_for_cleaning_outdoor%2C_2011-1.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/8/86/Indian_home_made_brooms_for_cleaning_outdoor%2C_2011-1.jpg' // Reuse
+  ]
+};
+
+  const CUSTOMER_DATA = [
+      { name: 'Rahul Deshmukh', email: 'rahul.d@gmail.com', phone: '9999900001' },
+      { name: 'Priya Kulkarni', email: 'priya.k@yahoo.com', phone: '9999900002' },
+      { name: 'Amit Patil', email: 'amit.patil@outlook.com', phone: '9999900003' },
+      { name: 'Sneha Jadhav', email: 'sneha.j@gmail.com', phone: '9999900004' },
+      { name: 'Vikram Singh', email: 'vikram.s@gmail.com', phone: '9999900005' },
+      { name: 'Anjali More', email: 'anjali.m@gmail.com', phone: '9999900006' }
+  ];
+
+  for (const c of CUSTOMER_DATA) {
     const password = await hashPassword('customer123');
     const customer = await prisma.user.upsert({
-      where: { email: `customer${i}@example.com` },
-      update: {},
-      create: {
-        name: `Customer ${i}`,
-        email: `customer${i}@example.com`,
-        phone: `+91-987654321${i}`,
+      where: { email: c.email },
+      update: {
+        name: c.name,
+        phone: c.phone,
         passwordHash: password,
         role: 'CUSTOMER',
         emailVerified: true,
-        phoneVerified: true,
+        // phoneVerified: true,
+      },
+      create: {
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        passwordHash: password,
+        role: 'CUSTOMER',
+        emailVerified: true,
+        // phoneVerified: true,
+        isBanned: false,
       },
     });
     customers.push(customer);
   }
-  console.log('✅ Created 5 customer users');
+  console.log('✅ Created realistic customer users');
 
-  // Create providers (5 per category = 35 total)
-  const providers = [];
-  let providerIndex = 0;
+  // Create Categories (Ensure these exist first)
+  const categories = ['tiffin', 'plumbing', 'electrical', 'tourism', 'fitness', 'salon', 'cleaning'];
+  for (const slug of categories) {
+    const name = slug.charAt(0).toUpperCase() + slug.slice(1);
+    // Schema has 'Category' model, not 'ServiceCategory'
+    await prisma.category.upsert({
+      where: { slug },
+      update: {},
+      create: {
+        name,
+        slug,
+        icon: slug, 
+        // imageUrl: REMOVED as per schema
+      },
+    });
+  }
+  console.log('✅ Categories ensured');
 
-  for (const category of CATEGORIES) {
-    const categoryProviders = PROVIDER_DATA[category as keyof typeof PROVIDER_DATA];
-    
-    for (const providerData of categoryProviders) {
-      providerIndex++;
-      const password = await hashPassword('provider123');
+  // Create Providers
+  await prisma.service.deleteMany({}); // Delete services first
+  await prisma.provider.deleteMany({}); // Delete providers
+  await prisma.user.deleteMany({ where: { role: 'PROVIDER' } });
+  
+  console.log('🧹 Cleared old Provider data');
+
+  const categoryCounts: Record<string, number> = {};
+
+  for (const p of DESIGN_PROVIDERS) {
+    // 1. Create User for Provider
+    const password = await hashPassword(`Provider@123`); // Standard password
+    const user = await prisma.user.create({
+      data: {
+        name: p.ownerName,
+        email: p.email,
+        phone: p.phone,
+        passwordHash: password,
+        role: 'PROVIDER',
+        emailVerified: true,
+        // phoneVerified: true, // REMOVED: Schema User does not have phoneVerified
+        isBanned: false,
+      }
+    });
+
+    // 2. Create Provider Profile
+    const provider = await prisma.provider.create({
+      data: {
+        userId: user.id,
+        businessName: p.businessName,
+        description: p.bio,
+        primaryCategory: p.primaryCategory,
+        address: p.address,
+        city: p.city,
+        state: 'Maharashtra',
+        pincode: '431601', // Default for now, specific ones in address
+        status: p.status as ProviderStatus,
+        averageRating: p.ratingAverage,
+        totalRatings: p.ratingCount,
+        gallery: p.gallery,
+        serviceRadius: 10,
+        totalRevenue: 0,
+      }
+    });
+
+    // 3. Add Services (Distributed to limit total per category to 2-3)
+    const cat = p.primaryCategory;
+    const index = categoryCounts[cat] || 0;
+    categoryCounts[cat] = index + 1; // Increment for next provider in this category
+
+    const templates = SERVICE_TEMPLATES[p.primaryCategory as keyof typeof SERVICE_TEMPLATES];
+    if (templates) {
+      let myTemplates: typeof templates = [];
       
-// Real person avatars (Unsplash)
-const USER_AVATARS = [
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop', // Man 1
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop', // Woman 1
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop', // Man 2
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop', // Woman 2
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop', // Man 3
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop', // Woman 3
-  'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&h=400&fit=crop', // Man 4
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop', // Woman 4 (Indian)
-  'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&h=400&fit=crop', // Man 5
-  'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop', // Woman 5
-];
-
-function getRandomAvatar() {
-  return USER_AVATARS[Math.floor(Math.random() * USER_AVATARS.length)];
-}
-
-      // Create user for provider
-      const user = await prisma.user.upsert({
-        where: { email: `provider${providerIndex}@example.com` },
-        update: {
-          name: providerData.owner, // Update name
-          phone: providerData.phone, // Update phone
-          avatarUrl: undefined, // Remove avatar on update too
-        },
-        create: {
-          name: providerData.owner,
-          email: `provider${providerIndex}@example.com`,
-          phone: providerData.phone,
-          passwordHash: password,
-          role: 'PROVIDER',
-          emailVerified: true,
-          phoneVerified: true,
-          avatarUrl: undefined, // No random avatar for providers
-        },
-      });
-
-      // Create provider
-      const provider = await prisma.provider.upsert({
-        where: { userId: user.id },
-        update: {
-          businessName: providerData.name,
-          description: BIO_TEMPLATES[Math.floor(Math.random() * BIO_TEMPLATES.length)]
-            .replace('{category}', category)
-            .replace('{businessName}', providerData.name),
-          address: (providerData as any).address || `${Math.floor(Math.random() * 100)} Main Street, Nanded`,
-          lat: (providerData as any).lat || (19.15 + (Math.random() * 0.05)),
-          lng: (providerData as any).lng || (77.31 + (Math.random() * 0.05)),
-          gallery: getGalleryImages(category),
-        },
-        create: {
-          userId: user.id,
-          businessName: providerData.name,
-          description: BIO_TEMPLATES[Math.floor(Math.random() * BIO_TEMPLATES.length)]
-            .replace('{category}', category)
-            .replace('{businessName}', providerData.name),
-          primaryCategory: category,
-          address: (providerData as any).address || `${Math.floor(Math.random() * 100)} Main Street, Nanded`,
-          city: 'Nanded',
-          state: 'Maharashtra',
-          pincode: '431601',
-          lat: (providerData as any).lat || (19.15 + (Math.random() * 0.05)),
-          lng: (providerData as any).lng || (77.31 + (Math.random() * 0.05)),
-          averageRating: (providerData as any).rating || 0, 
-          totalRatings: (providerData as any).votes || 0,
-          status: 'APPROVED',
-          phoneVisible: true,
-          gallery: getGalleryImages(category),
-        },
-      });
-
-      // Delete existing services for this provider (to avoid duplicates on re-seed)
-      await prisma.service.deleteMany({
-        where: { providerId: provider.id },
-      });
-
-      // Create multiple services for each provider with proper images
-      const categoryServices = SERVICE_DATA[category as keyof typeof SERVICE_DATA];
-      const servicesPerProvider = Math.min(3, categoryServices.length); // 3 services per provider
+      // Strategy: 
+      // Provider 1 gets Template 0 (and 2 if exists)
+      // Provider 2 gets Template 1
+      // Total visible services: 2 or 3.
+      if (index === 0) {
+        myTemplates.push(templates[0]);
+        if (templates.length > 2) myTemplates.push(templates[2]);
+      } else if (index === 1) {
+        if (templates.length > 1) myTemplates.push(templates[1]);
+      }
       
-      // Get provider index within category (0-4)
-      const providerIndexInCategory = (providerIndex - 1) % 5;
-      
-      for (let i = 0; i < servicesPerProvider; i++) {
-        // Select different services for each provider in the category
-        const serviceIndex = (providerIndexInCategory * servicesPerProvider + i) % categoryServices.length;
-        const selectedService = categoryServices[serviceIndex];
-        
-        // Create service without custom ID - let Prisma generate UUID
+      // Fallback: If logic misses (e.g. index > 1), give random or none. 
+      // Since we strictly have 2 providers, this covers all.
+
+      for (const t of myTemplates) {
         await prisma.service.create({
           data: {
             providerId: provider.id,
-            title: selectedService.title,
-            description: selectedService.description,
-            price: selectedService.price,
-            durationMin: selectedService.durationMin,
-            imageUrl: selectedService.imageUrl,
-          },
+            // categoryId: p.primaryCategory, // REMOVED
+            title: t.title,
+            description: t.description,
+            price: t.price,
+            durationMin: 60,
+            imageUrl: p.gallery[0] || null, // Added imageUrl from provider gallery
+            // isActive: true, // REMOVED
+          }
         });
       }
-
-      // Create 1 document
-      await prisma.providerDocument.create({
-        data: {
-          providerId: provider.id,
-          type: 'aadhar',
-          url: `/uploads/documents/${provider.id}/aadhar.pdf`, // Local storage path
-          filename: 'aadhar.pdf',
-        },
-      });
-
-      providers.push(provider);
     }
+    console.log(`Created Provider: ${p.businessName} (Services: ${index === 0 ? '1 & 3' : '2'})`);
   }
-  console.log('✅ Created 35 providers (5 per category)');
 
-  // Create 20 bookings
-  const bookings = [];
-  for (let i = 0; i < 20; i++) {
-    const customer = customers[Math.floor(Math.random() * customers.length)];
-    const provider = providers[Math.floor(Math.random() * providers.length)];
-    const service = await prisma.service.findFirst({
-      where: { providerId: provider.id },
-    });
-
-    if (!service) continue;
-
-    const totalAmount = Number(service.price);
-    const platformFee = totalAmount * 0.1; // 10%
-    const providerEarnings = totalAmount - platformFee;
-
-    const scheduledAt = new Date();
-    scheduledAt.setDate(scheduledAt.getDate() + Math.floor(Math.random() * 30));
-
-    const statuses = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
-    const status = statuses[Math.floor(Math.random() * statuses.length)] as any;
-
-    const booking = await prisma.booking.create({
-      data: {
-        userId: customer.id,
-        providerId: provider.id,
-        serviceId: service.id,
-        scheduledAt,
-        status,
-        totalAmount,
-        platformFee,
-        providerEarnings,
-        address: `${Math.floor(Math.random() * 100)} Customer Address, ${['Shivaji Nagar', 'Work', 'Taroda Naka', 'Vazirabad'][Math.floor(Math.random() * 4)]}`,
-        city: 'Nanded',
-        pincode: '431601',
-      },
-    });
-
-    bookings.push(booking);
-  }
-  console.log('✅ Created 20 bookings');
-
-  // Create 20 transactions
-  for (const booking of bookings.slice(0, 20)) {
-    await prisma.transaction.create({
-      data: {
-        userId: booking.userId,
-        bookingId: booking.id,
-        amount: booking.totalAmount,
-        currency: 'INR',
-        gateway: 'razorpay',
-        gatewayOrderId: `order_${booking.id}`,
-        gatewayPaymentId: `pay_${booking.id}`,
-        status: booking.status === 'COMPLETED' ? 'SUCCESS' : 'PENDING',
-      },
-    });
-  }
-  console.log('✅ Created 20 transactions');
-
-  // Create Reviews
-  console.log('📝 Creating reviews...');
-  for (const provider of providers) {
-    // If provider has predefined ratings (like our Plumbers), skip random review generation logic for rating calculation
-    // but still create some reviews to populate the table
-    const providerDataEntry = Object.values(PROVIDER_DATA).flat().find((p: any) => p.name === provider.businessName);
-    const predefinedVotes = (providerDataEntry as any)?.votes;
-    const predefinedRating = (providerDataEntry as any)?.rating;
-
-    const reviewCount = predefinedVotes || (Math.floor(Math.random() * 5) + 1); 
-    
-    let totalRating = 0;
-
-    for (let i = 0; i < reviewCount; i++) {
-      const customer = customers[Math.floor(Math.random() * customers.length)];
-      const rating = Math.floor(Math.random() * 2) + 4; // 4 or 5 stars mostly
-      
-      const categoryReviews = REVIEW_DATA[provider.primaryCategory as keyof typeof REVIEW_DATA] || [];
-      const allReviews = [...categoryReviews, ...GENERIC_REVIEWS];
-      const selectedComment = allReviews[Math.floor(Math.random() * allReviews.length)];
-
-      await prisma.review.create({
-        data: {
-          providerId: provider.id,
-          userId: customer.id,
-          rating,
-          comment: selectedComment,
-        },
-      });
-
-      totalRating += rating;
-    }
-
-    // Update provider rating - Use predefined if available, else calculated
-    await prisma.provider.update({
-      where: { id: provider.id },
-      data: {
-        totalRatings: reviewCount,
-        averageRating: predefinedRating || (totalRating / reviewCount),
-      },
-    });
-  }
-  console.log('✅ Created reviews and updated provider ratings');
-
-  // Create service categories
-  for (const category of CATEGORIES) {
-    await prisma.serviceCategory.upsert({
-      where: { slug: category.toLowerCase() },
-      update: {},
-      create: {
-        name: category,
-        slug: category.toLowerCase(),
-        description: `${category} services`,
-        icon: '🔧',
-        isActive: true,
-      },
-    });
-  }
-  console.log('✅ Created service categories');
-
-  console.log('🎉 Seed completed successfully!');
+  console.log('✅ Seed completed successfully with Real Nanded Data');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
-

@@ -2,7 +2,7 @@
  * Providers API
  */
 import { axiosClient } from './axiosClient';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface Provider {
   id: string;
@@ -30,7 +30,12 @@ export interface Provider {
   };
   services?: Service[];
   documents?: ProviderDocument[];
+  availability?: Record<string, string[]>;
   gallery?: string[];
+  bio?: string;
+  phone?: string;
+  experienceYears?: number;
+  serviceRadius?: number;
   createdAt: string;
 }
 
@@ -102,6 +107,11 @@ export const providersApi = {
       throw error;
     }
   },
+
+  getStats: async (): Promise<any> => {
+    const response = await axiosClient.get('/providers/stats');
+    return response.data;
+  },
 };
 
 // React Query hooks
@@ -140,5 +150,33 @@ export function useProvider(id: string) {
     refetchOnWindowFocus: false,
     retry: 1,
     retryDelay: 2000,
+  });
+}
+
+export function useUpdateProvider() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Provider> }) =>
+      providersApi.updateProvider(id, data),
+    onSuccess: (data: Provider) => {
+      queryClient.invalidateQueries({ queryKey: ['provider', data.id] });
+      queryClient.setQueryData(['provider', data.id], data);
+    },
+  });
+}
+
+export function useProviderStats(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['provider-stats'],
+    queryFn: providersApi.getStats,
+    staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401/403 (Auth/Permission errors)
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 2;
+    }
   });
 }

@@ -1,6 +1,8 @@
-import { createContext, useContext, ReactNode } from 'react';
-import { useNotifications as useNotificationsQuery, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '../api/notifications';
-import { useAuth } from '../hooks/useAuth';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useUser } from './UserContext';
+import { useSocket } from './SocketContext';
+import { axiosClient } from '../api/axiosClient';
+import { toast } from 'sonner';
 
 export interface Notification {
   id: string;
@@ -23,44 +25,89 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  // Check if user is authenticated
-  const { isAuthenticated } = useAuth();
-  
-  // Fetch notifications from API only if authenticated
-  const { data: notificationsData, isLoading, error } = useNotificationsQuery(undefined, isAuthenticated);
-  const markAsReadMutation = useMarkNotificationAsRead();
-  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
+  const { user } = useUser();
+  const socket = useSocket();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Transform API notifications to match our interface
-  // Handle both direct array and paginated response
-  const notificationsArray = notificationsData?.data || notificationsData || [];
-  const notifications: Notification[] = Array.isArray(notificationsArray) 
-    ? notificationsArray.map((n: any) => ({
-        id: n.id,
-        type: n.type,
-        title: n.payload?.title || n.type || 'Notification',
-        body: n.payload?.body || n.payload?.message || n.text || '',
-        read: n.read || false,
-        createdAt: n.createdAt ? new Date(n.createdAt) : new Date(),
-        meta: n.payload || n,
-      }))
-    : [];
+  // Fetch initial notifications
+  useEffect(() => {
+    if (!user) return;
+
+    fetchNotifications();
+
+    // Listen for new notifications via socket
+    if (socket?.socket) {
+      socket.socket.on('notification:new', (newNotification: any) => {
+        // Play sound if needed
+        const audio = new Audio('/notification.mp3');
+        audio.play().catch(e => console.log('Audio play failed', e));
+
+        // Add to state
+        setNotifications(prev => [{
+          ...newNotification.payload,
+          id: Date.now().toString(), // Use temp ID if coming from socket
+          type: newNotification.type,
+          createdAt: new Date(),
+          read: false
+        } as Notification, ...prev]);
+        
+        setUnreadCount(prev => prev + 1);
+        
+        toast.info(newNotification.payload.title);
+      });
+    }
+
+    return () => {
+      if (socket?.socket) {
+        socket.socket.off('notification:new');
+      }
+    };
+  }, [user, socket]);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axiosClient.get('/notifications');
+      setNotifications(response.data.data);
+      setUnreadCount(response.data.unreadCount);
+    } catch (error) {
+      console.error('Failed to fetch notifications', error);
+    }
+  };
 
   const addNotification = (notification: Omit<Notification, 'id' | 'createdAt'>) => {
-    // This is for local notifications (toasts, etc.)
-    // Real notifications come from the API
-    console.log('Local notification:', notification);
+    // Add locally (mostly for testing, usually comes from backend)
+    const newNotification: Notification = {
+      ...notification,
+      id: Date.now().toString(),
+      createdAt: new Date()
+    };
+    setNotifications(prev => [newNotification, ...prev]);
+    setUnreadCount(prev => prev + 1);
   };
 
-  const markAsRead = (id: string) => {
-    markAsReadMutation.mutate(id);
+  const markAsRead = async (id: string) => {
+    try {
+      await axiosClient.patch(`/notifications/${id}/read`);
+      setNotifications(prev =>
+        prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark as read', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    markAllAsReadMutation.mutate();
+  const markAllAsRead = async () => {
+    try {
+      await axiosClient.patch('/notifications/read-all');
+      setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all as read', error);
+    }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <NotificationContext.Provider

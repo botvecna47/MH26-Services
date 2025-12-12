@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, LayoutDashboard } from 'lucide-react';
+import { Home, Search, MessageSquare, LayoutDashboard, User } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 export default function MobileBottomNav() {
@@ -12,6 +12,7 @@ export default function MobileBottomNav() {
     ? [
         { path: '/', icon: Home, label: 'Home' },
         { path: '/services', icon: Search, label: 'Services' },
+        { path: '/messages', icon: MessageSquare, label: 'Messages' },
         { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       ]
     : [
@@ -27,8 +28,6 @@ export default function MobileBottomNav() {
             key={item.path}
             to={item.path}
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-              isActive(item.path)
-            } ${
               isActive(item.path)
                 ? 'text-[#ff6b35]'
                 : 'text-gray-600'

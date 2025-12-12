@@ -50,7 +50,7 @@ export const appealsApi = {
   },
 
   getMyAppeals: async () => {
-    const response = await axiosClient.get('/appeals/my');
+    const response = await axiosClient.get('/appeals/my-appeals');
     return response.data;
   },
 

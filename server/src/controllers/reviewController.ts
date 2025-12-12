@@ -2,6 +2,7 @@
  * Review Controller
  */
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { sanitizeInput } from '../utils/security';
 import logger from '../config/logger';
@@ -12,7 +13,8 @@ export const reviewController = {
    */
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const authReq = req as AuthRequest;
+      const userId = authReq.user!.id;
       const { bookingId, providerId, rating, comment } = req.body;
 
       // Verify provider exists

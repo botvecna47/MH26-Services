@@ -13,7 +13,23 @@ let io: SocketIOServer | null = null;
 export function setupSocketIO(httpServer: HTTPServer): void {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      origin: (origin, callback) => {
+        const envOrigins = process.env.CORS_ORIGIN
+          ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+          : [];
+        const allowedOrigins = [...envOrigins, 'http://localhost:5173', 'http://localhost:5000', 'http://127.0.0.1:5173', 'http://127.0.0.1:5000'];
+
+        // Allow requests with no origin (mobile apps, Postman, etc.) in development
+        if (!origin && process.env.NODE_ENV === 'development') {
+          return callback(null, true);
+        }
+
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
     },
     transports: ['websocket', 'polling'],
@@ -23,19 +39,19 @@ export function setupSocketIO(httpServer: HTTPServer): void {
   io.use(async (socket: Socket, next) => {
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
-      
+
       if (!token) {
         return next(new Error('Authentication error: No token provided'));
       }
 
       const payload = verifyAccessToken(token);
-      
+
       // Verify user exists and is active
       const user = await prisma.user.findUnique({
         where: { id: payload.userId },
-        select: { 
-          id: true, 
-          email: true, 
+        select: {
+          id: true,
+          email: true,
           role: true,
           provider: {
             select: {
@@ -115,7 +131,7 @@ export function setupSocketIO(httpServer: HTTPServer): void {
             senderId: userId,
           },
         });
-        
+
         // Confirm to sender
         socket.emit('message:sent', message);
       } catch (error) {
@@ -170,6 +186,18 @@ export function emitBookingUpdate(userId: string, booking: any): void {
 export function emitProviderApproval(providerId: string, status: string): void {
   if (io) {
     io.to(`provider:${providerId}`).emit('provider:approval', { providerId, status });
+  }
+}
+
+export function emitRevenueUpdate(userId: string, totalRevenue: number): void {
+  if (io) {
+    io.to(`user:${userId}`).emit('revenue:update', { totalRevenue });
+  }
+}
+
+export function emitWalletUpdate(userId: string, totalSpending: number): void {
+  if (io) {
+    io.to(`user:${userId}`).emit('wallet:update', { totalSpending });
   }
 }
 

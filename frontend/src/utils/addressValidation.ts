@@ -25,8 +25,6 @@ export function validateAddress(address: string): AddressValidationResult {
   // Check for required components
   const hasStreet = /\d+\s+[a-zA-Z]/.test(trimmedAddress) || /street|road|lane|avenue|nagar|colony/i.test(trimmedAddress);
   const hasArea = /area|locality|sector|ward|zone/i.test(trimmedAddress);
-  const hasCity = /nanded|city/i.test(trimmedAddress);
-  const hasPincode = /\b\d{6}\b/.test(trimmedAddress);
 
   // Only show street/area warnings if address is reasonably long
   // Don't be too strict for short addresses (user might still be typing)
@@ -45,7 +43,7 @@ export function validateAddress(address: string): AddressValidationResult {
 
   // Check for suspicious patterns (too many numbers, too few letters)
   const letterCount = (trimmedAddress.match(/[a-zA-Z]/g) || []).length;
-  const digitCount = (trimmedAddress.match(/\d/g) || []).length;
+
   
   if (letterCount < 5 && trimmedAddress.length > 10) {
     errors.push('Address should contain more descriptive text');

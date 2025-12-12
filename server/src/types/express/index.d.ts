@@ -1,10 +1,12 @@
-
-import { TokenPayload } from '../../utils/jwt';
-
 declare global {
   namespace Express {
     interface Request {
-      user?: TokenPayload;
+      user?: {
+        id: string;
+        email: string;
+        role: string;
+        isBanned?: boolean;
+      };
     }
   }
 }

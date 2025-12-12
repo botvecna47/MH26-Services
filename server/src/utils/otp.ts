@@ -27,49 +27,43 @@ export function generateOTP(): string {
 /**
  * Store OTP in database
  */
+/**
+ * Store OTP in memory (Database storage removed as per user request)
+ */
 export async function storeOTP(phone: string, otp: string, userId?: string): Promise<void> {
-  const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minutes expiry
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
 
-  // Delete any existing OTPs for this phone
-  await prisma.phoneOTP.deleteMany({
-    where: { phone },
+  // Store in memory
+  inMemoryOTPStore.set(phone, {
+    otp,
+    expiresAt,
+    registrationData: { userId } // generic usage
   });
-
-  // Create new OTP record
-  await prisma.phoneOTP.create({
-    data: {
-      phone,
-      code: otp,
-      expiresAt,
-      userId: userId || null,
-    },
-  });
+  
+  logger.debug(`OTP stored in memory for ${phone}`);
 }
 
 /**
- * Verify OTP
+ * Verify OTP from memory
  */
 export async function verifyOTP(phone: string, otp: string): Promise<boolean> {
-  const otpRecord = await prisma.phoneOTP.findFirst({
-    where: {
-      phone,
-      code: otp,
-      expiresAt: { gt: new Date() },
-      verified: false,
-    },
-  });
+  const record = inMemoryOTPStore.get(phone);
 
-  if (!otpRecord) {
+  if (!record) {
     return false;
   }
 
-  // Mark OTP as verified
-  await prisma.phoneOTP.update({
-    where: { id: otpRecord.id },
-    data: { verified: true },
-  });
+  if (record.expiresAt < Date.now()) {
+    inMemoryOTPStore.delete(phone);
+    return false;
+  }
 
+  if (record.otp !== otp) {
+    return false;
+  }
+
+  // OTP verified, remove it
+  inMemoryOTPStore.delete(phone);
   return true;
 }
 
@@ -77,12 +71,13 @@ export async function verifyOTP(phone: string, otp: string): Promise<boolean> {
  * Send OTP via SMS (placeholder - implement with actual SMS service)
  */
 export async function sendOTP(phone: string, otp: string): Promise<void> {
-  // TODO: Integrate with SMS service (Twilio, etc.)
-  // For now, just log
-  logger.info('OTP would be sent via SMS:', {
+  // NOTE: In a production environment, this would integrate with an SMS provider like Twilio.
+  // For this demonstration/development environment, we log the OTP to the console/logger 
+  // instead of incurring SMS costs.
+  logger.info('OTP generated (Simulated SMS):', {
     phone,
-    otp,
-    // In production, never log OTPs!
+    // safe to log in dev/demo
+    otp, 
   });
 
   // Example implementation with Twilio:
@@ -100,9 +95,9 @@ export async function sendOTP(phone: string, otp: string): Promise<void> {
   });
   */
 
-  // For development/testing, you can use console.log
+  // For development/testing, you can use logger
   if (process.env.NODE_ENV === 'development') {
-    console.log(`\n📱 OTP for ${phone}: ${otp}\n`);
+    logger.info(`\n📱 OTP for ${phone}: ${otp}\n`);
   }
 }
 
@@ -245,7 +240,7 @@ export async function sendEmailOTP(email: string, otp: string): Promise<void> {
   
   // For development/testing
   if (process.env.NODE_ENV === 'development') {
-    console.log(`\n📧 OTP for ${email}: ${otp}\n`);
+    logger.info(`\n📧 OTP for ${email}: ${otp}\n`);
   }
 }
 

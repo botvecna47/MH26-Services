@@ -17,8 +17,11 @@ model User {
   avatarUrl         String?
   role              UserRole  @default(CUSTOMER)
   emailVerified     Boolean   @default(false)
-  phoneVerified     Boolean   @default(false)
   isBanned          Boolean   @default(false)
+  address           String?
+  city              String?
+  walletBalance     Decimal   @default(0)
+  totalSpending     Decimal   @default(0)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -36,7 +39,6 @@ model User {
   provider          Provider?
   emailVerificationToken EmailVerificationToken?
   passwordResetTokens PasswordResetToken[]
-  phoneOTPs           PhoneOTP[]
   reviewedAppeals     Appeal[] @relation("AppealReviewer")
   appeals             Appeal[] @relation("UserAppeals")
 
@@ -66,9 +68,11 @@ model Provider {
   lng                Float?
   averageRating      Float?    @default(0)
   totalRatings       Int       @default(0)
+  totalRevenue       Decimal   @default(0)
   status             ProviderStatus @default(PENDING)
-  phoneVisible       Boolean   @default(true)
   qrCodeUrl          String?   // URL to provider's payment QR code
+  serviceRadius      Int       @default(10) // In km
+  availability       Json?     // e.g. { "mon": ["09:00-17:00"] }
   gallery            String[]  @default([]) // Array of image URLs
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -123,6 +127,7 @@ model Service {
   bookings    Booking[]
 
   @@index([providerId])
+  @@unique([providerId, title])
 }
 
 model Booking {
@@ -140,6 +145,7 @@ model Booking {
   city           String?   // Added for structured address
   pincode        String?   // Added for structured address
   requirements   String?
+  completionOtp  String?   // OTP for service completion verification
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -156,6 +162,7 @@ model Booking {
   @@index([status])
   @@index([scheduledAt])
   @@index([status, scheduledAt])
+  @@index([createdAt])
 }
 
 enum BookingStatus {
@@ -337,22 +344,7 @@ model PasswordResetToken {
   @@index([userId])
 }
 
-model PhoneOTP {
-  id        String   @id @default(uuid())
-  phone     String
-  code      String
-  userId    String?
-  verified  Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([phone])
-  @@index([code])
-  @@index([userId])
-  @@index([expiresAt])
-}
 
 model AuditLog {
   id         String   @id @default(uuid())
@@ -409,31 +401,9 @@ model SavedProvider {
   @@index([userId])
 }
 
-model PhoneRevealLog {
-  id         String   @id @default(uuid())
-  providerId String
-  userId     String
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
 
-  @@index([providerId])
-  @@index([userId])
-}
 
-model ServiceCategory {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  slug        String   @unique
-  description String?
-  icon        String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  @@index([slug])
-  @@index([isActive])
-}
 
 model Appeal {
   id          String   @id @default(uuid())
@@ -473,3 +443,16 @@ enum AppealStatus {
   UNDER_REVIEW
 }
 
+
+
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}

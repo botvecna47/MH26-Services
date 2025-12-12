@@ -61,28 +61,16 @@ export const authApi = {
     return response.data;
   },
 
-  resetPassword: async (token: string, password: string): Promise<{ message: string }> => {
+  resetPassword: async (email: string, otp: string, newPassword: string): Promise<{ message: string }> => {
     const response = await axiosClient.post<{ message: string }>('/auth/reset-password', {
-      token,
-      password,
-    });
-    return response.data;
-  },
-
-  sendPhoneOTP: async (phone: string): Promise<{ message: string; phone: string }> => {
-    const response = await axiosClient.post<{ message: string; phone: string }>('/auth/send-phone-otp', {
-      phone,
-    });
-    return response.data;
-  },
-
-  verifyPhoneOTP: async (phone: string, otp: string): Promise<{ message: string; verified: boolean }> => {
-    const response = await axiosClient.post<{ message: string; verified: boolean }>('/auth/verify-phone-otp', {
-      phone,
+      email,
       otp,
+      newPassword,
     });
     return response.data;
   },
+
+
 
   resendRegistrationOTP: async (email: string): Promise<{ message: string; email: string }> => {
     const response = await axiosClient.post<{ message: string; email: string }>('/auth/resend-registration-otp', {

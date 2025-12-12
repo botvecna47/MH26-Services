@@ -108,30 +108,50 @@ export function AuthModal({ mode, onClose, onSuccess, onSwitchMode }: AuthModalP
 
     setIsLoading(true);
 
-    try {
-      // TODO: Replace with actual API call
-      // For now, this is a placeholder that will be replaced with real authentication
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Authentication failed');
-      }
-
-      const data = await response.json();
-      onSuccess(data.user);
-      toast.success(isSignIn ? 'Welcome back!' : 'Account created successfully!');
-    } catch (error) {
-      toast.error(isSignIn ? 'Invalid credentials' : 'Failed to create account');
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setIsLoading(false);
-    }
+
+      // Demo credentials
+      if (isSignIn) {
+        // Check demo credentials
+        // Test credentials
+        const testAccounts = {
+          'user@mh26.com': { id: 'user-1', firstName: 'Devansh', lastName: 'Patel', role: 'user' as const },
+          'provider@mh26.com': { id: 'provider-user-1', firstName: 'Provider', lastName: 'Demo', role: 'provider' as const, businessName: 'QuickFix Plumbing' },
+          'admin@mh26.com': { id: 'admin-1', firstName: 'Admin', lastName: 'User', role: 'admin' as const },
+        };
+        
+        const account = testAccounts[formData.email as keyof typeof testAccounts];
+        
+        if (account && formData.password === 'demo123') {
+          const user: User = {
+            id: account.id,
+            email: formData.email,
+            firstName: account.firstName,
+            lastName: account.lastName,
+            role: account.role,
+            businessName: 'businessName' in account ? account.businessName : undefined,
+          };
+          toast.success(`Welcome back, ${account.firstName}!`);
+          onSuccess(user);
+        } else {
+          toast.error('Invalid credentials');
+        }
+      } else {
+        // Sign up - create new user
+        const user: User = {
+          id: `user-${Date.now()}`,
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: accountType,
+          businessName: accountType === 'provider' ? formData.businessName : undefined,
+        };
+        toast.success('Account created successfully!');
+        onSuccess(user);
+      }
+    }, 1000);
   };
 
   const handleModeSwitch = (newMode: 'signin' | 'signup') => {
@@ -377,6 +397,13 @@ export function AuthModal({ mode, onClose, onSuccess, onSwitchMode }: AuthModalP
                       <div className="bg-info/10 border border-info/20 rounded-lg p-3">
                         <div className="flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 text-info flex-shrink-0 mt-0.5" />
+                          <div className="text-xs space-y-1">
+                            <p className="font-medium text-info">Demo Credentials</p>
+                            <p className="text-muted-foreground">
+                              User: user@mh26.com / demo123<br />
+                              Admin: admin@mh26.com / demo123
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}

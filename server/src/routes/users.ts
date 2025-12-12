@@ -3,7 +3,7 @@
  */
 import { Router } from 'express';
 import { userController } from '../controllers/userController';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireNotBanned } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { asyncHandler } from '../middleware/errorHandler';
 import { upload, handleUploadError } from '../middleware/upload';
@@ -17,10 +17,10 @@ router.use(authenticate);
 router.get('/me', asyncHandler(userController.getMe));
 
 // Update current user profile
-router.patch('/me', asyncHandler(userController.updateMe));
+router.patch('/me', requireNotBanned, asyncHandler(userController.updateMe));
 
 // Upload profile picture (direct upload through backend - no CORS needed)
-router.post('/me/avatar', upload.single('avatar'), handleUploadError, asyncHandler(userController.uploadAvatar));
+router.post('/me/avatar', requireNotBanned, upload.single('avatar'), handleUploadError, asyncHandler(userController.uploadAvatar));
 
 // Get user by ID (public info only)
 router.get('/:id', asyncHandler(userController.getById));

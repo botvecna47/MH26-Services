@@ -4,11 +4,12 @@
  */
 import { sign, verify, SignOptions } from 'jsonwebtoken';
 import { prisma } from '../config/db';
+import { config } from '../config/env';
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
-const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
-const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
-const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+const ACCESS_SECRET = config.jwt.accessSecret;
+const REFRESH_SECRET = config.jwt.refreshSecret;
+const ACCESS_EXPIRES_IN = config.jwt.accessExpiresIn;
+const REFRESH_EXPIRES_IN = config.jwt.refreshExpiresIn;
 
 export interface TokenPayload {
   userId: string;

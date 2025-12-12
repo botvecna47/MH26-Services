@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Loader2, Download, Eye } from 'lucide-react';
 import { bookingsApi } from '../api/bookings';
@@ -11,6 +11,14 @@ interface InvoicePreviewModalProps {
   onClose: () => void;
   bookingId: string | null;
 }
+
+const formatId = (id: string | undefined, type: 'USER' | 'PROVIDER') => {
+  if (!id) return 'N/A';
+  // Take last 8 chars for a unique but short ID
+  const shortParams = id.slice(-8).toUpperCase(); 
+  const prefix = type === 'USER' ? 'CUS' : 'PRO';
+  return `${prefix}-${shortParams}`;
+};
 
 export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: InvoicePreviewModalProps) {
   const [loading, setLoading] = useState(false);
@@ -60,7 +68,9 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0" aria-describedby="invoice-desc">
+        <DialogTitle className="sr-only">Invoice Preview</DialogTitle>
+        <div id="invoice-desc" className="sr-only">Preview of the invoice details including billing and line items.</div>
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -115,7 +125,7 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
                 <div>
                   <h4 className="text-gray-900 font-semibold mb-2">Bill To:</h4>
                   <p className="text-gray-700">{invoiceData.booking?.user?.name || 'Customer'}</p>
-                  <p className="text-sm text-gray-600">ID: {invoiceData.booking?.userId}</p>
+                  <p className="text-sm text-gray-600">ID: {formatId(invoiceData.booking?.userId, 'USER')}</p>
                   {invoiceData.booking?.user?.email && (
                     <p className="text-sm text-gray-600">{invoiceData.booking.user.email}</p>
                   )}
@@ -123,7 +133,7 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
                 <div>
                   <h4 className="text-gray-900 font-semibold mb-2">Service Provider:</h4>
                   <p className="text-gray-700">{invoiceData.booking?.provider?.businessName || 'Provider'}</p>
-                  <p className="text-sm text-gray-600">ID: {invoiceData.booking?.providerId}</p>
+                  <p className="text-sm text-gray-600">ID: {formatId(invoiceData.booking?.providerId, 'PROVIDER')}</p>
                 </div>
               </div>
 

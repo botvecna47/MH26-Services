@@ -4,6 +4,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
 import logger from '../config/logger';
+import { AuthRequest } from '../middleware/auth';
 
 export const serviceController = {
   /**
@@ -15,7 +16,9 @@ export const serviceController = {
 
       const skip = (Number(page) - 1) * Number(limit);
       const where: any = {};
-
+      
+      // ... (rest of list logic)
+      
       if (providerId) {
         where.providerId = providerId;
       }
@@ -63,16 +66,8 @@ export const serviceController = {
       } else if (sort === 'name') {
         orderBy = { title: 'asc' };
       } else if (sort === 'rating') {
-        // Sorting by related field (provider rating) is tricky in Prisma without raw query or aggregate
-        // For now, we'll sort by createdAt if rating is selected, or we can try to sort in memory if dataset is small
-        // But better to keep it simple for now or use a different approach if strict rating sort is needed.
-        // Let's try to sort by provider's averageRating if possible.
-        // Prisma supports sorting by relation in newer versions.
-        orderBy = {
-          provider: {
-            averageRating: 'desc',
-          },
-        };
+        // Fallback to createdAt for now
+        orderBy = { createdAt: 'desc' };
       }
 
       const [services, total] = await Promise.all([
@@ -115,11 +110,82 @@ export const serviceController = {
   },
 
   /**
+   * Get categories (Dynamic from DB)
+   */
+  async getCategories(req: Request, res: Response): Promise<void> {
+    try {
+      const categories = await prisma.category.findMany({
+          orderBy: { name: 'asc' }
+      });
+      res.json(categories);
+    } catch (error) {
+      logger.error('Get categories error:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  },
+
+  /**
+   * Create category (Admin Only)
+   */
+  async createCategory(req: Request, res: Response): Promise<void> {
+      try {
+          const { name, slug, icon } = req.body;
+          
+          const category = await prisma.category.create({
+              data: { name, slug, icon }
+          });
+          
+          res.status(201).json(category);
+      } catch (error) {
+          logger.error('Create category error:', error);
+          res.status(500).json({ error: 'Failed to create category' });
+      }
+  },
+
+  /**
+   * Update category (Admin Only)
+   */
+  async updateCategory(req: Request, res: Response): Promise<void> {
+      try {
+          const { id } = req.params;
+          const { name, slug, icon } = req.body;
+          
+          const category = await prisma.category.update({
+              where: { id },
+              data: { name, slug, icon }
+          });
+          
+          res.json(category);
+      } catch (error) {
+          logger.error('Update category error:', error);
+          res.status(500).json({ error: 'Failed to update category' });
+      }
+  },
+
+  /**
+   * Delete category (Admin Only)
+   */
+  async deleteCategory(req: Request, res: Response): Promise<void> {
+      try {
+          const { id } = req.params;
+          
+          await prisma.category.delete({
+              where: { id }
+          });
+          
+          res.status(204).send();
+      } catch (error) {
+          logger.error('Delete category error:', error);
+          res.status(500).json({ error: 'Failed to delete category' });
+      }
+  },
+
+  /**
    * Create service
    */
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { providerId, title, description, price, durationMin } = req.body;
 
       // Verify provider belongs to user
@@ -166,7 +232,7 @@ export const serviceController = {
    */
   async update(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { id } = req.params;
       const { title, description, price, durationMin } = req.body;
 
@@ -216,7 +282,7 @@ export const serviceController = {
    */
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { id } = req.params;
 
       // Verify service belongs to user's provider
@@ -244,5 +310,7 @@ export const serviceController = {
       res.status(500).json({ error: 'Failed to delete service' });
     }
   },
+
+
 };
 

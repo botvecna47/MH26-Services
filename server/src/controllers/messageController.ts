@@ -2,6 +2,7 @@
  * Message Controller
  */
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { emitNotification } from '../socket';
 import { sanitizeInput } from '../utils/security';
@@ -13,7 +14,7 @@ export const messageController = {
    */
   async listConversations(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as AuthRequest).user!.id;
 
       // Get all unique conversation IDs for this user
       const messages = await prisma.message.findMany({
@@ -105,47 +106,50 @@ export const messageController = {
    */
   async getMessages(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
-      const { id } = req.params; // conversationId
+      const userId = (req as AuthRequest).user!.id;
+      const { id } = req.params; // conversationId OR otherUserId
 
-      // Parse conversation ID to get other user ID
-      // Support both '::' (new format) and '-' (old format for backward compatibility)
-      let parts: string[];
-      if (id.includes('::')) {
-        // New format: UUID::UUID
-        parts = id.split('::');
+      let otherUserId: string;
+
+      // Check if id is a simple UUID (User ID)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(id)) {
+        // It's a User ID
+        otherUserId = id;
+        
+        // Use conversation ID for consistency check if needed, but we can query by participants directly
+        // const conversationId = [userId, otherUserId].sort().join('::');
       } else {
-        // Old format: try to parse UUIDs (36 chars each)
-        // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
-        if (id.length === 73) { // 36 + 1 (hyphen) + 36
-          const firstUuid = id.substring(0, 36);
-          const secondUuid = id.substring(37);
-          parts = [firstUuid, secondUuid];
+        // It's a Conversation ID (User1::User2)
+        let parts: string[];
+        if (id.includes('::')) {
+          parts = id.split('::');
         } else {
-          // Fallback: try splitting by '-' and taking first and last UUID-like parts
-          const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
-          const matches = id.match(uuidPattern);
-          if (matches && matches.length === 2) {
-            parts = matches;
-          } else {
-            res.status(400).json({ error: 'Invalid conversation ID format' });
-            return;
-          }
+             // Fallback: try splitting by '-' and taking first and last UUID-like parts (Legacy)
+             // This logic is complex and brittle, better to rely on :: or raw UUID
+             const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+             const matches = id.match(uuidPattern);
+             if (matches && matches.length === 2 && id.length > 36) { 
+               parts = matches;
+             } else {
+               res.status(400).json({ error: 'Invalid conversation or user ID format' });
+               return;
+             }
         }
-      }
-      
-      if (parts.length !== 2) {
-        res.status(400).json({ error: 'Invalid conversation ID format' });
-        return;
-      }
-      
-      const [user1Id, user2Id] = parts.sort();
-      if (user1Id !== userId && user2Id !== userId) {
-        res.status(403).json({ error: 'Unauthorized' });
-        return;
-      }
+        
+        if (parts.length !== 2) {
+          res.status(400).json({ error: 'Invalid conversation ID format' });
+          return;
+        }
 
-      const otherUserId = user1Id === userId ? user2Id : user1Id;
+        const [user1Id, user2Id] = parts.sort();
+        if (user1Id !== userId && user2Id !== userId) {
+          res.status(403).json({ error: 'Unauthorized' });
+          return;
+        }
+
+        otherUserId = user1Id === userId ? user2Id : user1Id;
+      }
 
       const messages = await prisma.message.findMany({
         where: {
@@ -187,7 +191,7 @@ export const messageController = {
    */
   async createConversation(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { receiverId, text } = req.body;
 
       if (!receiverId) {
@@ -240,9 +244,9 @@ export const messageController = {
           data: {
             userId: receiverId,
             type: 'message',
+            title: 'New Message',
+            body: `${senderName}: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`,
             payload: {
-              title: 'New Message',
-              body: `${senderName}: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`,
               messageId: message.id,
               conversationId,
               senderId: userId,
@@ -278,7 +282,7 @@ export const messageController = {
    */
   async sendMessage(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { conversationId, receiverId, text, attachments } = req.body;
 
       if (!receiverId || !text || !text.trim()) {
@@ -344,9 +348,9 @@ export const messageController = {
           data: {
             userId: receiverId,
             type: 'message',
+            title: 'New Message',
+            body: `${senderName}: ${messagePreview}`,
             payload: {
-              title: 'New Message',
-              body: `${senderName}: ${messagePreview}`,
               messageId: message.id,
               conversationId: convId,
               senderId: userId,
@@ -395,32 +399,28 @@ export const messageController = {
    */
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
-      const { id } = req.params;
+      const userId = (req as AuthRequest).user!.id; // Assumes req.user is populated by auth middleware
+      const { id } = req.params; // This is the senderId (other user)
 
-      const message = await prisma.message.findUnique({
-        where: { id },
-      });
-
-      if (!message) {
-        res.status(404).json({ error: 'Message not found' });
+      if (!id) {
+        res.status(400).json({ error: 'Sender ID is required' });
         return;
       }
 
-      if (message.receiverId !== userId) {
-        res.status(403).json({ error: 'Unauthorized' });
-        return;
-      }
-
-      const updated = await prisma.message.update({
-        where: { id },
+      // Bulk update all unread messages from this sender to current user
+      const result = await prisma.message.updateMany({
+        where: {
+          receiverId: userId,
+          senderId: id,
+          read: false,
+        },
         data: { read: true },
       });
 
-      res.json(updated);
+      res.json({ success: true, count: result.count });
     } catch (error) {
       logger.error('Mark as read error:', error);
-      res.status(500).json({ error: 'Failed to mark message as read' });
+      res.status(500).json({ error: 'Failed to mark messages as read' });
     }
   },
 };

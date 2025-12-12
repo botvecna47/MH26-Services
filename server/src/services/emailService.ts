@@ -191,3 +191,44 @@ export async function sendBookingConfirmationEmail(
   });
 }
 
+/**
+ * Send provider credentials email
+ */
+export async function sendProviderCredentialsEmail(
+  email: string,
+  businessName: string,
+  password: string
+): Promise<void> {
+  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`;
+  
+  await sendEmail({
+    to: email,
+    subject: 'Welcome to MH26 Services - Your Provider Account Credentials',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ff6b35;">Welcome to MH26 Services!</h2>
+        <p>Your provider account for <strong>${businessName}</strong> has been created successfully.</p>
+        <p>Please use the following credentials to log in:</p>
+        
+        <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff6b35;">
+          <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+          <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #e5e7eb; padding: 2px 6px; rounded: 4px;">${password}</code></p>
+        </div>
+
+        <p style="color: #ef4444; font-weight: bold;">Important: Please change your password immediately after logging in.</p>
+
+        <p style="margin: 30px 0;">
+          <a href="${loginUrl}" 
+             style="background-color: #ff6b35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+            Log In to Dashboard
+          </a>
+        </p>
+        
+        <p style="color: #666; font-size: 14px;">
+          If you have any questions, please contact administrator.
+        </p>
+      </div>
+    `,
+  });
+}
+

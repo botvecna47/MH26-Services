@@ -11,6 +11,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     role: string;
+    isBanned: boolean;
   };
 }
 
@@ -40,6 +41,7 @@ export async function authenticate(
         id: true, 
         email: true, 
         role: true,
+        isBanned: true,
         provider: {
           select: {
             status: true,
@@ -63,6 +65,7 @@ export async function authenticate(
       id: user.id,
       email: user.email,
       role: user.role,
+      isBanned: user.isBanned,
     };
 
     next();
@@ -91,6 +94,27 @@ export function requireRole(...roles: string[]) {
 }
 
 /**
+ * Require user NOT to be banned
+ * This should be applied to all routes EXCEPT appeals and readonly public data
+ */
+export function requireNotBanned(req: AuthRequest, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  if (req.user.isBanned) {
+     res.status(403).json({ 
+       error: 'Your account has been banned.',
+       isBanned: true 
+     });
+     return;
+  }
+
+  next();
+}
+
+/**
  * Optional authentication (doesn't fail if no token)
  */
 export async function optionalAuth(
@@ -107,7 +131,7 @@ export async function optionalAuth(
       
       const user = await prisma.user.findUnique({
         where: { id: payload.userId },
-        select: { id: true, email: true, role: true },
+        select: { id: true, email: true, role: true, isBanned: true },
       });
 
       if (user) {
@@ -115,6 +139,7 @@ export async function optionalAuth(
           id: user.id,
           email: user.email,
           role: user.role,
+          isBanned: user.isBanned,
         };
       }
     }

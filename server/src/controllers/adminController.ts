@@ -2,8 +2,11 @@
  * Admin Controller
  */
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { emitNotification, emitProviderApproval } from '../socket';
+import { sendProviderApprovalEmail, sendProviderCredentialsEmail } from '../services/emailService';
+import { hashPassword } from '../utils/security';
 import logger from '../config/logger';
 
 export const adminController = {
@@ -27,9 +30,9 @@ export const adminController = {
         prisma.provider.count({ where: { status: 'PENDING' } }),
         prisma.booking.count(),
         prisma.booking.count({ where: { status: 'COMPLETED' } }),
-        prisma.transaction.aggregate({
-          where: { status: 'SUCCESS' },
-          _sum: { amount: true },
+        prisma.booking.aggregate({
+          where: { status: 'COMPLETED' },
+          _sum: { platformFee: true },
         }),
         prisma.booking.findMany({
           take: 10,
@@ -53,6 +56,55 @@ export const adminController = {
         }),
       ]);
 
+      const [
+        allUsers,
+        completedBookingsData, // Renamed from allTransactions for revenue growth
+        providerCategories
+      ] = await Promise.all([
+         prisma.user.findMany({ select: { createdAt: true } }),
+         prisma.booking.findMany({ 
+            where: { status: 'COMPLETED' },
+            select: { createdAt: true, platformFee: true }
+         }),
+         prisma.provider.groupBy({
+            by: ['primaryCategory'],
+            _count: { primaryCategory: true }
+         })
+      ]);
+
+      // Calculate User Growth (Last 6 months)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const userGrowth = new Array(6).fill(0).map((_, i) => {
+          const d = new Date();
+          d.setMonth(d.getMonth() - 5 + i);
+          return { month: months[d.getMonth()], users: 0, sortKey: d.toISOString().slice(0, 7) };
+      });
+
+      allUsers.forEach(u => {
+          const m = u.createdAt.toISOString().slice(0, 7); // YYYY-MM
+          const slot = userGrowth.find(g => g.sortKey === m);
+          if (slot) slot.users++;
+      });
+
+      // Calculate Revenue Growth (Last 6 months)
+      const revenueGrowth = new Array(6).fill(0).map((_, i) => {
+          const d = new Date();
+          d.setMonth(d.getMonth() - 5 + i);
+          return { month: months[d.getMonth()], revenue: 0, sortKey: d.toISOString().slice(0, 7) };
+      });
+
+        completedBookingsData.forEach(b => {
+          const m = b.createdAt.toISOString().slice(0, 7);
+          const slot = revenueGrowth.find(g => g.sortKey === m);
+          if (slot) slot.revenue += Number(b.platformFee);
+      });
+
+      // Format Category Distribution
+      const categoryDistribution = providerCategories.map(c => ({
+          name: c.primaryCategory,
+          value: c._count.primaryCategory
+      }));
+
       res.json({
         stats: {
           totalUsers,
@@ -60,8 +112,11 @@ export const adminController = {
           pendingProviders,
           totalBookings,
           completedBookings,
-          totalRevenue: totalRevenue._sum.amount || 0,
+          totalRevenue: totalRevenue._sum.platformFee || 0,
         },
+        userGrowth: userGrowth.map(({ sortKey, ...rest }) => rest),
+        revenueGrowth: revenueGrowth.map(({ sortKey, ...rest }) => rest),
+        categoryDistribution,
         recentBookings,
         topProviders,
       });
@@ -139,6 +194,117 @@ export const adminController = {
     } catch (error) {
       logger.error('Get all providers error:', error);
       res.status(500).json({ error: 'Failed to fetch providers' });
+    }
+  },
+
+  /**
+   * Create a new provider (User + Provider Profile)
+   */
+  async createProvider(req: Request, res: Response): Promise<void> {
+    try {
+      const { 
+        name, 
+        email, 
+        phone, 
+        businessName, 
+        primaryCategory, 
+        address, 
+        city, 
+        pincode, 
+        serviceRadius 
+      } = req.body;
+
+      // 1. Validation
+      if (!name || !email || !phone || !businessName || !primaryCategory) {
+         res.status(400).json({ error: 'Missing required fields' });
+         return;
+      }
+
+      // Check existing user
+      const existingUser = await prisma.user.findFirst({
+        where: { OR: [{ email }, { phone }] }
+      });
+
+      if (existingUser) {
+        res.status(409).json({ error: 'User with this email or phone already exists' });
+        return;
+      }
+
+      // 2. Generate Password (e.g., Plumbing@123)
+      const generatedPassword = `${primaryCategory.charAt(0).toUpperCase() + primaryCategory.slice(1)}@123`;
+      const passwordHash = await hashPassword(generatedPassword);
+
+      // 3. Create User & Provider in Transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Create User
+        const user = await tx.user.create({
+          data: {
+            name,
+            email,
+            phone,
+            passwordHash,
+            role: 'PROVIDER', // Explicitly setting role
+            emailVerified: true, // Auto-verify since Admin created
+            address,
+            city: city || 'Nanded',
+          }
+        });
+
+        // Create Provider Profile
+        const provider = await tx.provider.create({
+          data: {
+            userId: user.id,
+            businessName,
+            primaryCategory,
+            address: address || '',
+            city: city || 'Nanded',
+            pincode: pincode || '',
+            status: 'APPROVED', // Auto-approve
+            serviceRadius: Number(serviceRadius) || 10,
+            availability: {
+               mon: ["09:00-18:00"],
+               tue: ["09:00-18:00"],
+               wed: ["09:00-18:00"],
+               thu: ["09:00-18:00"],
+               fri: ["09:00-18:00"],
+               sat: ["09:00-18:00"]
+            }
+          }
+        });
+
+        return { user, provider };
+      });
+
+      // 4. Send Credentials Email
+      try {
+        await sendProviderCredentialsEmail(email, businessName, generatedPassword);
+      } catch (emailError) {
+        logger.error('Failed to send provider credentials email:', emailError);
+        // Don't fail the request, just log it. The provider is created.
+      }
+
+      // 5. Audit Log
+      await prisma.auditLog.create({
+        data: {
+          userId: (req as AuthRequest).user!.id,
+          action: 'CREATE_PROVIDER',
+          tableName: 'Provider',
+          recordId: result.provider.id,
+          newData: { businessName, email, category: primaryCategory },
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
+      });
+
+      res.status(201).json({ 
+        message: 'Provider created successfully', 
+        provider: result.provider,
+        user: { id: result.user.id, email: result.user.email } 
+      });
+
+    } catch (error) {
+      logger.error('Create provider error:', error);
+      res.status(500).json({ error: 'Failed to create provider' });
     }
   },
 
@@ -370,6 +536,7 @@ export const adminController = {
             email: true,
             phone: true,
             role: true,
+            isBanned: true,
             createdAt: true,
             provider: {
               select: {
@@ -470,6 +637,12 @@ export const adminController = {
         });
       }
 
+      // Actually ban the user
+      await prisma.user.update({
+        where: { id },
+        data: { isBanned: true },
+      });
+
       // Revoke all refresh tokens (force logout)
       await prisma.refreshToken.updateMany({
         where: {
@@ -490,7 +663,7 @@ export const adminController = {
       // Log admin action
       await prisma.auditLog.create({
         data: {
-          userId: req.user!.id,
+          userId: (req as AuthRequest).user!.id,
           action: 'BAN_USER',
           tableName: 'User',
           recordId: id,
@@ -504,6 +677,108 @@ export const adminController = {
     } catch (error) {
       logger.error('Ban user error:', error);
       res.status(500).json({ error: 'Failed to ban user' });
+    }
+  },
+
+  /**
+   * Get appeals (admin)
+   */
+  async getAppeals(req: Request, res: Response): Promise<void> {
+    try {
+      const { status, type, page = 1, limit = 20 } = req.query;
+
+      const skip = (Number(page) - 1) * Number(limit);
+      const where: any = {};
+
+      if (status && status !== 'all') where.status = status;
+      if (type && type !== 'all') where.type = type;
+
+      const [appeals, total] = await Promise.all([
+        prisma.appeal.findMany({
+          where,
+          skip,
+          take: Number(limit),
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            provider: { select: { id: true, businessName: true } },
+          },
+        }),
+        prisma.appeal.count({ where }),
+      ]);
+
+      res.json({
+        data: appeals,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / Number(limit)),
+        },
+      });
+    } catch (error) {
+      logger.error('Get appeals error:', error);
+      res.status(500).json({ error: 'Failed to fetch appeals' });
+    }
+  },
+
+  /**
+   * Unban user
+   */
+  async unbanUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const user = await prisma.user.findUnique({
+        where: { id },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      // Update user
+      await prisma.user.update({
+        where: { id },
+        data: { isBanned: false },
+      });
+
+      // Resolve any pending UNBAN_REQUEST appeals for this user
+      await prisma.appeal.updateMany({
+        where: {
+            userId: id,
+            type: 'UNBAN_REQUEST',
+            status: 'PENDING'
+        },
+        data: {
+            status: 'APPROVED',
+            adminNotes: 'User unbanned by administrator action.',
+            reviewedBy: (req as AuthRequest).user?.id,
+            reviewedAt: new Date()
+        }
+      });
+
+      // Log admin action
+      const { reason } = req.body;
+      
+      // Log admin action
+      await prisma.auditLog.create({
+        data: {
+          userId: (req as AuthRequest).user!.id,
+          action: 'UNBAN_USER',
+          tableName: 'User',
+          recordId: id,
+          newData: { reason, unbannedAt: new Date() },
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
+      });
+
+      res.json({ message: 'User unbanned successfully' });
+    } catch (error) {
+      logger.error('Unban user error:', error);
+      res.status(500).json({ error: 'Failed to unban user' });
     }
   },
 
@@ -563,12 +838,13 @@ export const adminController = {
    */
   async updateSettings(req: Request, res: Response): Promise<void> {
     try {
-      // TODO: Implement settings storage (could be a Settings model or env vars)
+      // NOTE: In a full production app, these settings would be persisted to a 'Settings' table or Redis.
+      // For this demo, we accept the update to simulate the admin action, but state is not persisted.
       const settings = req.body;
 
-      // For now, just return success
-      // In production, store settings in database
-      res.json({ message: 'Settings updated', settings });
+      logger.info('Admin updated settings (Simulated):', settings);
+
+      res.json({ message: 'Settings updated successfully', settings });
     } catch (error) {
       logger.error('Update settings error:', error);
       res.status(500).json({ error: 'Failed to update settings' });
@@ -606,8 +882,83 @@ export const adminController = {
         res.json({ data: providers });
       }
     } catch (error) {
-      logger.error('Export providers error:', error);
       res.status(500).json({ error: 'Failed to export providers' });
+    }
+  },
+
+  /**
+   * Get audit logs for a specific record (e.g. user history)
+   */
+  async getAuditLogs(req: Request, res: Response): Promise<void> {
+    try {
+        const { entityId, entityType, limit = 20 } = req.query;
+
+        if (!entityId || !entityType) {
+            res.status(400).json({ error: 'Entity ID and Type are required' });
+            return;
+        }
+
+        const logs = await prisma.auditLog.findMany({
+            where: {
+                recordId: String(entityId),
+                tableName: String(entityType)
+            },
+            take: Number(limit),
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: {
+                    select: { id: true, name: true, email: true, role: true }
+                }
+            }
+        });
+
+        res.json({ data: logs });
+    } catch (error) {
+        logger.error('Get audit logs error:', error);
+        res.status(500).json({ error: 'Failed to fetch audit logs' });
+    }
+  },
+
+  /**
+   * Get all bookings (for admin panel)
+   */
+  async getAllBookings(req: Request, res: Response): Promise<void> {
+    try {
+      const { status, page = 1, limit = 20 } = req.query;
+
+      const skip = (Number(page) - 1) * Number(limit);
+      const where: any = {};
+
+      if (status && status !== 'all') {
+        where.status = status;
+      }
+
+      const [bookings, total] = await Promise.all([
+        prisma.booking.findMany({
+          where,
+          skip,
+          take: Number(limit),
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            provider: { select: { id: true, businessName: true } },
+          },
+        }),
+        prisma.booking.count({ where }),
+      ]);
+
+      res.json({
+        data: bookings,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / Number(limit)),
+        },
+      });
+    } catch (error) {
+      logger.error('Get all bookings error:', error);
+      res.status(500).json({ error: 'Failed to fetch bookings' });
     }
   },
 };

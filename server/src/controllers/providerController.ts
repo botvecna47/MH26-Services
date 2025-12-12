@@ -1,7 +1,7 @@
 /**
  * Provider Controller
  */
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { AppError } from '../middleware/errorHandler';
@@ -11,7 +11,7 @@ export const providerController = {
   /**
    * List providers with filters
    */
-  async list(req: AuthRequest, res: Response): Promise<void> {
+  async list(req: Request, res: Response): Promise<void> {
     const { city, category, q, page = '1', limit = '10' } = req.query;
 
     const where: any = {
@@ -69,7 +69,7 @@ export const providerController = {
   /**
    * Get provider by ID
    */
-  async getById(req: AuthRequest, res: Response): Promise<void> {
+  async getById(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
 
     const provider = await prisma.provider.findUnique({
@@ -99,8 +99,9 @@ export const providerController = {
   /**
    * Create provider application
    */
-  async create(req: AuthRequest, res: Response): Promise<void> {
-    const userId = req.user!.id;
+  async create(req: Request, res: Response): Promise<void> {
+    const authReq = req as AuthRequest;
+    const userId = authReq.user!.id;
     const data = req.body;
 
     // Check if provider already exists
@@ -134,10 +135,11 @@ export const providerController = {
   /**
    * Update provider
    */
-  async update(req: AuthRequest, res: Response): Promise<void> {
+  async update(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
-    const userId = req.user!.id;
-    const data = req.body;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user!.id;
+    const { availability, ...otherData } = req.body;
 
     // Verify ownership or admin
     const provider = await prisma.provider.findUnique({
@@ -148,13 +150,16 @@ export const providerController = {
       throw new AppError('Provider not found', 404);
     }
 
-    if (provider.userId !== userId && req.user!.role !== 'ADMIN') {
+    if (provider.userId !== userId && authReq.user!.role !== 'ADMIN') {
       throw new AppError('Unauthorized', 403);
     }
 
     const updated = await prisma.provider.update({
       where: { id },
-      data,
+      data: {
+        ...otherData,
+        ...(availability ? { availability } : {})
+      },
     });
 
     res.json(updated);
@@ -163,9 +168,10 @@ export const providerController = {
   /**
    * Upload document (local storage)
    */
-  async uploadDocument(req: AuthRequest, res: Response): Promise<void> {
+  async uploadDocument(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const file = req.file;
+    const authReq = req as AuthRequest;
 
     if (!file) {
       throw new AppError('No file uploaded', 400);
@@ -175,7 +181,7 @@ export const providerController = {
       where: { id },
     });
 
-    if (!provider || provider.userId !== req.user!.id) {
+    if (!provider || provider.userId !== authReq.user!.id) {
       throw new AppError('Unauthorized', 403);
     }
 
@@ -215,9 +221,10 @@ export const providerController = {
   /**
    * Upload QR Code (local storage)
    */
-  async uploadQRCode(req: AuthRequest, res: Response): Promise<void> {
+  async uploadQRCode(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const file = req.file;
+    const authReq = req as AuthRequest;
 
     if (!file) {
       throw new AppError('No file uploaded', 400);
@@ -227,7 +234,7 @@ export const providerController = {
       where: { id },
     });
 
-    if (!provider || provider.userId !== req.user!.id) {
+    if (!provider || provider.userId !== authReq.user!.id) {
       throw new AppError('Unauthorized', 403);
     }
 
@@ -259,45 +266,12 @@ export const providerController = {
     });
   },
 
-  /**
-   * Reveal phone number (with logging)
-   */
-  async revealPhone(req: AuthRequest, res: Response): Promise<void> {
-    const { id } = req.params;
-    const userId = req.user!.id;
 
-    const provider = await prisma.provider.findUnique({
-      where: { id },
-      include: { user: true },
-    });
-
-    if (!provider) {
-      throw new AppError('Provider not found', 404);
-    }
-
-    if (!provider.phoneVisible) {
-      throw new AppError('Phone number is not visible', 403);
-    }
-
-    // Log access
-    await prisma.phoneRevealLog.create({
-      data: {
-        providerId: id,
-        userId,
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent') || undefined,
-      },
-    });
-
-    res.json({
-      phone: provider.user.phone,
-    });
-  },
 
   /**
    * Approve provider (Admin only)
    */
-  async approve(req: AuthRequest, res: Response): Promise<void> {
+  async approve(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
 
     const provider = await prisma.provider.update({
@@ -318,7 +292,7 @@ export const providerController = {
     // Audit log
     await prisma.auditLog.create({
       data: {
-        userId: req.user!.id,
+        userId: (req as AuthRequest).user!.id,
         action: 'APPROVE_PROVIDER',
         tableName: 'Provider',
         recordId: id,
@@ -334,7 +308,7 @@ export const providerController = {
   /**
    * Reject provider (Admin only)
    */
-  async reject(req: AuthRequest, res: Response): Promise<void> {
+  async reject(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -346,7 +320,7 @@ export const providerController = {
     // Audit log
     await prisma.auditLog.create({
       data: {
-        userId: req.user!.id,
+        userId: (req as AuthRequest).user!.id,
         action: 'REJECT_PROVIDER',
         tableName: 'Provider',
         recordId: id,
@@ -357,6 +331,72 @@ export const providerController = {
     });
 
     res.json(provider);
+  },
+
+  /**
+   * Get provider statistics
+   */
+  async getStats(req: Request, res: Response): Promise<void> {
+    const authReq = req as AuthRequest;
+    const userId = authReq.user!.id;
+
+    const provider = await prisma.provider.findUnique({
+      where: { userId },
+      select: { id: true, averageRating: true }
+    });
+
+    if (!provider) {
+      throw new AppError('Provider profile not found', 404);
+    }
+
+    // Parallelize DB queries for performance
+    const [
+      totalBookings,
+      completedBookings,
+      earningsResult,
+      monthlyRevenueResult,
+      pendingBookings
+    ] = await Promise.all([
+      // 1. Total Bookings
+      prisma.booking.count({ 
+        where: { providerId: provider.id } 
+      }),
+      // 2. Completed Bookings
+      prisma.booking.count({ 
+        where: { providerId: provider.id, status: 'COMPLETED' } 
+      }),
+      // 3. Total Earnings (Sum)
+      prisma.booking.aggregate({
+        where: { providerId: provider.id, status: 'COMPLETED' },
+        _sum: { totalAmount: true }
+      }),
+      // 4. Monthly Revenue
+      prisma.booking.aggregate({
+        where: { 
+          providerId: provider.id, 
+          status: 'COMPLETED',
+          createdAt: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // Start of current month
+          }
+        },
+        _sum: { totalAmount: true }
+      }),
+      // 5. Pending Bookings Count
+      prisma.booking.count({ 
+        where: { providerId: provider.id, status: 'PENDING' } 
+      })
+    ]);
+
+    const stats = {
+      totalBookings,
+      completedBookings,
+      totalEarnings: earningsResult._sum.totalAmount || 0,
+      rating: provider.averageRating || 0,
+      monthlyRevenue: monthlyRevenueResult._sum.totalAmount || 0,
+      pendingBookings
+    };
+
+    res.json(stats);
   },
 };
 

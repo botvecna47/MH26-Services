@@ -21,10 +21,13 @@ export const userController = {
           name: true,
           email: true,
           phone: true,
+          address: true,
+          city: true,
           avatarUrl: true,
           role: true,
           emailVerified: true,
-          phoneVerified: true,
+          walletBalance: true,
+          totalSpending: true,
           createdAt: true,
           provider: {
             select: {
@@ -54,10 +57,10 @@ export const userController = {
   async updateMe(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { name, phone } = req.body;
+      const { name, phone, address, city } = req.body;
 
-      // Validate phone number if provided
-      if (phone !== undefined) {
+      // Validate phone number if provided and not empty
+      if (phone !== undefined && phone !== '') {
         // Check phone format (10 digits starting with 6-9)
         if (!/^[6-9]\d{9}$/.test(phone) || phone.length !== 10) {
           res.status(400).json({ error: 'Phone number must be 10 digits starting with 6-9' });
@@ -85,7 +88,9 @@ export const userController = {
         where: { id: userId },
         data: {
           ...(name !== undefined && { name }),
-          ...(phone !== undefined && { phone }),
+          ...(phone !== undefined && phone !== '' && { phone }),
+          ...(address !== undefined && { address }),
+          ...(city !== undefined && { city }),
           ...(avatarUrl !== undefined && { avatarUrl }),
         },
         select: {
@@ -93,10 +98,11 @@ export const userController = {
           name: true,
           email: true,
           phone: true,
+          address: true,
+          city: true,
           avatarUrl: true,
           role: true,
           emailVerified: true,
-          phoneVerified: true,
         },
       });
 

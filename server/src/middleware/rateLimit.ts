@@ -13,11 +13,10 @@ import rateLimit from 'express-rate-limit';
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
-  message: 'Too many requests from this IP, please try again later.',
+  max: 300, // 300 requests per window (increased for search traffic)
   standardHeaders: true,
   legacyHeaders: false,
-  // TODO: Add Redis store when rate-limit-redis is installed
+  // FUTURE: Add Redis store for distributed rate limiting
   // store: new RedisStore({ client: getRedisClient(), prefix: 'rl:api:' }),
 });
 

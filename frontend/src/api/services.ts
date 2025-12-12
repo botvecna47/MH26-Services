@@ -67,15 +67,62 @@ export const servicesApi = {
     const response = await axiosClient.get<PaginatedServices>('/services', { params });
     return response.data;
   },
+
+  createService: async (data: Partial<Service>): Promise<Service> => {
+    const response = await axiosClient.post<Service>('/services', data);
+    return response.data;
+  },
+
+  updateService: async (id: string, data: Partial<Service>): Promise<Service> => {
+    const response = await axiosClient.put<Service>(`/services/${id}`, data);
+    return response.data;
+  },
+
+  deleteService: async (id: string): Promise<void> => {
+    await axiosClient.delete(`/services/${id}`);
+  },
 };
 
 // React Query hooks
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 export function useServices(filters?: ServiceFilters) {
   return useQuery({
     queryKey: ['services', filters],
     queryFn: () => servicesApi.getServices(filters),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useCreateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: servicesApi.createService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+}
+
+export function useUpdateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Service> }) => 
+      servicesApi.updateService(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: servicesApi.deleteService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
   });
 }
 

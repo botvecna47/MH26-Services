@@ -3,6 +3,7 @@
  * Used for rate limiting, caching, and session management
  */
 import Redis from 'ioredis';
+import logger from './logger';
 
 let redisClient: Redis | null = null;
 
@@ -26,25 +27,26 @@ export function getRedisClient(): Redis {
     });
 
     redisClient.on('error', (err) => {
-      console.warn('Redis Client Error (will use in-memory fallback):', err.message);
+      logger.warn(`Redis Client Error (will use in-memory fallback): ${err.message}`);
     });
 
     redisClient.on('connect', () => {
-      console.log('Redis Client Connected');
+      logger.info('Redis Client Connected');
     });
 
     // Try to connect, but don't throw if it fails
     redisClient.connect().catch((err) => {
-      console.warn('Redis connection failed (will use in-memory fallback):', err.message);
+      logger.warn(`Redis connection failed (will use in-memory fallback): ${err.message}`);
     });
   }
 
   return redisClient;
 }
 
-export function closeRedisConnection(): Promise<void> {
+export async function closeRedisConnection(): Promise<void> {
   if (redisClient) {
-    return redisClient.quit();
+    await redisClient.quit();
+    return;
   }
   return Promise.resolve();
 }

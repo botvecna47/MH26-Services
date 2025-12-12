@@ -4,29 +4,22 @@ import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useUser } from '../context/UserContext';
 import { toast } from 'sonner';
-
-interface Review {
-  id: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  photos: string[];
-  createdAt: Date;
-  flagged: boolean;
-}
+import { Review as ApiReview, useCreateReview } from '../api/reviews';
 
 interface ReviewsListProps {
-  reviews: Review[];
+  reviews: ApiReview[];
   providerId: string;
 }
 
-export default function ReviewsList({ reviews = [], providerId }: ReviewsListProps) {
+export default function ReviewsList({ reviews, providerId }: ReviewsListProps) {
   const { isAuthenticated } = useUser();
   const [showAddReview, setShowAddReview] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
+  
+  const createReviewMutation = useCreateReview();
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
@@ -39,11 +32,19 @@ export default function ReviewsList({ reviews = [], providerId }: ReviewsListPro
       return;
     }
 
-    // In real app: POST /api/reviews
-    toast.success('Review submitted successfully');
-    setShowAddReview(false);
-    setNewComment('');
-    setNewRating(5);
+    try {
+        await createReviewMutation.mutateAsync({
+            providerId,
+            rating: newRating,
+            comment: newComment
+        });
+        toast.success('Review submitted successfully');
+        setShowAddReview(false);
+        setNewComment('');
+        setNewRating(5);
+    } catch (error: any) {
+        toast.error(error?.response?.data?.message || 'Failed to submit review');
+    }
   };
 
   const renderStars = (rating: number, interactive: boolean = false) => {
@@ -55,7 +56,7 @@ export default function ReviewsList({ reviews = [], providerId }: ReviewsListPro
             type="button"
             onClick={() => interactive && setNewRating(star)}
             disabled={!interactive}
-            className={interactive ? 'cursor-pointer' : 'cursor-default'}
+            className={interactive ? 'cursor-pointer' : 'cursor-default focus:outline-none'}
           >
             <Star
               className={`h-4 w-4 ${
@@ -133,9 +134,9 @@ export default function ReviewsList({ reviews = [], providerId }: ReviewsListPro
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-900">{review.userName}</span>
+                    <span className="font-medium text-gray-900">{review.user.name}</span>
                     <span className="text-xs text-gray-500">
-                      {formatDistanceToNow(review.createdAt, { addSuffix: true })}
+                      {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
                     </span>
                   </div>
                   {renderStars(review.rating)}
@@ -145,22 +146,7 @@ export default function ReviewsList({ reviews = [], providerId }: ReviewsListPro
                 </button>
               </div>
               <p className="text-gray-700 mb-2">{review.comment}</p>
-              {review.photos && review.photos.length > 0 && (
-                <div className="flex gap-2">
-                  {review.photos.map((photo, idx) => (
-                    <div
-                      key={idx}
-                      className="w-20 h-20 bg-gray-100 rounded overflow-hidden"
-                    >
-                      <img
-                        src={photo}
-                        alt={`Review ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              
               <div className="flex gap-4 mt-2">
                 <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
                   <ThumbsUp className="h-3 w-3" />

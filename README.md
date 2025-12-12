@@ -1,106 +1,113 @@
-# MH26 Services - Your Local Service Marketplace 🛠️🏡
+# MH26 Services Platform
 
-![Project Status](https://img.shields.io/badge/Status-Active_Development-green)
-![License](https://img.shields.io/badge/License-MIT-blue)
-![Tech Stack](https://img.shields.io/badge/Stack-PERN-lightgrey)
+**Empowering Local Commerce via Digital Efficiency**
 
-Welcome to **MH26 Services**! 👋
+MH26 Services is a robust, full-stack marketplace application engineered to bridge the gap between local service professionals and homeowners in the Nanded region. By digitizing the discovery, booking, and transaction lifecycle, this platform modernizes how essential services—from plumbing to electrical repairs—are accessed and delivered.
 
-We are building a community-driven platform specifically for the people of **Nanded (MH26)**. Our goal is simple: connect local residents with trusted, skilled service providers like plumbers, electricians, carpenters, and more. No more asking around for phone numbers—find help when you need it, right here.
+This repository hosts a scalable, production-ready solution featuring real-time resource management, secure financial transaction flows, and a comprehensive administration suite. It is designed not just as a utilitarian tool, but as a complete ecosystem for service commerce.
 
 ---
 
-## 🚀 Why This Project Exists
+## Technical Architecture
 
-Finding a reliable handyman shouldn't be hard. This project aims to:
-- **Simplify Search**: Find the right person for the job in seconds.
-- **Build Trust**: See profiles, photos, and reviews (coming soon!) before you book.
-- **Empower Locals**: Give local skilled workers a digital platform to showcase their talent and grow their business.
+The platform is built on a high-performance monolithic architecture that emphasizes type safety, data integrity, and real-time responsiveness.
 
-## ✨ Key Features
+### Backend Infrastructure
+*   **Runtime Environment**: Node.js with Express, structured for scalability.
+*   **Language**: TypeScript throughout, ensuring rigorous static typing and reducing runtime errors.
+*   **Database**: PostgreSQL managed via Prisma ORM. We utilize complex schema relations including foreign key constraints, indexes for query performance, and atomic transactions for financial integrity.
+*   **Real-time Communication**: Socket.io integration handles live status updates for bookings and payments, ensuring users are never out of sync.
+*   **Authentication**: Dual-layer security using JWT (access/refresh tokens) and secure password hashing with bcrypt.
 
-- **For Customers**:
-    - 🔍 **Easy Search**: Browse services by category (e.g., Plumbing, Electrical).
-    - 📅 **Direct Booking**: Schedule appointments that fit your calendar.
-    - 💬 **WhatsApp Integration**: Chat directly with providers to discuss details (simulated).
-    - 🔒 **Secure Auth**: Safe login and data protection.
+### Frontend Experience
+*   **Framework**: React 18, utilizing the latest hook patterns and context APIs.
+*   **State Management**: React Query (TanStack Query) for efficient server state synchronization and caching.
+*   **Design System**: Tailwind CSS combined with deeply customized Shadcn UI components creates a premium, responsive interface.
+*   **Data Visualization**: Recharts provides administrative analytics for revenue and user growth.
 
-- **For Providers**:
-    - 📋 **Profile Management**: customizable profiles with business details.
-    - 🖼️ **Portfolio Gallery**: Show off your best work with image uploads.
-    - 📈 **Dashboard**: Track your bookings and earnings.
+---
 
-## 🛠️ The Tech Under the Hood
+## Core Capabilities
 
-We believe in using robust, modern tools to build a fast and reliable experience:
+### For Costumers
+*   **Intelligent Discovery**: Services are organized into intuitive categories locally sourced from real-world data. Advanced filtering allows users to find the exact service they need.
+*   **Seamless Booking**: A streamlined reservation flow allows users to schedule services for specific dates and times, with conflict detection built-in.
+*   **Secure Transactions**: Integrated wallet and payment gateway structures ensure money is handled safely.
+*   **Transparency**: Live tracking of booking status from "Confirmed" to "Provider En Route" to "Completed".
 
-| Component | Technology | Why? |
-| :--- | :--- | :--- |
-| **Frontend** | [React](https://reactjs.org/) + [Vite](https://vitejs.dev/) | Blazing fast performance and a smooth user interface. |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com/) | Beautiful, responsive designs without the bloat. |
-| **Backend** | [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/) | Scalable and efficient server-side logic. |
-| **Database** | [PostgreSQL](https://www.postgresql.org/) | Rock-solid data storage. |
-| **ORM** | [Prisma](https://www.prisma.io/) | Type-safe database interactions that prevent bugs. |
+### For Service Providers
+*   **Digital Office**: Providers receive a dedicated dashboard to manage their availability, view incoming jobs, and track earnings.
+*   **Portfolio Management**: Providers can showcase their work through image galleries, building trust with potential clients.
+*   **Revenue Tracking**: Detailed financial reports breakdown earnings, platform fees, and net profit in real-time.
 
-## 🏃‍♂️ Getting Started Guide
+### For Administrators
+*   **God-Mode Control**: A powerful dashboard offers oversight of the entire ecosystem. Admins can moderate users, verify provider credentials, and intervene in bookings.
+*   **Financial Oversight**: Automated calculation of platform fees (7%) and revenue aggregation provides a clear picture of business health.
+*   **Data Integrity**: Built-in seed tools and verification scripts ensure the platform is always populated with valid, realistic data for testing and demos.
 
-Want to run this locally? Awesome! Here is how you can get set up in minutes.
+---
+
+## Getting Started
+
+Follow these instructions to deploy a local instance of the MH26 Services Platform.
 
 ### Prerequisites
-- **Node.js** (v16 or higher)
-- **PostgreSQL** installed and running locally.
+Ensure your environment is equipped with:
+*   Node.js (v18+)
+*   PostgreSQL (v14+)
+*   npm (v9+)
 
-### Installation Steps
+### Installation
 
-1.  **Clone the Repo**:
+1.  **Clone the Repository**
+    Begin by cloning the codebase to your local machine.
     ```bash
     git clone https://github.com/botvecna47/MH26-Services.git
     cd MH26-Services
     ```
 
-2.  **Install Dependencies**:
-    We need to install packages for both the server and the client.
-    ```bash
-    # Install backend deps
-    cd server
-    npm install
-
-    # Install frontend deps
-    cd ../frontend
-    npm install
-    ```
-
-3.  **Configure Environment**:
-    - Go to `server/` and create a `.env` file.
-    - Add your database connection string:
-    ```env
-    DATABASE_URL="postgresql://user:password@localhost:5432/mh26_services?schema=public"
-    JWT_SECRET="super_secret_key"
-    ```
-
-4.  **Wake up the Database**:
-    Apply the schema and seed some fake data (so it doesn't look empty!).
+2.  **Backend Configuration**
+    Navigate to the server directory and install dependencies.
     ```bash
     cd server
-    npx prisma migrate dev --name init
-    npx prisma db seed
+    npm install
     ```
+    Create a `.env` file with your database credentials and secret keys. Refer to the codebase for the required variable names (PORT, DATABASE_URL, ACCESS_TOKEN_SECRET, etc.).
 
-5.  **Launch! 🚀**:
-    From the root directory:
+    Initialize the database schema and populate it with initial data:
+    ```bash
+    npx prisma migrate deploy
+    npm run seed
+    ```
+    Start the backend server:
     ```bash
     npm run dev
     ```
-    - **Frontend**: Visit `http://localhost:5173`
-    - **Backend API**: Running at `http://localhost:3000`
 
-## 📚 Learn More
+3.  **Frontend Initialization**
+    In a separate terminal, navigate to the frontend directory.
+    ```bash
+    cd frontend
+    npm install
+    ```
+    Configure the frontend `.env` file to point to your backend API and Socket URL.
+    Start the interface:
+    ```bash
+    npm run dev
+    ```
 
-We have detailed documentation if you want to dive deeper:
-- **[Database Schema](docs/DB.md)** 🗄️: See how our data connects.
-- **[Architecture](docs/ARCHITECTURE.md)** 🏗️: Understand the system design.
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** 🔧: Stuck? Check here.
-- **[UML Diagra,s](docs/archive/UML_DIAGRAMS.md)** 🔧: Stuck? Check here.
+Your application should now be live at your local host address.
 
 ---
-*Made with ❤️ for Nanded.*
+
+## Deployment Strategy
+
+The application is structured for easy deployment to cloud services like Railway or AWS. The distinct separation of frontend (static assets) and backend (API service) allows for independent scaling.
+
+*   **Build**: Run `npm run build` in both directories to generate optimized production assets.
+*   **Serve**: The backend is configured to serve the frontend's static build files, allowing for a simplified single-process deployment if desired.
+
+---
+
+**MH26 Services Platform**
+*Digital Solutions for Local Needs.*

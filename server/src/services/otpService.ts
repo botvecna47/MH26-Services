@@ -39,7 +39,7 @@ export class OTPService {
       // Try Redis first
       const { getRedisClient } = await import('../config/redis');
       const redis = getRedisClient();
-      
+
       // Quick ping check
       await Promise.race([
         redis.ping(),
@@ -51,7 +51,7 @@ export class OTPService {
         data,
         createdAt: new Date().toISOString(),
       }));
-      
+
       logger.debug(`OTP stored in Redis for: ${identifier}`);
     } catch (error) {
       // Fallback to memory
@@ -71,7 +71,7 @@ export class OTPService {
       // Try Redis
       const { getRedisClient } = await import('../config/redis');
       const redis = getRedisClient();
-      
+
       const stored = await redis.get(key);
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -113,7 +113,7 @@ export class OTPService {
     }
 
     const hasTwilioCreds = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER);
-    
+
     if (hasTwilioCreds) {
       try {
         logger.info(`Attempting to send SMS via Twilio to ${phone}`);
@@ -136,7 +136,7 @@ export class OTPService {
           from: process.env.TWILIO_FROM_NUMBER,
           to: formattedPhone
         });
-        
+
         logger.info(`SMS sent to ${formattedPhone} via Twilio`);
       } catch (error: any) {
         logger.error(`Failed to send SMS to ${phone} via Twilio`, {
@@ -144,7 +144,7 @@ export class OTPService {
           code: error.code,
           moreInfo: error.moreInfo
         });
-        
+
         // If it's a trial account error (21608), inform the user
         if (error.code === 21608) {
           logger.warn('Twilio Trial Account: Destination number not verified.');
@@ -173,7 +173,7 @@ export class OTPService {
     // Development logging
     if (process.env.NODE_ENV !== 'production') {
       logger.info('------------------------------------------------');
-      logger.info(`📧 [DEV MODE] Email OTP for ${email}: ${otp}`);
+      logger.info(`📧 [DEV MODE] Email OTP to ${email}: ${otp}`);
       logger.info('------------------------------------------------');
     }
 

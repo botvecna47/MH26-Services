@@ -2,6 +2,7 @@
  * Report Controller
  */
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { emitNotification } from '../socket';
 import logger from '../config/logger';
@@ -12,7 +13,8 @@ export const reportController = {
    */
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const authReq = req as AuthRequest;
+      const userId = authReq.user!.id;
       const { id: providerId } = req.params;
       const { reason, details } = req.body;
 

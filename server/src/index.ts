@@ -8,12 +8,9 @@ import app from './app';
 import { setupSocketIO } from './socket';
 import logger from './config/logger';
 import { closeRedisConnection } from './config/redis';
-import { validateEnv } from './config/validateEnv';
+import { config } from './config/env'; // Validation happens on import
 
-// Validate environment variables before starting
-validateEnv();
-
-const PORT = process.env.PORT || 3000;
+const PORT = config.port;
 const httpServer = http.createServer(app);
 
 // Routes are registered in app.ts

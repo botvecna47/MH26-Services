@@ -20,6 +20,10 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.txt
+*.pid
+*.seed
+*.pid.lock
 
 # Prisma
 prisma/migrations/
@@ -38,11 +42,39 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+*.test.js
+*.spec.js
+junit.xml
+server/tests/
+server/src/**/*.test.ts
+server/src/**/*.spec.ts
+frontend/src/**/*.test.ts
+frontend/src/**/*.spec.ts
+test-results/
 
 # Temporary files
 tmp/
 temp/
 *.tmp
+
+# Documentation & Reports
+*.md
+!README.md
+
+# Agent Artifacts
+.gemini/
+
+# Scripts & Tools
+scripts/
+server/src/scripts/
+server/tests/
+verify_api.js
+verify_seed.js
+check_categories.ts
 
 # Archives
 *.zip
@@ -58,4 +90,3 @@ server/dist/
 server/build/
 server/uploads/
 server/logs/
-

@@ -12,6 +12,7 @@ const router = Router();
 
 // Protected routes
 router.post('/', authenticate, asyncHandler(appealController.create));
+router.get('/my-appeals', authenticate, asyncHandler(appealController.listMine));
 router.get('/:id', authenticate, asyncHandler(appealController.getById));
 
 // Admin routes

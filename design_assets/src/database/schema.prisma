@@ -1,0 +1,388 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  NETBANKING
+  WALLET
+  CASH
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_COMPLETED
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  REVIEW_RECEIVED
+  MESSAGE_RECEIVED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum DocumentType {
+  ID_PROOF
+  ADDRESS_PROOF
+  BUSINESS_LICENSE
+  INSURANCE
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AddressType {
+  HOME
+  WORK
+  BUSINESS
+  OTHER
+}
+
+enum PriceType {
+  FIXED
+  HOURLY
+  PER_ITEM
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String    @unique
+  userType    UserType
+  profileImage String?
+  isVerified  Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLogin   DateTime?
+
+  // Relations
+  addresses     Address[]
+  customerBookings Booking[] @relation("CustomerBookings")
+  providerBookings Booking[] @relation("ProviderBookings")
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  notifications Notification[]
+  customerReviews Review[] @relation("CustomerReviews")
+  providerReviews Review[] @relation("ProviderReviews")
+  customerPayments Payment[] @relation("CustomerPayments")
+  providerPayments Payment[] @relation("ProviderPayments")
+
+  // Provider-specific fields
+  businessName        String?
+  businessDescription String?
+  serviceCategories   String[]
+  businessImages      String[]
+  isApproved         Boolean?
+  approvedAt         DateTime?
+  rejectionReason    String?
+  totalEarnings      Float     @default(0)
+  thisMonthEarnings  Float     @default(0)
+  pendingEarnings    Float     @default(0)
+  averageRating      Float     @default(0)
+  totalReviews       Int       @default(0)
+
+  // Customer-specific fields
+  loyaltyPoints              Int     @default(0)
+  preferredContactMethod     String? @default("both")
+  emailNotifications         Boolean @default(true)
+  smsNotifications          Boolean @default(true)
+  pushNotifications         Boolean @default(true)
+  defaultPaymentMethod      PaymentMethod?
+
+  // Provider relations
+  documents     ProviderDocument[]
+  availability  ProviderAvailability[]
+  bankDetails   BankDetails?
+
+  // Admin-specific fields
+  permissions   AdminPermission[]
+
+  @@map("users")
+}
+
+model Address {
+  id        String      @id @default(cuid())
+  userId    String
+  type      AddressType @default(HOME)
+  street    String
+  area      String
+  city      String
+  state     String
+  pincode   String
+  landmark  String?
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@map("addresses")
+}
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String
+  icon        String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  services Service[]
+
+  @@map("service_categories")
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  name        String
+  categoryId  String
+  description String
+  basePrice   Float
+  priceType   PriceType     @default(FIXED)
+  duration    Int           // in minutes
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category ServiceCategory @relation(fields: [categoryId], references: [id])
+  bookings Booking[]
+
+  @@map("services")
+}
+
+model Booking {
+  id                String        @id @default(cuid())
+  customerId        String
+  providerId        String
+  serviceId         String
+  addressId         String
+  status            BookingStatus @default(PENDING)
+  scheduledDate     DateTime
+  scheduledTime     String
+  requirements      String?
+  estimatedDuration Int
+  estimatedPrice    Float
+  actualPrice       Float?
+  paymentStatus     PaymentStatus @default(PENDING)
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  cancelReason      String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  customer User    @relation("CustomerBookings", fields: [customerId], references: [id])
+  provider User    @relation("ProviderBookings", fields: [providerId], references: [id])
+  service  Service @relation(fields: [serviceId], references: [id])
+  address  Address @relation(fields: [addressId], references: [id])
+  reviews  Review[]
+  messages Message[]
+  payments Payment[]
+
+  @@map("bookings")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String
+  customerId  String
+  providerId  String
+  rating      Int      // 1-5
+  comment     String?
+  photos      String[]
+  isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer User    @relation("CustomerReviews", fields: [customerId], references: [id])
+  provider User    @relation("ProviderReviews", fields: [providerId], references: [id])
+
+  @@unique([bookingId, customerId])
+  @@map("reviews")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  bookingId  String
+  senderId   String
+  receiverId String
+  content    String
+  type       String   @default("text") // text, image, file
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender   User    @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User    @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?            // Additional data for the notification
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Payment {
+  id                  String        @id @default(cuid())
+  bookingId           String
+  customerId          String
+  providerId          String
+  amount              Float
+  platformFee         Float
+  providerAmount      Float
+  paymentMethod       PaymentMethod
+  status              PaymentStatus @default(PENDING)
+  transactionId       String?
+  razorpayOrderId     String?
+  razorpayPaymentId   String?
+  failureReason       String?
+  processedAt         DateTime?
+  createdAt           DateTime      @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer User    @relation("CustomerPayments", fields: [customerId], references: [id])
+  provider User    @relation("ProviderPayments", fields: [providerId], references: [id])
+
+  @@map("payments")
+}
+
+model ProviderDocument {
+  id              String         @id @default(cuid())
+  providerId      String
+  type            DocumentType
+  fileName        String
+  fileUrl         String
+  status          DocumentStatus @default(PENDING)
+  rejectionReason String?
+  uploadedAt      DateTime       @default(now())
+  verifiedAt      DateTime?
+
+  provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("provider_documents")
+}
+
+model ProviderAvailability {
+  id          String  @id @default(cuid())
+  providerId  String
+  dayOfWeek   Int     // 0-6 (Sunday to Saturday)
+  startTime   String  // "09:00"
+  endTime     String  // "18:00"
+  isAvailable Boolean @default(true)
+
+  provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayOfWeek])
+  @@map("provider_availability")
+}
+
+model BankDetails {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  accountNumber     String
+  ifscCode          String
+  accountHolderName String
+  bankName          String
+  isVerified        Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bank_details")
+}
+
+model AdminPermission {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  users       User[]
+
+  @@map("admin_permissions")
+}
+
+model SystemSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  type        String   @default("string") // string, number, boolean, json
+  description String
+  updatedBy   String
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// Indexes for performance
+model Session {
+  id        String   @id @default(cuid())
+  sessionToken String @unique
+  userId    String
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}

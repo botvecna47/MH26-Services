@@ -22,11 +22,10 @@ router.post('/logout', validate(refreshTokenSchema), asyncHandler(authController
 router.post('/forgot-password', authLimiter, asyncHandler(authController.forgotPassword));
 router.post('/reset-password', authLimiter, asyncHandler(authController.resetPassword));
 router.get('/verify-email', asyncHandler(authController.verifyEmail));
-router.post('/send-phone-otp', authLimiter, validate(sendPhoneOTPSchema), asyncHandler(authController.sendPhoneOTP));
-router.post('/verify-phone-otp', authLimiter, validate(verifyPhoneOTPSchema), asyncHandler(authController.verifyPhoneOTP));
 
 // Protected routes
 router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(authController.changePassword));
+router.post('/change-email-request', authenticate, authLimiter, asyncHandler(authController.requestEmailChange));
 
 export default router;
 

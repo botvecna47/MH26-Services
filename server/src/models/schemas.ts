@@ -71,11 +71,8 @@ export const createProviderSchema = z.object({
     pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
     lat: z.number().optional(),
     lng: z.number().optional(),
-    phoneVisible: z.boolean().default(true),
   }),
 });
-
-// Booking Schemas
 export const createBookingSchema = z.object({
   body: z.object({
     providerId: z.string().uuid('Invalid provider ID'),
@@ -121,7 +118,6 @@ export const updateProviderSchema = z.object({
     pincode: z.string().regex(/^\d{6}$/).optional(),
     lat: z.number().optional(),
     lng: z.number().optional(),
-    phoneVisible: z.boolean().optional(),
   }),
 });
 
@@ -133,6 +129,18 @@ export const createServiceSchema = z.object({
     description: z.string().optional(),
     price: z.number().positive('Price must be positive'),
     durationMin: z.number().int().positive('Duration must be positive'),
+  }),
+});
+
+export const updateServiceSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid service ID'),
+  }),
+  body: z.object({
+    title: z.string().min(3).optional(),
+    description: z.string().optional(),
+    price: z.number().positive().optional(),
+    durationMin: z.number().int().positive().optional(),
   }),
 });
 

@@ -2,6 +2,7 @@
  * Notification Controller
  */
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import logger from '../config/logger';
 
@@ -11,7 +12,7 @@ export const notificationController = {
    */
   async list(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { read, page = 1, limit = 20 } = req.query;
 
       const skip = (Number(page) - 1) * Number(limit);
@@ -53,7 +54,7 @@ export const notificationController = {
    */
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as AuthRequest).user!.id;
       const { id } = req.params;
 
       const notification = await prisma.notification.findUnique({
@@ -87,7 +88,7 @@ export const notificationController = {
    */
   async markAllAsRead(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user!.id;
+      const userId = (req as AuthRequest).user!.id;
 
       await prisma.notification.updateMany({
         where: {

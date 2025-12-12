@@ -30,7 +30,7 @@ app.use(helmet({
         "https://images.unsplash.com",
         "https://api.dicebear.com",
       ], 
-      connectSrc: ["'self'", "https:", "ws:", "wss:", "http://localhost:3000", "http://127.0.0.1:3000"], // Allow API and WebSocket calls
+      connectSrc: ["'self'", "https:", "ws:", "wss:", "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5000"], // Allow API and WebSocket calls
       fontSrc: ["'self'", "data:", "https:"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
@@ -51,9 +51,16 @@ app.use(helmet({
 // CORS configuration
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    const allowedOrigins = process.env.CORS_ORIGIN 
+    const envOrigins = process.env.CORS_ORIGIN 
       ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-      : ['http://localhost:5173'];
+      : [];
+    const allowedOrigins = [
+      ...envOrigins, 
+      'http://localhost:5173', 
+      'http://localhost:5000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5000'
+    ];
     
     // Allow requests with no origin (mobile apps, Postman, etc.) in development
     if (!origin && process.env.NODE_ENV === 'development') {
@@ -86,7 +93,7 @@ app.use('/uploads', (req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = process.env.CORS_ORIGIN 
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:5173'];
+    : ['http://localhost:5173', 'http://localhost:5000'];
   
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -103,7 +110,7 @@ app.use('/uploads', (req, res, next) => {
   }
   
   next();
-}, express.static(path.join(process.cwd(), 'uploads')));
+}, express.static(path.join(process.cwd(), 'server', 'uploads')));
 
 // Request logging
 app.use((req, res, next) => {
