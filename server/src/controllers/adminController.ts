@@ -276,14 +276,24 @@ export const adminController = {
       });
 
       // 4. Send Credentials Email
-      try {
-        await sendProviderCredentialsEmail(email, businessName, generatedPassword);
-      } catch (emailError) {
-        logger.error('Failed to send provider credentials email:', emailError);
-        // Don't fail the request, just log it. The provider is created.
-      }
+    try {
+      await sendProviderCredentialsEmail(email, businessName, generatedPassword);
+      logger.info(`✅ Credentials email sent to: ${email}`);
+    } catch (emailError) {
+      logger.error('Failed to send provider credentials email:', emailError);
+      // Don't fail the request, just log it. The provider is created.
+    }
 
-      // 5. Audit Log
+    // 5. Log credentials to console for admin reference (in case email fails)
+    logger.info('\n' + '='.repeat(60));
+    logger.info('🔑 NEW PROVIDER CREATED - CREDENTIALS');
+    logger.info('='.repeat(60));
+    logger.info(`📧 Email:    ${email}`);
+    logger.info(`🔐 Password: ${generatedPassword}`);
+    logger.info(`🏢 Business: ${businessName}`);
+    logger.info(`📂 Category: ${primaryCategory}`);
+    logger.info('='.repeat(60) + '\n');
+      // 6. Audit Log
       await prisma.auditLog.create({
         data: {
           userId: (req as AuthRequest).user!.id,
