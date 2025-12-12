@@ -269,7 +269,7 @@ export const useSuspendProvider = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      const { data } = await axiosClient.put(`/admin/providers/${id}/suspend`, { reason });
+      const { data } = await axiosClient.patch(`/admin/providers/${id}/suspend`, { reason });
       return data;
     },
     onSuccess: () => {
@@ -283,7 +283,7 @@ export const useUnsuspendProvider = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const { data } = await axiosClient.put(`/admin/providers/${id}/unsuspend`, { reason });
+      const { data } = await axiosClient.patch(`/admin/providers/${id}/unsuspend`, { reason });
       return data;
     },
     onSuccess: () => {

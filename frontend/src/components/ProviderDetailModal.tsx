@@ -22,8 +22,8 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 bg-white">
-        <DialogHeader className="px-6 py-4 border-b border-gray-100">
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 bg-white overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-[#ff6b35]" />
                 Provider Details
@@ -35,8 +35,8 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
             Loading provider details...
           </div>
         ) : provider ? (
-          <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
-            <div className="px-6 pt-2 pb-0">
+          <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
+            <div className="px-6 pt-2 pb-0 flex-shrink-0">
                 <TabsList className="w-full justify-start bg-transparent border-b border-gray-100 rounded-none h-auto p-0 gap-6">
                     <TabsTrigger value="overview" className="border-b-2 border-transparent data-[state=active]:border-[#ff6b35] data-[state=active]:text-[#ff6b35] rounded-none px-2 py-3">Overview</TabsTrigger>
                     <TabsTrigger value="services" className="border-b-2 border-transparent data-[state=active]:border-[#ff6b35] data-[state=active]:text-[#ff6b35] rounded-none px-2 py-3">Services</TabsTrigger>
@@ -45,7 +45,7 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
                 </TabsList>
             </div>
 
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="p-6">
                     {/* OVERVIEW TAB */}
                     <TabsContent value="overview" className="space-y-6 m-0">
@@ -254,7 +254,7 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
                         </div>
                     </TabsContent>
                 </div>
-            </ScrollArea>
+            </div>
           </Tabs>
         ) : (
           <div className="flex-1 flex items-center justify-center text-red-500">
