@@ -78,5 +78,13 @@ export const authApi = {
     });
     return response.data;
   },
+
+  verifyRegistrationOTP: async (email: string, otp: string): Promise<AuthResponse> => {
+    const response = await axiosClient.post<AuthResponse>('/auth/verify-registration-otp', {
+      email,
+      otp,
+    });
+    return response.data;
+  },
 };
 

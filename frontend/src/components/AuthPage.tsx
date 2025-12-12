@@ -222,6 +222,21 @@ export default function AuthPage() {
         
         toast.success('Account created successfully!');
         navigate('/');
+      } else if (mode === 'verify-otp') {
+        // Verify OTP
+        const response = await authApi.verifyRegistrationOTP(formData.email, formData.otp);
+        
+        console.log('OTP verification response:', response); // DEBUG
+        
+        // Save tokens
+        localStorage.setItem('accessToken', response.tokens.accessToken);
+        localStorage.setItem('refreshToken', response.tokens.refreshToken);
+        
+        // Update User Context
+        setUser(response.user);
+        
+        toast.success('Email verified! Welcome to MH26 Services!');
+        navigate('/');
       } else if (mode === 'join') {
         // Provider Join (Onboarding)
         navigate('/provider-onboarding');
