@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import {
   Mail,
@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowRight,
+  Loader2,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -30,7 +31,7 @@ import {
 import { useUser } from '../context/UserContext';
 import { authApi } from '../api/auth';
 
-type AuthMode = 'signin' | 'signup' | 'join';
+type AuthMode = 'signin' | 'signup' | 'join' | 'verify-otp';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ export default function AuthPage() {
     name: '',
     phone: '',
     businessName: '',
+    otp: '',
   });
 
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -399,6 +401,57 @@ export default function AuthPage() {
 
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {mode === 'verify-otp' ? (
+                    // OTP Verification Mode
+                    <>
+                      <div className="text-center space-y-2 mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900">Verify Your Email</h3>
+                        <p className="text-sm text-gray-600">
+                          We've sent a 6-digit code to <strong>{formData.email}</strong>
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm text-gray-700">Enter OTP Code</label>
+                        <Input
+                          type="text"
+                          placeholder="000000"
+                          value={formData.otp || ''}
+                          onChange={(e) => handleInputChange('otp', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          className="text-center text-2xl tracking-widest h-14"
+                          maxLength={6}
+                          autoFocus
+                        />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        className="w-full h-11 bg-gradient-to-r from-[#ff6b35] to-[#f7931e] hover:opacity-90"
+                        disabled={isLoading || !formData.otp || formData.otp.length !== 6}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          'Verify & Continue'
+                        )}
+                      </Button>
+
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => setMode('signup')}
+                          className="text-sm text-gray-600 hover:text-[#ff6b35]"
+                        >
+                          ← Back to Sign Up
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    // Regular Sign In/Sign Up/Join Form
+                    <>
                   {/* Email */}
                   <div className="space-y-2">
                     <label className="text-sm text-gray-700">Email Address</label>
@@ -558,6 +611,8 @@ export default function AuthPage() {
                         Privacy Policy
                       </button>
                     </p>
+                  )}
+                  </>
                   )}
                 </form>
 
