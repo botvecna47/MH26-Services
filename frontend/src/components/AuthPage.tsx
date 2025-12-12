@@ -144,6 +144,11 @@ export default function AuthPage() {
         // Sign In
         const response = await authApi.login({ email: formData.email, password: formData.password });
         
+        // Validate response
+        if (!response || !response.tokens || !response.tokens.accessToken) {
+          throw new Error('Invalid response from server');
+        }
+        
         // Save tokens
         localStorage.setItem('accessToken', response.tokens.accessToken);
         localStorage.setItem('refreshToken', response.tokens.refreshToken);
@@ -168,6 +173,11 @@ export default function AuthPage() {
             role: 'CUSTOMER'
         });
         
+        // Validate response
+        if (!response || !response.tokens || !response.tokens.accessToken) {
+          throw new Error('Invalid response from server');
+        }
+        
         // Save tokens
         localStorage.setItem('accessToken', response.tokens.accessToken);
         localStorage.setItem('refreshToken', response.tokens.refreshToken);
@@ -178,37 +188,24 @@ export default function AuthPage() {
         toast.success('Account created successfully!');
         navigate('/');
       } else if (mode === 'join') {
-        // Check if user exists or login/register first? 
-        // For 'join' used as provider onboarding trigger, we might want to register first as provider
-        // Or redirect to onboarding if logged in.
-        // Assuming 'join' creates a PROVIDER account or redirects to onboarding flow
-        
-         const response = await authApi.register({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            password: formData.password,
-            role: 'PROVIDER'
-        });
-        
-        // Save tokens
-         localStorage.setItem('accessToken', response.tokens.accessToken);
-        localStorage.setItem('refreshToken', response.tokens.refreshToken);
-        
-        // Update User Context
-        setUser(response.user);
-
-        toast.success('Account created! Redirecting to provider onboarding...');
-        navigate('/provider-onboarding', {
-          state: {
-            businessName: formData.businessName,
-          },
-        });
+        // Provider Join (Onboarding)
+        navigate('/provider-onboarding');
       }
     } catch (error: any) {
       console.error('Auth Error:', error);
-      const errorMessage = error.response?.data?.message || 'Authentication failed. Please try again.';
-      toast.error(errorMessage);
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        toast.error('Invalid email or password');
+      } else if (error.response?.status === 409) {
+        toast.error('An account with this email or phone already exists');
+      } else if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error('Authentication failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
