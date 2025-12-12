@@ -243,6 +243,7 @@ export default function AuthPage() {
       }
     } catch (error: any) {
       console.error('Auth Error:', error);
+      console.error('Error response:', error.response?.data); // DEBUG - see actual error
       
       // Handle specific error cases
       if (error.response?.status === 401) {
@@ -254,6 +255,10 @@ export default function AuthPage() {
         } else {
           toast.error('An account with this email or phone already exists');
         }
+      } else if (error.response?.status === 400 && mode === 'verify-otp') {
+        // Show specific OTP error
+        const errorMsg = error.response?.data?.error || 'Invalid or expired OTP';
+        toast.error(errorMsg);
       } else if (error.response?.data?.error) {
         toast.error(error.response.data.error);
       } else if (error.message) {
