@@ -248,7 +248,12 @@ export default function AuthPage() {
       if (error.response?.status === 401) {
         toast.error('Invalid email or password');
       } else if (error.response?.status === 409) {
-        toast.error('An account with this email or phone already exists');
+        if (mode === 'signup' || mode === 'verify-otp') {
+          toast.error('This email is already registered. Please sign in instead.');
+          setMode('signin'); // Switch to sign in mode
+        } else {
+          toast.error('An account with this email or phone already exists');
+        }
       } else if (error.response?.data?.error) {
         toast.error(error.response.data.error);
       } else if (error.message) {
