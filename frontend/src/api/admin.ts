@@ -226,16 +226,34 @@ export function useAppeals(params?: { status?: string; type?: string; page?: num
   });
 }
 
-export function useApproveProvider() {
+// Get Provider Details
+export const useProviderDetails = (providerId: string | null) => {
+  return useQuery({
+    queryKey: ['admin-provider-details', providerId],
+    queryFn: async () => {
+      if (!providerId) return null;
+      const { data } = await axiosClient.get(`/admin/providers/${providerId}/details`);
+      return data;
+    },
+    enabled: !!providerId,
+  });
+};
+
+// Approve Provider
+export const useApproveProvider = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: adminApi.approveProvider,
+    mutationFn: async (id: string) => {
+      const { data } = await axiosClient.put(`/admin/providers/${id}/approve`);
+      return data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending-providers'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] }); // Invalidate details
     },
   });
-}
+};
 
 export function useRejectProvider() {
   const queryClient = useQueryClient();
@@ -247,26 +265,33 @@ export function useRejectProvider() {
   });
 }
 
-export function useSuspendProvider() {
+export const useSuspendProvider = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: adminApi.suspendProvider,
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const { data } = await axiosClient.put(`/admin/providers/${id}/suspend`, { reason });
+      return data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
-      // Invalidate provider list if we have one
+        queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] });
     },
   });
-}
+};
 
-export function useUnsuspendProvider() {
+export const useUnsuspendProvider = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: adminApi.unsuspendProvider,
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const { data } = await axiosClient.put(`/admin/providers/${id}/unsuspend`, { reason });
+      return data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] });
     },
   });
-}
+};
 
 export function useBanUser() {
   const queryClient = useQueryClient();

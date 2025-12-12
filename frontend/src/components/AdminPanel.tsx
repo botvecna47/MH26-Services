@@ -58,6 +58,7 @@ import VerificationModal from './VerificationModal';
 import { Booking } from '../api/bookings';
 import { User as UserType } from '../types/database';
 import UserDetailModal from './UserDetailModal';
+import ProviderDetailModal from './ProviderDetailModal';
 import BookingDetailModal from './BookingDetailModal';
 import AddProviderModal from './AddProviderModal';
 
@@ -82,6 +83,7 @@ export default function AdminPanel() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null); // New state for full details
   const [selectedVerificationProvider, setSelectedVerificationProvider] = useState<VerificationProvider | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedDetailProviderId, setSelectedDetailProviderId] = useState<string | null>(null); // New state
   const [isAddProviderOpen, setIsAddProviderOpen] = useState(false);
 
   // Queries
@@ -132,19 +134,23 @@ export default function AdminPanel() {
   };
 
   const handleSuspendProvider = async (providerId: string) => {
-    if (confirm('Are you sure you want to suspend this provider?')) {
-      try {
-        await suspendProviderMutation.mutateAsync(providerId);
-        toast.success('Provider suspended');
-      } catch (error) {
-        toast.error('Failed to suspend provider');
+    const reason = prompt('Enter reason for suspension:');
+    if (reason) {
+      if (confirm('Are you sure you want to suspend this provider?')) {
+        try {
+          await suspendProviderMutation.mutateAsync({ id: providerId, reason });
+          toast.success('Provider suspended');
+        } catch (error) {
+          toast.error('Failed to suspend provider');
+        }
       }
     }
   };
 
   const handleUnsuspendProvider = async (providerId: string) => {
+    const reason = prompt('Enter reason for unsuspension (optional):');
     try {
-      await unsuspendProviderMutation.mutateAsync(providerId);
+      await unsuspendProviderMutation.mutateAsync({ id: providerId, reason: reason || 'Admin Action' });
       toast.success('Provider unsuspended');
     } catch (error) {
       toast.error('Failed to unsuspend provider');
@@ -533,6 +539,9 @@ export default function AdminPanel() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex space-x-2">
+                              <Button size="sm" variant="ghost" onClick={() => setSelectedDetailProviderId(p.id)}>
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              </Button>
                               {p.status === 'APPROVED' && (
                                 <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleSuspendProvider(p.id)}>
                                   Suspend
@@ -795,6 +804,13 @@ export default function AdminPanel() {
         </Tabs>
       </main>
 
+      <ProviderDetailModal
+        providerId={selectedDetailProviderId}
+        isOpen={!!selectedDetailProviderId}
+        onClose={() => setSelectedDetailProviderId(null)}
+      />
+
+      {/* Other Modals */}
       {selectedInvoiceBooking && (
         <InvoicePreviewModal
           isOpen={!!selectedInvoiceBooking}

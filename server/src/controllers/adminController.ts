@@ -415,17 +415,18 @@ export const adminController = {
     }
   },
 
-  /**
+    /**
    * Suspend provider
    */
   async suspendProvider(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const { reason } = req.body; // Capture reason
 
       const provider = await prisma.provider.findUnique({
         where: { id },
         include: {
-          user: { select: { id: true } },
+          user: { select: { id: true, email: true } },
         },
       });
 
@@ -444,14 +445,35 @@ export const adminController = {
         },
       });
 
+      // Log to AuditLog (History)
+      await prisma.auditLog.create({
+        data: {
+          userId: (req as AuthRequest).user!.id,
+          action: 'SUSPEND_PROVIDER',
+          tableName: 'Provider',
+          recordId: id,
+          newData: { status: 'SUSPENDED', reason: reason || 'No reason provided' },
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
+      });
+
       // Emit socket event
       emitProviderApproval(id, 'SUSPENDED');
 
       // Notify provider
       emitNotification(provider.userId, {
         type: 'provider_suspended',
-        payload: { providerId: id, status: 'SUSPENDED' },
+        payload: { providerId: id, status: 'SUSPENDED', reason },
       });
+
+      // Send email
+      await sendProviderApprovalEmail(
+        updated.user.email,
+        updated.businessName,
+        false, // rejected/suspended
+        reason || 'Violation of platform policies'
+      );
 
       res.json(updated);
     } catch (error) {
@@ -466,6 +488,7 @@ export const adminController = {
   async unsuspendProvider(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const { reason } = req.body;
 
       const provider = await prisma.provider.findUnique({
         where: { id },
@@ -494,6 +517,19 @@ export const adminController = {
         },
       });
 
+      // Log to AuditLog
+      await prisma.auditLog.create({
+        data: {
+          userId: (req as AuthRequest).user!.id,
+          action: 'UNSUSPEND_PROVIDER',
+          tableName: 'Provider',
+          recordId: id,
+          newData: { status: 'APPROVED', reason: reason || 'Admin action' },
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
+      });
+
       // Emit socket event
       emitProviderApproval(id, 'APPROVED');
 
@@ -507,6 +543,56 @@ export const adminController = {
     } catch (error) {
       logger.error('Unsuspend provider error:', error);
       res.status(500).json({ error: 'Failed to unsuspend provider' });
+    }
+  },
+
+  /**
+   * Get provider details with history
+   */
+  async getProviderDetails(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const provider = await prisma.provider.findUnique({
+        where: { id },
+        include: {
+            user: { select: { id: true, name: true, email: true, phone: true, avatarUrl: true, createdAt: true } },
+            services: true,
+            documents: true,
+            reviews: {
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: { user: { select: { name: true } } }
+            },
+            _count: {
+                select: { bookings: true, reviews: true }
+            }
+        }
+      });
+
+      if (!provider) {
+         res.status(404).json({ error: 'Provider not found' });
+         return;
+      }
+
+      // Fetch History from AuditLog
+      const history = await prisma.auditLog.findMany({
+        where: {
+            OR: [
+                { tableName: 'Provider', recordId: id },
+                { tableName: 'User', recordId: provider.userId } // Include user-level bans if any
+            ]
+        },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            user: { select: { name: true } } // Admin who performed action
+        }
+      });
+
+      res.json({ ...provider, history });
+    } catch (error) {
+        logger.error('Get provider details error:', error);
+        res.status(500).json({ error: 'Failed to fetch provider details' });
     }
   },
 
