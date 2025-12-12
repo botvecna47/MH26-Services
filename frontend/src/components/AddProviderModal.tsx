@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { useCreateProvider } from '../api/admin';
+import { useCategories } from '../api/categories';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -14,6 +15,7 @@ interface AddProviderModalProps {
 
 export default function AddProviderModal({ isOpen, onClose }: AddProviderModalProps) {
   const createProviderMutation = useCreateProvider();
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -26,16 +28,6 @@ export default function AddProviderModal({ isOpen, onClose }: AddProviderModalPr
     pincode: '',
     serviceRadius: '10'
   });
-
-  const categories = [
-    { id: 'plumbing', name: 'Plumbing' },
-    { id: 'electrical', name: 'Electrical' },
-    { id: 'cleaning', name: 'Cleaning' },
-    { id: 'tiffin', name: 'Tiffin Service' },
-    { id: 'salon', name: 'Salon' },
-    { id: 'fitness', name: 'Fitness & Yoga' },
-    { id: 'tourism', name: 'Tourism' },
-  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -128,13 +120,13 @@ export default function AddProviderModal({ isOpen, onClose }: AddProviderModalPr
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
-                <Select onValueChange={handleSelectChange} value={formData.primaryCategory}>
+                <Select onValueChange={handleSelectChange} value={formData.primaryCategory} disabled={categoriesLoading}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
+                    <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select Category"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    {categoriesData?.map((cat: any) => (
+                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
