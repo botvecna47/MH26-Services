@@ -488,6 +488,8 @@ export default function AuthPage() {
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         className={`pl-10 h-11 ${errors.email ? 'border-red-500' : ''}`}
+                        autoComplete="email"
+                        name="email"
                       />
                     </div>
                     {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
@@ -523,6 +525,8 @@ export default function AuthPage() {
                           value={formData.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
                           className={`pl-10 h-11 ${errors.phone ? 'border-red-500' : ''}`}
+                          autoComplete="tel"
+                          name="phone"
                         />
                       </div>
                       {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
@@ -558,6 +562,8 @@ export default function AuthPage() {
                         value={formData.password}
                         onChange={(e) => handleInputChange('password', e.target.value)}
                         className={`pl-10 pr-10 h-11 ${errors.password ? 'border-red-500' : ''}`}
+                        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                        name="password"
                       />
                       <button
                         type="button"
