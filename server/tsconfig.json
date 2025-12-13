@@ -21,6 +21,6 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "prisma/seed.ts"]
+  "exclude": ["node_modules", "dist", "tests", "prisma/seed.ts", "src/__tests__"]
 }
 
