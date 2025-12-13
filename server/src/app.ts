@@ -51,6 +51,11 @@ app.use(helmet({
 // CORS configuration
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Support wildcard for easy production setup
+    if (process.env.CORS_ORIGIN === '*') {
+      return callback(null, true);
+    }
+
     const envOrigins = process.env.CORS_ORIGIN 
       ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
       : [];
@@ -66,15 +71,17 @@ const corsOptions = {
       'http://127.0.0.1:4174'
     ];
     
-    // Allow requests with no origin (mobile apps, Postman, etc.) in development
-    if (!origin && process.env.NODE_ENV === 'development') {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) {
       return callback(null, true);
     }
     
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // Log rejected origin but don't throw error - just deny
+      console.warn(`CORS: Blocked origin ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+      callback(null, false);
     }
   },
   credentials: true,
