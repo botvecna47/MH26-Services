@@ -91,3 +91,4 @@ server/build/
 server/uploads/
 server/logs/
 server/verify-admin.js
+Lighthouse report.json
