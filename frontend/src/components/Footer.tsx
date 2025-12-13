@@ -105,13 +105,11 @@ export default function Footer() {
             <div>
               <h3 className="text-gray-900 mb-4">Our Services</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/services?category=tiffin" className="hover:text-[#ff6b35] transition-colors">Tiffin Service</Link></li>
                 <li><Link to="/services?category=plumbing" className="hover:text-[#ff6b35] transition-colors">Plumbing</Link></li>
                 <li><Link to="/services?category=electrical" className="hover:text-[#ff6b35] transition-colors">Electrical</Link></li>
-                <li><Link to="/services?category=tourism" className="hover:text-[#ff6b35] transition-colors">Tourism</Link></li>
-                <li><Link to="/services?category=fitness" className="hover:text-[#ff6b35] transition-colors">Fitness</Link></li>
+                <li><Link to="/services?category=catering" className="hover:text-[#ff6b35] transition-colors">Catering</Link></li>
                 <li><Link to="/services?category=salon" className="hover:text-[#ff6b35] transition-colors">Salon & Beauty</Link></li>
-                <li><Link to="/services?category=cleaning" className="hover:text-[#ff6b35] transition-colors">Cleaning</Link></li>
+                <li><Link to="/services" className="text-[#ff6b35] hover:underline font-medium">View All Services →</Link></li>
               </ul>
             </div>
 
