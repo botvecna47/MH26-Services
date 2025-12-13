@@ -257,14 +257,24 @@ export const bookingService = {
          throw new AppError('Unauthorized', 403);
      }
      
+     const baseAmount = Number(booking.totalAmount);
+     const platformFeeRate = 0.07; // 7% platform fee
+     const gstRate = 0.08; // 8% GST
+     
+     const platformFee = baseAmount * platformFeeRate;
+     const gst = baseAmount * gstRate;
+     const grandTotal = baseAmount + gst; // Customer pays base + GST
+     const providerEarnings = baseAmount - platformFee; // Provider gets base minus platform fee
+     
      return {
         invoiceNumber: `INV-${booking.id.slice(0, 8).toUpperCase()}`,
         date: booking.createdAt,
         booking,
-        subtotal: booking.totalAmount,
-        tax: Number(booking.totalAmount) * 0.18, 
-        platformFee: Number(booking.totalAmount) * 0.07, // 7% fee
-        total: Number(booking.totalAmount) * 1.18, // Simplified tax logic for MVP
+        subtotal: baseAmount,
+        platformFee: platformFee,
+        gst: gst,
+        total: grandTotal,
+        providerEarnings: providerEarnings,
      };
   },
 

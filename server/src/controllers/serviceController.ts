@@ -94,8 +94,15 @@ export const serviceController = {
         prisma.service.count({ where }),
       ]);
 
+      // Transform services to include frontend-compatible fields
+      const transformedServices = services.map(service => ({
+        ...service,
+        price: service.basePrice, // Map basePrice to price for frontend
+        title: service.name, // Map name to title for frontend
+      }));
+
       res.json({
-        data: services,
+        data: transformedServices,
         pagination: {
           page: Number(page),
           limit: Number(limit),
