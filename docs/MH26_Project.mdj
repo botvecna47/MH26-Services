@@ -1,0 +1,49 @@
+{
+  "_type": "Project",
+  "_id": "PJ001",
+  "name": "MH26 Services",
+  "ownedElements": [
+    {
+      "_type": "UMLModel",
+      "_id": "MD001",
+      "_parent": { "$ref": "PJ001" },
+      "name": "Design Model",
+      "ownedElements": [
+        {
+          "_type": "UMLClassDiagram",
+          "_id": "DG001",
+          "_parent": { "$ref": "MD001" },
+          "name": "Main Class Diagram"
+        },
+        {
+          "_type": "UMLClass",
+          "_id": "CL001",
+          "_parent": { "$ref": "MD001" },
+          "name": "User",
+          "attributes": [
+            { "_type": "UMLAttribute", "_id": "AT001", "_parent": { "$ref": "CL001" }, "name": "email", "type": "String" },
+            { "_type": "UMLAttribute", "_id": "AT002", "_parent": { "$ref": "CL001" }, "name": "role", "type": "String" }
+          ]
+        },
+        {
+          "_type": "UMLClass",
+          "_id": "CL002",
+          "_parent": { "$ref": "MD001" },
+          "name": "Provider",
+          "attributes": [
+             { "_type": "UMLAttribute", "_id": "AT003", "_parent": { "$ref": "CL002" }, "name": "businessName", "type": "String" }
+          ]
+        },
+        {
+          "_type": "UMLClass",
+          "_id": "CL003",
+          "_parent": { "$ref": "MD001" },
+          "name": "Booking",
+           "attributes": [
+             { "_type": "UMLAttribute", "_id": "AT004", "_parent": { "$ref": "CL003" }, "name": "status", "type": "Enum" }
+          ]
+        }
+      ]
+    }
+  ]
+}
