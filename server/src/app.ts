@@ -12,6 +12,9 @@ import logger from './config/logger';
 
 const app = express();
 
+// Trust proxy for rate limiting behind reverse proxies (Render, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // Security middleware
 // Security middleware
 app.use(helmet({
