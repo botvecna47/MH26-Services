@@ -1,12 +1,12 @@
 {
   "_type": "Project",
-  "_id": "AAAAAAFF+qBWK6M3Z8Y=",
+  "_id": "PROJECT001",
   "name": "MH26_Services_ERD",
   "ownedElements": [
     {
       "_type": "ERDDataModel",
       "_id": "DATAMODEL001",
-      "_parent": { "$ref": "AAAAAAFF+qBWK6M3Z8Y=" },
+      "_parent": { "$ref": "PROJECT001" },
       "name": "MH26_Data_Model",
       "ownedElements": [
         {
@@ -15,11 +15,11 @@
           "_parent": { "$ref": "DATAMODEL001" },
           "name": "USER",
           "columns": [
-            { "_type": "ERDColumn", "_id": "COL_USER_ID", "name": "id", "type": "VARCHAR(36)", "primaryKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_USER_NAME", "name": "name", "type": "VARCHAR(100)", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_USER_EMAIL", "name": "email", "type": "VARCHAR(255)", "unique": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_USER_PHONE", "name": "phone", "type": "VARCHAR(15)", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_USER_ROLE", "name": "role", "type": "ENUM", "nullable": false }
+            { "_type": "ERDColumn", "_id": "COL_U1", "name": "id", "type": "VARCHAR(36)", "primaryKey": true },
+            { "_type": "ERDColumn", "_id": "COL_U2", "name": "name", "type": "VARCHAR(100)" },
+            { "_type": "ERDColumn", "_id": "COL_U3", "name": "email", "type": "VARCHAR(255)" },
+            { "_type": "ERDColumn", "_id": "COL_U4", "name": "phone", "type": "VARCHAR(15)" },
+            { "_type": "ERDColumn", "_id": "COL_U5", "name": "role", "type": "ENUM" }
           ]
         },
         {
@@ -28,11 +28,11 @@
           "_parent": { "$ref": "DATAMODEL001" },
           "name": "PROVIDER",
           "columns": [
-            { "_type": "ERDColumn", "_id": "COL_PROV_ID", "name": "id", "type": "VARCHAR(36)", "primaryKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_PROV_USERID", "name": "userId", "type": "VARCHAR(36)", "foreignKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_PROV_BIZNAME", "name": "businessName", "type": "VARCHAR(200)", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_PROV_CATID", "name": "categoryId", "type": "VARCHAR(36)", "foreignKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_PROV_STATUS", "name": "status", "type": "ENUM", "nullable": false }
+            { "_type": "ERDColumn", "_id": "COL_P1", "name": "id", "type": "VARCHAR(36)", "primaryKey": true },
+            { "_type": "ERDColumn", "_id": "COL_P2", "name": "userId", "type": "VARCHAR(36)" },
+            { "_type": "ERDColumn", "_id": "COL_P3", "name": "businessName", "type": "VARCHAR(200)" },
+            { "_type": "ERDColumn", "_id": "COL_P4", "name": "categoryId", "type": "VARCHAR(36)" },
+            { "_type": "ERDColumn", "_id": "COL_P5", "name": "status", "type": "ENUM" }
           ]
         },
         {
@@ -41,11 +41,11 @@
           "_parent": { "$ref": "DATAMODEL001" },
           "name": "CATEGORY",
           "columns": [
-            { "_type": "ERDColumn", "_id": "COL_CAT_ID", "name": "id", "type": "VARCHAR(36)", "primaryKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_CAT_NAME", "name": "name", "type": "VARCHAR(100)", "unique": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_CAT_SLUG", "name": "slug", "type": "VARCHAR(100)", "unique": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_CAT_DESC", "name": "description", "type": "TEXT", "nullable": true },
-            { "_type": "ERDColumn", "_id": "COL_CAT_ACTIVE", "name": "isActive", "type": "BOOLEAN", "nullable": false }
+            { "_type": "ERDColumn", "_id": "COL_C1", "name": "id", "type": "VARCHAR(36)", "primaryKey": true },
+            { "_type": "ERDColumn", "_id": "COL_C2", "name": "name", "type": "VARCHAR(100)" },
+            { "_type": "ERDColumn", "_id": "COL_C3", "name": "slug", "type": "VARCHAR(100)" },
+            { "_type": "ERDColumn", "_id": "COL_C4", "name": "description", "type": "TEXT" },
+            { "_type": "ERDColumn", "_id": "COL_C5", "name": "isActive", "type": "BOOLEAN" }
           ]
         },
         {
@@ -54,11 +54,11 @@
           "_parent": { "$ref": "DATAMODEL001" },
           "name": "SERVICE",
           "columns": [
-            { "_type": "ERDColumn", "_id": "COL_SVC_ID", "name": "id", "type": "VARCHAR(36)", "primaryKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_SVC_PROVID", "name": "providerId", "type": "VARCHAR(36)", "foreignKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_SVC_NAME", "name": "name", "type": "VARCHAR(200)", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_SVC_PRICE", "name": "basePrice", "type": "DECIMAL(10,2)", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_SVC_ACTIVE", "name": "isActive", "type": "BOOLEAN", "nullable": false }
+            { "_type": "ERDColumn", "_id": "COL_S1", "name": "id", "type": "VARCHAR(36)", "primaryKey": true },
+            { "_type": "ERDColumn", "_id": "COL_S2", "name": "providerId", "type": "VARCHAR(36)" },
+            { "_type": "ERDColumn", "_id": "COL_S3", "name": "name", "type": "VARCHAR(200)" },
+            { "_type": "ERDColumn", "_id": "COL_S4", "name": "basePrice", "type": "DECIMAL(10,2)" },
+            { "_type": "ERDColumn", "_id": "COL_S5", "name": "isActive", "type": "BOOLEAN" }
           ]
         },
         {
@@ -67,11 +67,11 @@
           "_parent": { "$ref": "DATAMODEL001" },
           "name": "BOOKING",
           "columns": [
-            { "_type": "ERDColumn", "_id": "COL_BKG_ID", "name": "id", "type": "VARCHAR(36)", "primaryKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_BKG_CUSTID", "name": "customerId", "type": "VARCHAR(36)", "foreignKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_BKG_SVCID", "name": "serviceId", "type": "VARCHAR(36)", "foreignKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_BKG_STATUS", "name": "status", "type": "ENUM", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_BKG_DATE", "name": "dateTime", "type": "DATETIME", "nullable": false }
+            { "_type": "ERDColumn", "_id": "COL_B1", "name": "id", "type": "VARCHAR(36)", "primaryKey": true },
+            { "_type": "ERDColumn", "_id": "COL_B2", "name": "customerId", "type": "VARCHAR(36)" },
+            { "_type": "ERDColumn", "_id": "COL_B3", "name": "serviceId", "type": "VARCHAR(36)" },
+            { "_type": "ERDColumn", "_id": "COL_B4", "name": "status", "type": "ENUM" },
+            { "_type": "ERDColumn", "_id": "COL_B5", "name": "totalAmount", "type": "DECIMAL(10,2)" }
           ]
         },
         {
@@ -80,124 +80,83 @@
           "_parent": { "$ref": "DATAMODEL001" },
           "name": "REVIEW",
           "columns": [
-            { "_type": "ERDColumn", "_id": "COL_REV_ID", "name": "id", "type": "VARCHAR(36)", "primaryKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_REV_BKGID", "name": "bookingId", "type": "VARCHAR(36)", "foreignKey": true, "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_REV_RATING", "name": "rating", "type": "INT", "nullable": false },
-            { "_type": "ERDColumn", "_id": "COL_REV_COMMENT", "name": "comment", "type": "TEXT", "nullable": true },
-            { "_type": "ERDColumn", "_id": "COL_REV_DATE", "name": "createdAt", "type": "DATETIME", "nullable": false }
+            { "_type": "ERDColumn", "_id": "COL_R1", "name": "id", "type": "VARCHAR(36)", "primaryKey": true },
+            { "_type": "ERDColumn", "_id": "COL_R2", "name": "bookingId", "type": "VARCHAR(36)" },
+            { "_type": "ERDColumn", "_id": "COL_R3", "name": "rating", "type": "INT" },
+            { "_type": "ERDColumn", "_id": "COL_R4", "name": "comment", "type": "TEXT" },
+            { "_type": "ERDColumn", "_id": "COL_R5", "name": "createdAt", "type": "DATETIME" }
           ]
-        },
-        {
-          "_type": "ERDRelationship",
-          "_id": "REL_USER_PROVIDER",
-          "_parent": { "$ref": "DATAMODEL001" },
-          "name": "User_has_Provider",
-          "end1": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_USER" },
-            "cardinality": "1"
-          },
-          "end2": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_PROVIDER" },
-            "cardinality": "0..1"
-          },
-          "identifying": false
-        },
-        {
-          "_type": "ERDRelationship",
-          "_id": "REL_USER_BOOKING",
-          "_parent": { "$ref": "DATAMODEL001" },
-          "name": "User_creates_Booking",
-          "end1": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_USER" },
-            "cardinality": "1"
-          },
-          "end2": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_BOOKING" },
-            "cardinality": "0..*"
-          },
-          "identifying": false
-        },
-        {
-          "_type": "ERDRelationship",
-          "_id": "REL_CATEGORY_PROVIDER",
-          "_parent": { "$ref": "DATAMODEL001" },
-          "name": "Category_has_Providers",
-          "end1": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_CATEGORY" },
-            "cardinality": "1"
-          },
-          "end2": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_PROVIDER" },
-            "cardinality": "0..*"
-          },
-          "identifying": false
-        },
-        {
-          "_type": "ERDRelationship",
-          "_id": "REL_PROVIDER_SERVICE",
-          "_parent": { "$ref": "DATAMODEL001" },
-          "name": "Provider_offers_Services",
-          "end1": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_PROVIDER" },
-            "cardinality": "1"
-          },
-          "end2": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_SERVICE" },
-            "cardinality": "1..*"
-          },
-          "identifying": true
-        },
-        {
-          "_type": "ERDRelationship",
-          "_id": "REL_SERVICE_BOOKING",
-          "_parent": { "$ref": "DATAMODEL001" },
-          "name": "Service_has_Bookings",
-          "end1": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_SERVICE" },
-            "cardinality": "1"
-          },
-          "end2": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_BOOKING" },
-            "cardinality": "0..*"
-          },
-          "identifying": false
-        },
-        {
-          "_type": "ERDRelationship",
-          "_id": "REL_BOOKING_REVIEW",
-          "_parent": { "$ref": "DATAMODEL001" },
-          "name": "Booking_has_Review",
-          "end1": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_BOOKING" },
-            "cardinality": "1"
-          },
-          "end2": {
-            "_type": "ERDRelationshipEnd",
-            "reference": { "$ref": "ENTITY_REVIEW" },
-            "cardinality": "0..1"
-          },
-          "identifying": true
         }
       ]
     },
     {
       "_type": "ERDDiagram",
       "_id": "DIAGRAM001",
-      "_parent": { "$ref": "AAAAAAFF+qBWK6M3Z8Y=" },
+      "_parent": { "$ref": "PROJECT001" },
       "name": "MH26_ER_Diagram",
       "defaultDiagram": true,
-      "ownedViews": []
+      "ownedViews": [
+        {
+          "_type": "ERDEntityView",
+          "_id": "VIEW_USER",
+          "_parent": { "$ref": "DIAGRAM001" },
+          "model": { "$ref": "ENTITY_USER" },
+          "left": 50,
+          "top": 50,
+          "width": 150,
+          "height": 130
+        },
+        {
+          "_type": "ERDEntityView",
+          "_id": "VIEW_PROVIDER",
+          "_parent": { "$ref": "DIAGRAM001" },
+          "model": { "$ref": "ENTITY_PROVIDER" },
+          "left": 300,
+          "top": 50,
+          "width": 150,
+          "height": 130
+        },
+        {
+          "_type": "ERDEntityView",
+          "_id": "VIEW_CATEGORY",
+          "_parent": { "$ref": "DIAGRAM001" },
+          "model": { "$ref": "ENTITY_CATEGORY" },
+          "left": 550,
+          "top": 50,
+          "width": 150,
+          "height": 130
+        },
+        {
+          "_type": "ERDEntityView",
+          "_id": "VIEW_SERVICE",
+          "_parent": { "$ref": "DIAGRAM001" },
+          "model": { "$ref": "ENTITY_SERVICE" },
+          "left": 300,
+          "top": 250,
+          "width": 150,
+          "height": 130
+        },
+        {
+          "_type": "ERDEntityView",
+          "_id": "VIEW_BOOKING",
+          "_parent": { "$ref": "DIAGRAM001" },
+          "model": { "$ref": "ENTITY_BOOKING" },
+          "left": 50,
+          "top": 250,
+          "width": 150,
+          "height": 130
+        },
+        {
+          "_type": "ERDEntityView",
+          "_id": "VIEW_REVIEW",
+          "_parent": { "$ref": "DIAGRAM001" },
+          "model": { "$ref": "ENTITY_REVIEW" },
+          "left": 50,
+          "top": 450,
+          "width": 150,
+          "height": 130
+        }
+      ]
     }
   ]
 }
