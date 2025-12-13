@@ -186,7 +186,7 @@ export const serviceController = {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req as AuthRequest).user!.id;
-      const { providerId, title, description, price, durationMin } = req.body;
+      const { providerId, title, description, price, durationMin, imageUrl } = req.body;
 
       // Verify provider belongs to user
       const provider = await prisma.provider.findFirst({
@@ -201,13 +201,23 @@ export const serviceController = {
         return;
       }
 
+      // Image Fallback Logic: Service Image -> Provider Gallery [0] -> Empty String
+      let finalImageUrl = imageUrl || '';
+      if (!finalImageUrl && provider.gallery && Array.isArray(provider.gallery) && provider.gallery.length > 0) {
+        finalImageUrl = provider.gallery[0];
+      }
+
       const service = await prisma.service.create({
         data: {
           providerId,
-          title,
+          name: title, // Mapped from title
           description,
-          price,
-          durationMin,
+          category: provider.primaryCategory, // Set from provider's category
+          basePrice: price, // Mapped from price (checking if schema has basePrice or price)
+          priceUnit: 'per service', // Default
+          estimatedDuration: durationMin, // Mapped from durationMin
+          imageUrl: finalImageUrl,
+          isActive: true,
         },
         include: {
           provider: {
@@ -234,7 +244,7 @@ export const serviceController = {
     try {
       const userId = (req as AuthRequest).user!.id;
       const { id } = req.params;
-      const { title, description, price, durationMin } = req.body;
+      const { title, description, price, durationMin, imageUrl } = req.body;
 
       // Verify service belongs to user's provider
       const service = await prisma.service.findFirst({
@@ -254,10 +264,11 @@ export const serviceController = {
       const updated = await prisma.service.update({
         where: { id },
         data: {
-          title,
+          name: title,
           description,
-          price,
-          durationMin,
+          basePrice: price,
+          estimatedDuration: durationMin,
+          imageUrl, // Allow update if provided
         },
         include: {
           provider: {

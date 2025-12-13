@@ -112,7 +112,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
  * Send verification email
  */
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {
-  const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
+  // Default to FRONTEND URL (5173), not backend
+  const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?token=${encodeURIComponent(token)}`;
   
   await sendEmail({
     to: email,
@@ -131,7 +132,8 @@ export async function sendVerificationEmail(email: string, token: string): Promi
  * Send password reset email
  */
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
-  const resetUrl = `${process.env.API_BASE_URL}/reset-password?token=${token}`;
+  // Reset password page is also on frontend
+  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${encodeURIComponent(token)}`;
   
   await sendEmail({
     to: email,

@@ -30,6 +30,7 @@ export default function ProviderDetailPage() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [revealedPhone, setRevealedPhone] = useState<string | null>(null);
+  const [revealedEmail, setRevealedEmail] = useState<string | null>(null);
 
   // Fetch Provider Data
   const { data: provider, isLoading: isLoadingProvider, error: providerError } = useProvider(id || '');
@@ -67,10 +68,11 @@ export default function ProviderDetailPage() {
     try {
         const data = await providersApi.revealPhone(provider.id);
         setRevealedPhone(data.phone);
+        setRevealedEmail(data.email);
         setPhoneRevealed(true);
         toast.success('Contact details revealed');
     } catch (error) {
-        toast.error('Failed to reveal phone number');
+        toast.error('Failed to reveal contact details');
     }
   };
 
@@ -234,7 +236,7 @@ export default function ProviderDetailPage() {
                     <label className="text-sm text-gray-600 mb-2 block">Email</label>
                     <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">{provider.user.email}</span>
+                      <span className="text-sm text-gray-700">{revealedEmail || provider.user.email}</span>
                     </div>
                   </div>
               )}

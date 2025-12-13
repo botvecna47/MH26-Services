@@ -398,5 +398,41 @@ export const providerController = {
 
     res.json(stats);
   },
+  /**
+   * Reveal provider contact details
+   */
+  async revealContact(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const authReq = req as AuthRequest;
+    
+    // Ensure user is authenticated
+    if (!authReq.user) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    const provider = await prisma.provider.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            phone: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!provider) {
+      throw new AppError('Provider not found', 404);
+    }
+
+    // Log the reveal action for analytics if needed
+    // await prisma.auditLog.create(...)
+
+    res.json({
+      phone: provider.user.phone,
+      email: provider.user.email
+    });
+  },
 };
 

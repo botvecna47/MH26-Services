@@ -22,6 +22,7 @@ router.post('/', authenticate, requireNotBanned, validate(createProviderSchema),
 router.patch('/:id', authenticate, requireNotBanned, validate(updateProviderSchema), asyncHandler(providerController.update));
 router.post('/:id/documents', authenticate, requireNotBanned, upload.single('file'), asyncHandler(providerController.uploadDocument));
 router.post('/:id/qrcode', authenticate, requireNotBanned, upload.single('file'), asyncHandler(providerController.uploadQRCode));
+router.post('/:id/reveal-phone', authenticate, requireNotBanned, asyncHandler(providerController.revealContact));
 
 
 // Admin routes

@@ -11,7 +11,9 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 // Initialize socket outside component to prevent multiple connections during re-renders
 // But we need auth token, so we'll connect inside effect
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Initialize socket outside component to prevent multiple connections during re-renders
+// But we need auth token, so we'll connect inside effect
+const SOCKET_URL = 'http://localhost:5000';
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);

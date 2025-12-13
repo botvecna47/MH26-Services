@@ -1,0 +1,423 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table User {
+  id String [pk]
+  name String [not null]
+  email String [unique, not null]
+  phone String
+  passwordHash String [not null]
+  avatarUrl String
+  role UserRole [not null, default: 'CUSTOMER']
+  emailVerified Boolean [not null, default: false]
+  isBanned Boolean [not null, default: false]
+  address String
+  city String
+  walletBalance Decimal [not null, default: 0]
+  totalSpending Decimal [not null, default: 0]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  bookings Booking [not null]
+  transactions Transaction [not null]
+  messagesSent Message [not null]
+  messagesReceived Message [not null]
+  refreshTokens RefreshToken [not null]
+  savedProviders SavedProvider [not null]
+  reviews Review [not null]
+  auditLogs AuditLog [not null]
+  notifications Notification [not null]
+  reports Report [not null]
+  provider Provider
+  emailVerificationToken EmailVerificationToken
+  passwordResetTokens PasswordResetToken [not null]
+  reviewedAppeals Appeal [not null]
+  appeals Appeal [not null]
+}
+
+Table Provider {
+  id String [pk]
+  userId String [unique, not null]
+  businessName String [not null]
+  description String
+  primaryCategory String [not null]
+  secondaryCategory String
+  address String [not null]
+  city String [not null]
+  state String [not null, default: 'Maharashtra']
+  pincode String [not null]
+  lat Float
+  lng Float
+  averageRating Float [default: 0]
+  totalRatings Int [not null, default: 0]
+  totalRevenue Decimal [not null, default: 0]
+  status ProviderStatus [not null, default: 'PENDING']
+  qrCodeUrl String
+  serviceRadius Int [not null, default: 10]
+  availability Json
+  gallery String[] [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user User [not null]
+  documents ProviderDocument [not null]
+  services Service [not null]
+  bookings Booking [not null]
+  payouts Payout [not null]
+  reviews Review [not null]
+  savedBy SavedProvider [not null]
+  reports Report [not null]
+  appeals Appeal [not null]
+}
+
+Table ProviderDocument {
+  id String [pk]
+  providerId String [not null]
+  type String [not null]
+  url String [not null]
+  filename String [not null]
+  uploadedAt DateTime [default: `now()`, not null]
+  provider Provider [not null]
+}
+
+Table Service {
+  id String [pk]
+  providerId String [not null]
+  name String [not null]
+  description String
+  category String [not null]
+  basePrice Float [not null]
+  priceUnit String [not null, default: 'per service']
+  estimatedDuration Int [not null]
+  imageUrl String
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  provider Provider [not null]
+  bookings Booking [not null]
+
+  indexes {
+    (providerId, name) [unique]
+  }
+}
+
+Table Booking {
+  id String [pk]
+  userId String [not null]
+  providerId String [not null]
+  serviceId String [not null]
+  scheduledAt DateTime [not null]
+  status BookingStatus [not null, default: 'PENDING']
+  paymentStatus PaymentStatus [not null, default: 'PENDING']
+  totalAmount Decimal [not null]
+  platformFee Decimal [not null]
+  providerEarnings Decimal [not null]
+  address String
+  city String
+  pincode String
+  requirements String
+  completionOtp String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user User [not null]
+  provider Provider [not null]
+  service Service [not null]
+  cancellation BookingCancellation
+  transaction Transaction
+  review Review
+}
+
+Table BookingCancellation {
+  id String [pk]
+  bookingId String [unique, not null]
+  cancelledBy String [not null]
+  reason String
+  createdAt DateTime [default: `now()`, not null]
+  booking Booking [not null]
+}
+
+Table Transaction {
+  id String [pk]
+  userId String [not null]
+  bookingId String [unique]
+  amount Decimal [not null]
+  currency String [not null, default: 'INR']
+  gateway String [not null, default: 'razorpay']
+  gatewayOrderId String
+  gatewayPaymentId String
+  status TransactionStatus [not null, default: 'PENDING']
+  metadata Json
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user User [not null]
+  booking Booking
+}
+
+Table Message {
+  id String [pk]
+  conversationId String [not null]
+  senderId String [not null]
+  receiverId String [not null]
+  text String
+  attachments Json
+  read Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  sender User [not null]
+  receiver User [not null]
+}
+
+Table Notification {
+  id String [pk]
+  userId String [not null]
+  type String [not null]
+  title String [not null]
+  body String [not null]
+  payload Json
+  read Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  user User [not null]
+}
+
+Table Review {
+  id String [pk]
+  bookingId String [unique]
+  providerId String [not null]
+  userId String [not null]
+  rating Int [not null]
+  comment String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  provider Provider [not null]
+  user User [not null]
+  booking Booking
+}
+
+Table Report {
+  id String [pk]
+  reporterId String [not null]
+  providerId String [not null]
+  reason String [not null]
+  details String
+  attachments Json
+  status ReportStatus [not null, default: 'OPEN']
+  adminNotes String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  resolvedAt DateTime
+  reporter User [not null]
+  provider Provider [not null]
+}
+
+Table RefreshToken {
+  id String [pk]
+  userId String [not null]
+  token String [unique, not null]
+  expiresAt DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  revokedAt DateTime
+  user User [not null]
+}
+
+Table EmailVerificationToken {
+  id String [pk]
+  userId String [unique, not null]
+  token String [unique, not null]
+  expiresAt DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  user User [not null]
+}
+
+Table PasswordResetToken {
+  id String [pk]
+  userId String [not null]
+  token String [unique, not null]
+  expiresAt DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  used Boolean [not null, default: false]
+  user User [not null]
+}
+
+Table AuditLog {
+  id String [pk]
+  userId String
+  action String [not null]
+  tableName String [not null]
+  recordId String
+  oldData Json
+  newData Json
+  ipAddress String
+  userAgent String
+  createdAt DateTime [default: `now()`, not null]
+  user User
+}
+
+Table Payout {
+  id String [pk]
+  providerId String [not null]
+  amount Decimal [not null]
+  status PayoutStatus [not null, default: 'PENDING']
+  gatewayRef String
+  metadata Json
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  provider Provider [not null]
+}
+
+Table SavedProvider {
+  id String [pk]
+  userId String [not null]
+  providerId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  user User [not null]
+  provider Provider [not null]
+
+  indexes {
+    (userId, providerId) [unique]
+  }
+}
+
+Table Appeal {
+  id String [pk]
+  userId String
+  providerId String
+  type AppealType [not null]
+  reason String [not null]
+  details String
+  status AppealStatus [not null, default: 'PENDING']
+  adminNotes String
+  reviewedBy String
+  reviewedAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user User
+  provider Provider
+  reviewer User
+}
+
+Table Category {
+  id String [pk]
+  name String [unique, not null]
+  slug String [unique, not null]
+  description String
+  icon String
+  imageUrl String
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+Enum ProviderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+Enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+Enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+Enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+Enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+Enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+Enum AppealType {
+  UNBAN_REQUEST
+  REJECTION_APPEAL
+  SUSPENSION_APPEAL
+  OTHER
+}
+
+Enum AppealStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  UNDER_REVIEW
+}
+
+Ref: Provider.userId - User.id [delete: Cascade]
+
+Ref: ProviderDocument.providerId > Provider.id [delete: Cascade]
+
+Ref: Service.providerId > Provider.id [delete: Cascade]
+
+Ref: Booking.userId > User.id [delete: Cascade]
+
+Ref: Booking.providerId > Provider.id [delete: Cascade]
+
+Ref: Booking.serviceId > Service.id [delete: Cascade]
+
+Ref: BookingCancellation.bookingId - Booking.id [delete: Cascade]
+
+Ref: Transaction.userId > User.id [delete: Cascade]
+
+Ref: Transaction.bookingId - Booking.id [delete: Set Null]
+
+Ref: Message.senderId > User.id [delete: Cascade]
+
+Ref: Message.receiverId > User.id [delete: Cascade]
+
+Ref: Notification.userId > User.id [delete: Cascade]
+
+Ref: Review.providerId > Provider.id [delete: Cascade]
+
+Ref: Review.userId > User.id [delete: Cascade]
+
+Ref: Review.bookingId - Booking.id [delete: Set Null]
+
+Ref: Report.reporterId > User.id [delete: Cascade]
+
+Ref: Report.providerId > Provider.id [delete: Cascade]
+
+Ref: RefreshToken.userId > User.id [delete: Cascade]
+
+Ref: EmailVerificationToken.userId - User.id [delete: Cascade]
+
+Ref: PasswordResetToken.userId > User.id [delete: Cascade]
+
+Ref: AuditLog.userId > User.id [delete: Set Null]
+
+Ref: Payout.providerId > Provider.id [delete: Cascade]
+
+Ref: SavedProvider.userId > User.id [delete: Cascade]
+
+Ref: SavedProvider.providerId > Provider.id [delete: Cascade]
+
+Ref: Appeal.userId > User.id [delete: Cascade]
+
+Ref: Appeal.providerId > Provider.id [delete: Cascade]
+
+Ref: Appeal.reviewedBy > User.id [delete: Cascade]

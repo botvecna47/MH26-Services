@@ -90,3 +90,4 @@ server/dist/
 server/build/
 server/uploads/
 server/logs/
+server/verify-admin.js

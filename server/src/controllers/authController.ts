@@ -453,6 +453,8 @@ export const authController = {
   async verifyEmail(req: Request, res: Response): Promise<void> {
     const { token } = req.query;
 
+    logger.info('verifyEmail called', { token: typeof token === 'string' ? token.substring(0, 20) + '...' : token });
+
     if (!token || typeof token !== 'string') {
       throw new AppError('Verification token is required', 400);
     }
@@ -461,6 +463,8 @@ export const authController = {
     const tokenRecord = await prisma.emailVerificationToken.findUnique({
       where: { token },
     });
+
+    logger.info('Token record lookup result', { found: !!tokenRecord });
 
     if (!tokenRecord) {
       throw new AppError('Invalid verification token', 400);
@@ -478,38 +482,31 @@ export const authController = {
       select: { emailVerified: true },
     });
 
-    if (user?.emailVerified) {
-      // Delete token if already verified
-      await prisma.emailVerificationToken.delete({ where: { token } });
-      res.json({ message: 'Email is already verified' });
-      return;
-    }
-
     // Parse token to extract potential new email (Change Email flow)
     // Format: "randomToken.base64Email"
     const parts = tokenRecord.token.split('.');
-    let newEmail = null;
+    let newEmail: string | null = null;
     
     if (parts.length === 2) {
         try {
             newEmail = Buffer.from(parts[1], 'base64').toString('ascii');
-             // specific validation for email could go here
+            logger.info('Extracted new email from token', { newEmail });
         } catch (e) {
             // ignore, normal verification
+            logger.warn('Failed to decode email from token', { error: e });
         }
     }
 
-    // Verify User matches token (already done by relation, but sanity check)
-    // If newEmail is present, we update the user's email AND set verified = true
-    
+    // If this is an email CHANGE request (newEmail present in token)
     if (newEmail) {
-        // Check if email taken again just in case
+        // Check if email is already taken by another user
         const taken = await prisma.user.findUnique({ where: { email: newEmail } });
         if (taken && taken.id !== tokenRecord.userId) {
              await prisma.emailVerificationToken.delete({ where: { token } });
              throw new AppError('Email already taken', 409);
         }
 
+        // Update the user's email
         await prisma.user.update({
             where: { id: tokenRecord.userId },
             data: { 
@@ -517,15 +514,30 @@ export const authController = {
                 emailVerified: true 
             },
         });
-         logger.info(`Email updated and verified for user: ${tokenRecord.userId} to ${newEmail}`);
-    } else {
-        // Normal verification (if we ever use it)
-        await prisma.user.update({
-            where: { id: tokenRecord.userId },
-            data: { emailVerified: true },
-        });
-         logger.info(`Email verified for user: ${tokenRecord.userId}`);
+        logger.info(`Email CHANGED and verified for user: ${tokenRecord.userId} to ${newEmail}`);
+        
+        // Delete verification token
+        await prisma.emailVerificationToken.delete({ where: { token } });
+        
+        res.json({ message: 'Email changed successfully' });
+        return;
     }
+
+    // Normal verification flow (no email change)
+    // Check if email is already verified
+    if (user?.emailVerified) {
+      // Delete token if already verified
+      await prisma.emailVerificationToken.delete({ where: { token } });
+      res.json({ message: 'Email is already verified' });
+      return;
+    }
+
+    // Normal verification (if we ever use it)
+    await prisma.user.update({
+        where: { id: tokenRecord.userId },
+        data: { emailVerified: true },
+    });
+    logger.info(`Email verified for user: ${tokenRecord.userId}`);
 
     // Delete verification token
     await prisma.emailVerificationToken.delete({ where: { token } });

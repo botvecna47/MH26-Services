@@ -4,6 +4,8 @@ import { cn } from '../lib/utils';
 
 interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
+  width?: number | string;
+  height?: number | string;
 }
 
 export default function ImageWithFallback({ 
@@ -11,6 +13,7 @@ export default function ImageWithFallback({
   alt, 
   className, 
   fallbackSrc = 'https://images.unsplash.com/photo-1581578731117-104f2a41d95b?w=800&auto=format&fit=crop&q=60', // Generic fallback
+  loading = "lazy",
   ...props 
 }: ImageWithFallbackProps) {
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
@@ -42,6 +45,8 @@ export default function ImageWithFallback({
           src={imgSrc}
           alt={alt}
           onError={handleError}
+          loading={loading}
+          decoding="async"
           className={cn("w-full h-full object-cover transition-opacity duration-300", hasError ? 'opacity-80' : 'opacity-100')}
           {...props}
         />

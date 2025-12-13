@@ -82,7 +82,9 @@ export const createBookingSchema = z.object({
       { message: 'Invalid date format. Use ISO 8601 format.' }
     ),
     totalAmount: z.coerce.number().positive('Amount must be a positive number'),
-    address: z.string().min(10, 'Address must be at least 10 characters').optional(),
+    address: z.string().min(5, 'Address must be at least 5 characters').optional(),
+    city: z.string().min(2, 'City must be at least 2 characters').optional(),
+    pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits').optional(),
     requirements: z.string().optional(),
   }),
 });

@@ -58,8 +58,12 @@ const corsOptions = {
       ...envOrigins, 
       'http://localhost:5173', 
       'http://localhost:5000',
+      'http://localhost:4173', // Vite Preview
+      'http://localhost:4174', // Vite Preview (alternative)
       'http://127.0.0.1:5173',
-      'http://127.0.0.1:5000'
+      'http://127.0.0.1:5000',
+      'http://127.0.0.1:4173',
+      'http://127.0.0.1:4174'
     ];
     
     // Allow requests with no origin (mobile apps, Postman, etc.) in development

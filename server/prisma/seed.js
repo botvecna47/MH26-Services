@@ -40,7 +40,7 @@ async function main() {
         slug: 'plumbing',
         description: 'Professional plumbing services for homes and businesses',
         icon: '🔧',
-        imageUrl: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800',
+        imageUrl: 'https://via.placeholder.com/800x600',
         isActive: true,
       },
     }),
@@ -50,7 +50,7 @@ async function main() {
         slug: 'electrical',
         description: 'Licensed electricians for all your electrical needs',
         icon: '⚡',
-        imageUrl: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800',
+        imageUrl: 'https://via.placeholder.com/800x600',
         isActive: true,
       },
     }),
@@ -60,7 +60,7 @@ async function main() {
         slug: 'cleaning',
         description: 'Professional cleaning services for homes and offices',
         icon: '🧹',
-        imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
+        imageUrl: 'https://via.placeholder.com/800x600',
         isActive: true,
       },
     }),
@@ -70,7 +70,7 @@ async function main() {
         slug: 'catering',
         description: 'Delicious catering services for all occasions',
         icon: '🍽️',
-        imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800',
+        imageUrl: 'https://via.placeholder.com/800x600',
         isActive: true,
       },
     }),
@@ -80,7 +80,7 @@ async function main() {
         slug: 'salon',
         description: 'Beauty and grooming services for everyone',
         icon: '💇',
-        imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+        imageUrl: 'https://via.placeholder.com/800x600',
         isActive: true,
       },
     }),
@@ -105,9 +105,9 @@ async function main() {
         { name: 'Water Tank Cleaning', price: 800, duration: 90 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800',
-        'https://images.unsplash.com/photo-1581578731117-10d78438fbd8?w=800',
-        'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
     {
@@ -125,9 +125,9 @@ async function main() {
         { name: 'Sanitary Fitting Replacement', price: 800, duration: 75 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800',
-        'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800',
-        'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
 
@@ -147,9 +147,9 @@ async function main() {
         { name: 'Circuit Breaker Repair', price: 600, duration: 60 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800',
-        'https://images.unsplash.com/photo-1544724569-5f546fd6dd2d?w=800',
-        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
     {
@@ -167,9 +167,9 @@ async function main() {
         { name: 'Emergency Electrical Repair', price: 1000, duration: 60 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1518349619113-03114f06ac3a?w=800',
-        'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800',
-        'https://images.unsplash.com/photo-1544724569-5f546fd6dd2d?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
 
@@ -189,9 +189,9 @@ async function main() {
         { name: 'Sofa & Carpet Cleaning', price: 1200, duration: 120 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
-        'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=800',
-        'https://images.unsplash.com/photo-1584621645331-c77565315121?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
     {
@@ -209,9 +209,9 @@ async function main() {
         { name: 'Post-Construction Cleaning', price: 3000, duration: 240 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1584621645331-c77565315121?w=800',
-        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
-        'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
 
@@ -231,9 +231,9 @@ async function main() {
         { name: 'Traditional Maharashtrian Thali', price: 400, duration: 120 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1555244162-803834f70033?w=800',
-        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
-        'https://images.unsplash.com/photo-1556910103-1c02745a30bf?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
     {
@@ -251,9 +251,9 @@ async function main() {
         { name: 'Festival Special Menu', price: 400, duration: 150 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
-        'https://images.unsplash.com/photo-1555244162-803834f70033?w=800',
-        'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
 
@@ -273,9 +273,9 @@ async function main() {
         { name: 'Facial & Cleanup', price: 800, duration: 60 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
-        'https://images.unsplash.com/photo-1487412947132-232a6958a13e?w=800',
-        'https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
     {
@@ -293,9 +293,9 @@ async function main() {
         { name: 'Waxing (Full Body)', price: 1500, duration: 90 },
       ],
       gallery: [
-        'https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=800',
-        'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
-        'https://images.unsplash.com/photo-1487412947132-232a6958a13e?w=800',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
+        'https://via.placeholder.com/800x600',
       ],
     },
   ];

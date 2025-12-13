@@ -27,7 +27,7 @@ export const bookingService = {
     }
 
     // 2. Fee Calculation using Config
-    const price = Number(service.price);
+    const price = Number(service.basePrice);
     const feePercent = 0.07; // 7% Platform Fee as requested
     const platformFee = price * feePercent;
     const providerEarnings = price - platformFee;
@@ -65,7 +65,7 @@ export const bookingService = {
           userId: provider.userId,
           type: 'BOOKING_REQUEST',
           title: 'New Booking Request',
-          body: `${newBooking.user.name} has requested ${newBooking.service.title} on ${scheduledDate.toLocaleDateString()}`,
+          body: `${newBooking.user.name} has requested ${newBooking.service.name} on ${scheduledDate.toLocaleDateString()}`,
           payload: { bookingId: newBooking.id, serviceId: newBooking.serviceId },
         },
       });
@@ -228,7 +228,7 @@ export const bookingService = {
                     userId: targetUserId,
                     type: 'BOOKING_UPDATE',
                     title: notif.title,
-                    body: `${notif.msg} for ${booking.service.title}`,
+                    body: `${notif.msg} for ${booking.service.name}`,
                     payload: { bookingId, status, reason },
                 }
             });
@@ -412,7 +412,7 @@ export const bookingService = {
                 userId: booking.userId,
                 type: 'BOOKING_UPDATE',
                 title: 'Service Completed',
-                body: `Your service for ${booking.service.title} has been marked as completed.`,
+                body: `Your service for ${booking.service.name} has been marked as completed.`,
                 payload: { bookingId, status: 'COMPLETED' }
             }
         });

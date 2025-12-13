@@ -20,7 +20,8 @@ export default function VerifyEmailPage() {
 
         const verifyEmail = async () => {
             try {
-                await axiosClient.get(`/auth/verify-email?token=${token}`);
+                // Token must be re-encoded since it was decoded from URL params
+                await axiosClient.get(`/auth/verify-email?token=${encodeURIComponent(token)}`);
                 setStatus('success');
         setMessage('Your email has been successfully verified! You can now close this tab or return to the dashboard.');
 
