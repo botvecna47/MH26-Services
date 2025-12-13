@@ -92,3 +92,5 @@ server/uploads/
 server/logs/
 server/verify-admin.js
 Lighthouse report.json
+design_assets/
+server/providers_list.md
