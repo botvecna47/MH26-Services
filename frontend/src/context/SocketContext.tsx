@@ -13,7 +13,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 // But we need auth token, so we'll connect inside effect
 // Initialize socket outside component to prevent multiple connections during re-renders
 // But we need auth token, so we'll connect inside effect
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL as string) || 'http://localhost:5000';
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);

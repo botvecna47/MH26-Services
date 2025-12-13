@@ -4,108 +4,134 @@
 
 MH26 Services is a robust, full-stack marketplace application engineered to bridge the gap between local service professionals and homeowners in the Nanded region. By digitizing the discovery, booking, and transaction lifecycle, this platform modernizes how essential services—from plumbing to electrical repairs—are accessed and delivered.
 
-This repository hosts a scalable, production-ready solution featuring real-time resource management, secure financial transaction flows, and a comprehensive administration suite. It is designed not just as a utilitarian tool, but as a complete ecosystem for service commerce.
+This repository hosts a scalable, production-ready solution featuring real-time resource management, secure financial transaction flows, and a comprehensive administration suite.
 
 ---
 
-## Technical Architecture
+## Technical Architecture & Stack
 
 The platform is built on a high-performance monolithic architecture that emphasizes type safety, data integrity, and real-time responsiveness.
 
-### Backend Infrastructure
-*   **Runtime Environment**: Node.js with Express, structured for scalability.
-*   **Language**: TypeScript throughout, ensuring rigorous static typing and reducing runtime errors.
-*   **Database**: PostgreSQL managed via Prisma ORM. We utilize complex schema relations including foreign key constraints, indexes for query performance, and atomic transactions for financial integrity.
-*   **Real-time Communication**: Socket.io integration handles live status updates for bookings and payments, ensuring users are never out of sync.
-*   **Authentication**: Dual-layer security using JWT (access/refresh tokens) and secure password hashing with bcrypt.
+### Backend (Node.js/Express)
+*   **Runtime**: Node.js v18+ with Express.js Framework.
+*   **Language**: TypeScript (Strict mode).
+*   **Database**: PostgreSQL (v14+) managed via **Prisma ORM**.
+    *   Features: Complex schema relations, foreign key constraints, atomic transactions.
+*   **Real-time**: **Socket.io** for live booking updates and notifications.
+*   **Caching/Session**: **Redis** (optional but recommended for production) / In-memory for dev.
+*   **Security**:
+    *   **Helmet**: HTTP header hardening.
+    *   **Bcrypt**: Secure password hashing.
+    *   **Rate Limiting**: `express-rate-limit` to prevent abuse.
+    *   **JWT**: Access & Refresh token rotation strategy.
+    *   **Zod**: Runtime request schema validation.
+*   **Logging**: Winston logger for structured logs.
+*   **Email**: Nodemailer for transactional emails.
 
-### Frontend Experience
-*   **Framework**: React 18, utilizing the latest hook patterns and context APIs.
-*   **State Management**: React Query (TanStack Query) for efficient server state synchronization and caching.
-*   **Design System**: Tailwind CSS combined with deeply customized Shadcn UI components creates a premium, responsive interface.
-*   **Data Visualization**: Recharts provides administrative analytics for revenue and user growth.
+### Frontend (React/Vite)
+*   **Framework**: React 18 with **Vite** (Lightning fast build tool).
+*   **Language**: TypeScript.
+*   **State Management**: **TanStack Query (React Query)** for server state & caching.
+*   **Styling**: **Tailwind CSS** with **Shadcn UI** (Radix Primitives).
+*   **Forms**: React Hook Form + Zod resolvers.
+*   **Routing**: React Router DOM v6.
+*   **Visualization**: Recharts for analytics dashboards.
+*   **Utilities**: `date-fns` for time manipulation, `axios` for HTTP requests.
 
 ---
 
 ## Core Capabilities
 
-### For Costumers
-*   **Intelligent Discovery**: Services are organized into intuitive categories locally sourced from real-world data. Advanced filtering allows users to find the exact service they need.
-*   **Seamless Booking**: A streamlined reservation flow allows users to schedule services for specific dates and times, with conflict detection built-in.
-*   **Secure Transactions**: Integrated wallet and payment gateway structures ensure money is handled safely.
-*   **Transparency**: Live tracking of booking status from "Confirmed" to "Provider En Route" to "Completed".
+### For Customers
+*   **Intelligent Discovery**: Categorized services with search and filtering.
+*   **Seamless Booking**: Date/time slot selection with conflict detection.
+*   **Secure Transactions**: Integrated wallet system and mock payment flows.
+*   **Live Tracking**: Real-time status updates via WebSockets.
 
 ### For Service Providers
-*   **Digital Office**: Providers receive a dedicated dashboard to manage their availability, view incoming jobs, and track earnings.
-*   **Portfolio Management**: Providers can showcase their work through image galleries, building trust with potential clients.
-*   **Revenue Tracking**: Detailed financial reports breakdown earnings, platform fees, and net profit in real-time.
+*   **Digital Office**: Dashboard for availability management and job tracking.
+*   **Portfolio**: Image gallery and credential management.
+*   **Financials**: Earnings reports and payout tracking.
 
 ### For Administrators
-*   **God-Mode Control**: A powerful dashboard offers oversight of the entire ecosystem. Admins can moderate users, verify provider credentials, and intervene in bookings.
-*   **Financial Oversight**: Automated calculation of platform fees (7%) and revenue aggregation provides a clear picture of business health.
-*   **Data Integrity**: Built-in seed tools and verification scripts ensure the platform is always populated with valid, realistic data for testing and demos.
+*   **God-Mode Control**: Full oversight of users, providers, and bookings.
+*   **Financial Oversight**: Platform fee calculation (default 7%) and revenue aggregation.
+*   **Verification**: Tools for verifying provider documents and ensuring quality.
 
 ---
 
 ## Getting Started
 
-Follow these instructions to deploy a local instance of the MH26 Services Platform.
-
 ### Prerequisites
-Ensure your environment is equipped with:
 *   Node.js (v18+)
-*   PostgreSQL (v14+)
+*   PostgreSQL (Local or Cloud like Neon/Aiven)
 *   npm (v9+)
 
 ### Installation
 
 1.  **Clone the Repository**
-    Begin by cloning the codebase to your local machine.
     ```bash
     git clone https://github.com/botvecna47/MH26-Services.git
     cd MH26-Services
     ```
 
-2.  **Backend Configuration**
-    Navigate to the server directory and install dependencies.
+2.  **Backend Setup**
     ```bash
     cd server
     npm install
     ```
-    Create a `.env` file with your database credentials and secret keys. Refer to the codebase for the required variable names (PORT, DATABASE_URL, ACCESS_TOKEN_SECRET, etc.).
+    *   Create a `.env` file in `server/` (refer to `.env.example`).
+    *   Set `DATABASE_URL` to your PostgreSQL connection string.
+    *   Set `CORS_ORIGIN` to your frontend URL (or `*` for dev).
 
-    Initialize the database schema and populate it with initial data:
+    **Initialize Database:**
     ```bash
-    npx prisma migrate deploy
-    npm run seed
+    npx prisma migrate deploy  # Apply schema
+    npm run seed               # Populate with initial data
     ```
-    Start the backend server:
+    **Start Server:**
     ```bash
     npm run dev
     ```
 
-3.  **Frontend Initialization**
-    In a separate terminal, navigate to the frontend directory.
+3.  **Frontend Setup**
     ```bash
     cd frontend
     npm install
     ```
-    Configure the frontend `.env` file to point to your backend API and Socket URL.
-    Start the interface:
+    *   Create a `.env` file in `frontend/` (refer to `frontend/.env.example`).
+    *   Set `VITE_API_URL` to point to your backend (e.g., `http://localhost:5000/api`).
+    *   Set `VITE_SOCKET_URL` to point to your backend (e.g., `http://localhost:5000`).
+
+    **Start Interface:**
     ```bash
     npm run dev
     ```
 
-Your application should now be live at your local host address.
-
 ---
 
-## Deployment Strategy
+## Deployment Guide (Safety & Best Practices)
 
-The application is structured for easy deployment to cloud services like Railway or AWS. The distinct separation of frontend (static assets) and backend (API service) allows for independent scaling.
+To safely host this application, follow the **Split Deployment Strategy** due to the use of WebSockets (Socket.io).
 
-*   **Build**: Run `npm run build` in both directories to generate optimized production assets.
-*   **Serve**: The backend is configured to serve the frontend's static build files, allowing for a simplified single-process deployment if desired.
+### 1. Database (PostgreSQL)
+*   **Host**: Use a managed cloud provider like **Neon.tech**, **Supabase**, or **Aiven**.
+*   **Safety Check**: Ensure your database is not accessible to the public internet without a password. Use strong passwords in `DATABASE_URL`.
+
+### 2. Backend (Render / Railway)
+*   **Host**: Use **Render** or **Railway**.
+*   **Why?**: Vercel/Netlify are "Serverless" and **kill connections**, breaking Socket.io. Render/Railway keep the server alive.
+*   **Environment Variables**:
+    *   `NODE_ENV`: Set to `production`.
+    *   `CORS_ORIGIN`: Set STRICTLY to your frontend domain (e.g., `https://my-frontend.vercel.app`). Do not use `*` in production.
+    *   `JWT_SECRET`: Use a long, complex random string.
+
+### 3. Frontend (Vercel)
+*   **Host**: **Vercel** is recommended.
+*   **Configuration**:
+    *   Set `VITE_API_URL` to your Backend URL.
+    *   Set `VITE_SOCKET_URL` to your Backend URL.
+*   **Safety Check**: The frontend contains **no secrets**. All strict logic (payments, data validation) must happen on the backend.
 
 ---
 
