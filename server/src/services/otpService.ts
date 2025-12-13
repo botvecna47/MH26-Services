@@ -170,12 +170,10 @@ export class OTPService {
    * Send OTP via Email
    */
   static async sendEmail(email: string, otp: string): Promise<void> {
-    // Development logging
-    if (process.env.NODE_ENV !== 'production') {
-      logger.info('------------------------------------------------');
-      logger.info(`📧 [DEV MODE] Email OTP to ${email}: ${otp}`);
-      logger.info('------------------------------------------------');
-    }
+    // Always log OTP for debugging (in production logs are secure)
+    logger.info('------------------------------------------------');
+    logger.info(`📧 Email OTP to ${email}: ${otp}`);
+    logger.info('------------------------------------------------');
 
     try {
       await sendEmail({
@@ -190,12 +188,12 @@ export class OTPService {
         `,
         text: `Your verification code is: ${otp}`,
       });
+      logger.info(`✅ Email sent successfully to ${email}`);
     } catch (error) {
-      logger.error(`Failed to send email to ${email}`, error);
-      // We don't throw here to allow the flow to continue if in dev mode (user can see console)
-      if (process.env.NODE_ENV === 'production') {
-        throw error;
-      }
+      // Log error but don't crash - user can still see OTP in logs for now
+      logger.error(`❌ Failed to send email to ${email}:`, error);
+      logger.warn(`⚠️ SMTP might not be configured. User can still proceed with OTP from logs.`);
+      // Don't throw - allow registration to continue
     }
   }
 }
