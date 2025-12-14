@@ -599,7 +599,19 @@ export const adminController = {
         }
       });
 
-      res.json({ ...provider, history });
+      // Map services to frontend format (basePrice -> price, name -> title)
+      const mappedProvider = {
+        ...provider,
+        services: provider.services.map(service => ({
+          ...service,
+          price: service.basePrice,
+          title: service.name,
+          durationMin: service.estimatedDuration,
+        })),
+        history,
+      };
+
+      res.json(mappedProvider);
     } catch (error) {
         logger.error('Get provider details error:', error);
         res.status(500).json({ error: 'Failed to fetch provider details' });
