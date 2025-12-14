@@ -67,6 +67,7 @@ temp/
 !docs/*.md
 !report.md 
 !audit.md 
+!DEPLOYMENT_
 
 # Agent Artifacts
 .gemini/
