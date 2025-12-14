@@ -1,12 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Booking } from '../api/bookings';
+import { Booking, useCancelBooking } from '../api/bookings';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Button } from './ui/button';
-import { MapPin, Phone, Mail, Calendar, Clock, DollarSign, CheckCircle, User, X } from 'lucide-react';
+import { MapPin, Phone, Mail, Calendar, Clock, DollarSign, CheckCircle, User, X, XCircle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useState } from 'react';
 import CompletionModal from './CompletionModal';
 import ReviewModal from './ReviewModal';
+import { toast } from 'sonner';
 
 
 interface BookingDetailModalProps {
@@ -20,8 +21,20 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
   const isCustomer = user?.role === 'CUSTOMER';
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const cancelBookingMutation = useCancelBooking();
 
   if (!booking) return null;
+
+  const handleCancelBooking = async () => {
+    const reason = prompt('Please provide a reason for cancellation (optional):');
+    try {
+      await cancelBookingMutation.mutateAsync({ id: booking.id, reason: reason || undefined });
+      toast.success('Booking cancelled successfully');
+      onClose();
+    } catch (error) {
+      toast.error('Failed to cancel booking');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,6 +47,7 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
   };
 
   const completionOtp = (booking as any).completionOtp;
+  const canCancel = (booking.status === 'PENDING' || booking.status === 'CONFIRMED');
 
   return (
     <>
@@ -147,6 +161,19 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
                   onClick={() => setShowReviewModal(true)}
                 >
                   Leave a Review
+                </Button>
+              )}
+
+              {/* Cancel Button for Customers */}
+              {isCustomer && canCancel && (
+                <Button
+                  variant="outline"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-5 rounded-xl"
+                  onClick={handleCancelBooking}
+                  disabled={cancelBookingMutation.isPending}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {cancelBookingMutation.isPending ? 'Cancelling...' : 'Cancel Booking'}
                 </Button>
               )}
 

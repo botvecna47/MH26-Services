@@ -71,13 +71,19 @@ export default function BookingModal({
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.time) newErrors.time = 'Time is required';
 
-    // Validate date is not in the past
+    // Validate date is today or tomorrow only
     if (formData.date) {
       const selectedDate = new Date(formData.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(23, 59, 59, 999);
+      
       if (selectedDate < today) {
         newErrors.date = 'Date cannot be in the past';
+      } else if (selectedDate > tomorrow) {
+        newErrors.date = 'Booking available only for today or tomorrow';
       }
     }
 
@@ -179,7 +185,7 @@ export default function BookingModal({
                   onChange={handleChange}
                   className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#ff6b35] focus:border-transparent outline-none transition-all ${errors.date ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
                   min={new Date().toISOString().split('T')[0]} // Min today
-                  max={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]} // Max 3 days
+                  max={new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]} // Max tomorrow
                 />
               </div>
               {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}

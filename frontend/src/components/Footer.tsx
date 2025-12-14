@@ -149,9 +149,9 @@ export default function Footer() {
                 © {currentYear} MH26 Services. All rights reserved.
               </p>
               <div className="flex gap-6 text-sm">
-                <a href="#" className="hover:text-[#ff6b35] transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-[#ff6b35] transition-colors">Terms of Service</a>
-                <a href="#" className="hover:text-[#ff6b35] transition-colors">Cookie Policy</a>
+                <Link to="/privacy" className="hover:text-[#ff6b35] transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-[#ff6b35] transition-colors">Terms of Service</Link>
+                <Link to="/cookies" className="hover:text-[#ff6b35] transition-colors">Cookie Policy</Link>
               </div>
             </div>
           </div>

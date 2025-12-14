@@ -29,6 +29,9 @@ const ProviderProfilePage = lazy(() => import('./components/ProviderProfilePage'
 const ProviderOnboardingPage = lazy(() => import('./components/ProviderOnboardingPage'));
 const NotificationsPage = lazy(() => import('./components/NotificationsPage'));
 const BannedPage = lazy(() => import('./components/BannedPage'));
+const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
+const TermsPage = lazy(() => import('./components/TermsPage'));
+const CookiePolicyPage = lazy(() => import('./components/CookiePolicyPage'));
 
 const PageLoader = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -73,6 +76,11 @@ export default function App() {
                       
                        {/* Banned User Route */}
                       <Route path="/banned" element={<BannedPage />} />
+
+                      {/* Policy Pages */}
+                      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                      <Route path="/terms" element={<TermsPage />} />
+                      <Route path="/cookies" element={<CookiePolicyPage />} />
 
                       {/* Catch-all route for 404s */}
                       <Route path="*" element={<Navigate to="/" replace />} />
