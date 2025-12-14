@@ -1,36 +1,59 @@
 import winston from 'winston';
 
-const logFormat = winston.format.combine(
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Console format - always needed (Render captures stdout)
+const consoleFormat = winston.format.combine(
+  winston.format.colorize({ all: !isProduction }), // No colors in production (cleaner logs)
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    const metaStr = Object.keys(meta).length && !meta.service 
+      ? ` ${JSON.stringify(meta)}` 
+      : '';
+    return `${timestamp} [${level}]: ${message}${metaStr}`;
+  })
+);
+
+// JSON format for file logs (structured logging)
+const fileFormat = winston.format.combine(
+  winston.format.timestamp(),
   winston.format.errors({ stack: true }),
-  winston.format.splat(),
   winston.format.json()
 );
 
-export const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: logFormat,
-  defaultMeta: { service: 'mh26-services-api' },
-  transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-  ],
-});
+// Build transports based on environment
+const transports: winston.transport[] = [];
 
-if (process.env.NODE_ENV) {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.timestamp({ format: 'HH:mm:ss' }),
-        winston.format.printf(({ timestamp, level, message, ...meta }) => {
-          const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
-          return `${timestamp} [${level}]: ${message} ${metaStr}`;
-        })
-      ),
+// ALWAYS add console transport - this is what Render captures!
+transports.push(
+  new winston.transports.Console({
+    format: consoleFormat,
+  })
+);
+
+// Only add file transports in development (files don't persist on Render)
+if (!isProduction) {
+  transports.push(
+    new winston.transports.File({ 
+      filename: 'logs/error.log', 
+      level: 'error',
+      format: fileFormat,
+    }),
+    new winston.transports.File({ 
+      filename: 'logs/combined.log',
+      format: fileFormat,
     })
   );
 }
 
-export default logger;
+export const logger = winston.createLogger({
+  // Use 'info' in production to see OTP logs, 'debug' in dev for everything
+  level: isProduction ? 'info' : 'debug',
+  defaultMeta: { service: 'mh26-services-api' },
+  transports,
+});
 
+// Log startup environment
+logger.info(`🚀 Logger initialized [${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}]`);
+
+export default logger;

@@ -1,8 +1,10 @@
 /**
  * Email Utility
- * Sends emails via SMTP (nodemailer) or logs in development
+ * Priority: Resend API → SMTP (nodemailer) → Console log
+ * Resend works on Render free tier (HTTP-based, not blocked)
  */
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import logger from '../config/logger';
 
 export interface EmailOptions {
@@ -12,98 +14,113 @@ export interface EmailOptions {
   text?: string;
 }
 
+// Initialize Resend client if API key is available
+const resend = process.env.RESEND_API_KEY 
+  ? new Resend(process.env.RESEND_API_KEY) 
+  : null;
+
 /**
- * Send email via SMTP or log in development
+ * Send email via Resend API, SMTP, or log fallback
  */
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  // Check if SMTP is configured
+  // Priority 1: Try Resend API (works on Render free tier!)
+  if (resend && process.env.RESEND_API_KEY) {
+    try {
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'MH26 Services <onboarding@resend.dev>';
+      
+      logger.info(`📧 Sending email via Resend to: ${options.to}`);
+      
+      const { data, error } = await resend.emails.send({
+        from: fromEmail,
+        to: [options.to],
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      logger.info(`✅ Email sent via Resend! ID: ${data?.id}`, { to: options.to });
+      return; // Success - exit early
+    } catch (error: any) {
+      logger.error(`❌ Resend failed: ${error.message}`, { to: options.to });
+      // Fall through to try SMTP
+    }
+  }
+
+  // Priority 2: Try SMTP (works locally, blocked on Render free tier)
   const smtpConfigured = 
     process.env.SMTP_HOST && 
     process.env.SMTP_USER && 
     process.env.SMTP_PASS;
 
   if (smtpConfigured) {
-    // Send actual email if SMTP is configured (works in both development and production)
     try {
       const port = parseInt(process.env.SMTP_PORT || '587');
       const isSecure = port === 465;
       
-      logger.info(`Attempting to send email via SMTP: ${process.env.SMTP_HOST}:${port}`, {
-        to: options.to,
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        secure: isSecure,
-      });
+      logger.info(`📧 Sending email via SMTP: ${process.env.SMTP_HOST}:${port}`);
 
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: port,
-        secure: isSecure, // true for 465, false for other ports
+        secure: isSecure,
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
-        // For Gmail, we might need these options
-        tls: {
-          rejectUnauthorized: false, // Allow self-signed certificates (for development)
-        },
-        connectionTimeout: 10000, // 10 seconds timeout
-        greetingTimeout: 5000,    // 5 seconds greeting timeout
-        socketTimeout: 10000,     // 10 seconds socket timeout
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000,
       });
 
-      // Verify transporter configuration
       await transporter.verify();
-      logger.info('SMTP connection verified successfully');
-
-      const mailOptions = {
+      
+      const info = await transporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: options.to,
         subject: options.subject,
         html: options.html,
-        text: options.text || options.html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
-      };
+        text: options.text || options.html.replace(/<[^>]*>/g, ''),
+      });
 
-      const info = await transporter.sendMail(mailOptions);
-      
-      logger.info(`Email sent successfully to: ${options.to}`, {
-        messageId: info.messageId,
-        response: info.response,
-      });
+      logger.info(`✅ Email sent via SMTP! MessageId: ${info.messageId}`);
+      return; // Success
     } catch (error: any) {
-      logger.error('Failed to send email:', {
-        error: error.message,
-        code: error.code,
-        command: error.command,
-        response: error.response,
-        responseCode: error.responseCode,
-        stack: error.stack,
-      });
-      
-      // Log OTP to console as fallback for debugging
-      if (options.subject.includes('OTP') || options.subject.includes('verification')) {
-        const otpMatch = options.html.match(/>(\d{6})</) || options.text?.match(/(\d{6})/);
-        if (otpMatch) {
-          logger.error(`\n❌ EMAIL SEND FAILED - OTP for ${options.to}: ${otpMatch[1]}\n`);
-          logger.error(`Error details: ${error.message}`);
-        }
-      }
-      
-      throw new Error(`Failed to send email: ${error.message}`);
+      logger.error(`❌ SMTP failed: ${error.message}`);
+      // Fall through to console log
     }
-  } else {
-    // If SMTP not configured, log the email
-    logger.warn('SMTP not configured - email will not be sent. Configure SMTP_HOST, SMTP_USER, and SMTP_PASS to send emails.', {
-      to: options.to,
-      subject: options.subject,
-    });
-    
-    // Log OTP in console for easy testing
-    if (options.subject.includes('OTP') || options.subject.includes('verification')) {
-      const otpMatch = options.html.match(/>(\d{6})</) || options.text?.match(/(\d{6})/);
-      if (otpMatch) {
-        logger.info(`\n📧 EMAIL OTP for ${options.to}: ${otpMatch[1]}\n`);
-        logger.warn('⚠️  Note: SMTP not configured. Email was not actually sent. Check your .env file for SMTP settings.');
-      }
+  }
+
+  // Priority 3: Console log fallback (for development/demo without email config)
+  logger.warn('⚠️ No email service configured. Email NOT sent.', {
+    to: options.to,
+    subject: options.subject,
+  });
+  
+  // Extract and prominently log OTP if present
+  if (options.subject.includes('OTP') || options.subject.includes('Verification') || options.subject.includes('verification')) {
+    const otpMatch = options.html.match(/>(\d{6})</) || options.text?.match(/(\d{6})/);
+    if (otpMatch) {
+      logger.info('═══════════════════════════════════════════════════════');
+      logger.info(`📧 EMAIL FOR: ${options.to}`);
+      logger.info(`📋 SUBJECT: ${options.subject}`);
+      logger.info(`🔐 OTP CODE: ${otpMatch[1]}`);
+      logger.info('═══════════════════════════════════════════════════════');
+    }
+  }
+  
+  // Log password for credential emails
+  if (options.subject.includes('Provider Account') || options.subject.includes('Credentials')) {
+    const passwordMatch = options.html.match(/Password:<\/strong>\s*<code[^>]*>([^<]+)<\/code>/);
+    if (passwordMatch) {
+      logger.info('═══════════════════════════════════════════════════════');
+      logger.info(`📧 CREDENTIALS FOR: ${options.to}`);
+      logger.info(`🔑 PASSWORD: ${passwordMatch[1]}`);
+      logger.info('═══════════════════════════════════════════════════════');
     }
   }
 }

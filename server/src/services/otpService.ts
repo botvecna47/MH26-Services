@@ -52,7 +52,7 @@ export class OTPService {
         createdAt: new Date().toISOString(),
       }));
 
-      logger.debug(`OTP stored in Redis for: ${identifier}`);
+      logger.info(`OTP stored in Redis for: ${identifier}`);
     } catch (error) {
       // Fallback to memory
       logger.warn(`Redis unavailable for OTP storage, using memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -158,7 +158,7 @@ export class OTPService {
       }
     } else {
       logger.warn('Twilio credentials missing. SMS not sent (check .env). Falling back to console log.');
-      logger.debug('Twilio Config Status:', {
+      logger.info('Twilio Config Status:', {
         hasAccountSid: !!process.env.TWILIO_ACCOUNT_SID,
         hasAuthToken: !!process.env.TWILIO_AUTH_TOKEN,
         hasFromNumber: !!process.env.TWILIO_FROM_NUMBER
