@@ -1050,13 +1050,24 @@ export const adminController = {
           include: {
             user: { select: { id: true, name: true, email: true } },
             provider: { select: { id: true, businessName: true } },
+            service: { select: { id: true, name: true, basePrice: true } },
           },
         }),
         prisma.booking.count({ where }),
       ]);
 
+      // Map service fields for frontend (name → title, basePrice → price)
+      const mappedBookings = bookings.map(booking => ({
+        ...booking,
+        service: booking.service ? {
+          ...booking.service,
+          title: booking.service.name,
+          price: booking.service.basePrice,
+        } : null,
+      }));
+
       res.json({
-        data: bookings,
+        data: mappedBookings,
         pagination: {
           page: Number(page),
           limit: Number(limit),

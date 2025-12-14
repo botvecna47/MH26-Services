@@ -752,10 +752,6 @@ export default function AdminPanel() {
                   </tbody>
                 </table>
               </div>
-              {/* Pagination Controls could go here */}
-              <div className="p-4 border-t border-gray-200 bg-gray-50/50 flex justify-center">
-                <Button variant="outline" size="sm" disabled>Load More (Coming Soon)</Button>
-              </div>
             </div>
           </TabsContent>
 
