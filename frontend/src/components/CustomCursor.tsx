@@ -61,10 +61,7 @@ export default function CustomCursor() {
       setIsVisible(true);
     };
 
-    const onMouseDown = () => {
-      setIsClicking(true);
-      playClickSound();
-    };
+    const onMouseDown = () => setIsClicking(true);
     
     const onMouseUp = () => setIsClicking(false);
 
