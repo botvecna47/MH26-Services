@@ -3745,3 +3745,82 @@
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
 }
+
+/* ============================================
+   Custom Cozy Cursor - Clean & Simple
+   ============================================ */
+
+/* Hide default cursor on desktop */
+@media (pointer: fine) {
+  html, body {
+    cursor: none;
+  }
+
+  a, button, [role="button"], input, textarea, select, label {
+    cursor: none;
+  }
+}
+
+/* Custom cursor dot */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, #ff6b35, #ff8f5a);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease-out, opacity 0.15s;
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.4);
+}
+
+/* Custom cursor ring */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 107, 53, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: all 0.15s ease-out;
+  backdrop-filter: blur(1px);
+}
+
+/* Hover effects */
+.cursor-dot.hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  background: linear-gradient(135deg, #ff5722, #ff6b35);
+}
+
+.cursor-ring.hover {
+  width: 48px;
+  height: 48px;
+  border-color: rgba(255, 107, 53, 0.3);
+  background: rgba(255, 107, 53, 0.05);
+}
+
+/* Click effect */
+.cursor-dot.click {
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+.cursor-ring.click {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+  border-color: rgba(255, 107, 53, 0.8);
+}
+
+/* Hide cursor elements on touch devices */
+@media (pointer: coarse) {
+  .cursor-dot, .cursor-ring {
+    display: none !important;
+  }
+}

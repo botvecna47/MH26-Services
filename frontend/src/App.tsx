@@ -11,6 +11,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { SocketProvider } from './context/SocketContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import UserSocketSync from './components/UserSocketSync';
+import CustomCursor from './components/CustomCursor';
 
 // Lazy loaded components
 const HomePage = lazy(() => import('./components/HomePage'));
@@ -47,6 +48,7 @@ export default function App() {
             <NotificationProvider>
               <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <div className="min-h-screen glass-gradient-bg">
+                <CustomCursor />
                 <ScrollToTop />
                 <UnifiedNavigation />
                 <main className="pb-20 md:pb-0">
