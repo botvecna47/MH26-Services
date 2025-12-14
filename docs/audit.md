@@ -179,7 +179,122 @@ The database is **PostgreSQL**, managed by **Prisma ORM**.
 
 ---
 
+## 7.1 Financial System: Invoicing, Revenue & Spending
+
+### Overview
+
+The platform implements a complete mock financial system that tracks:
+- **Customer Spending**: Total amount spent on services
+- **Provider Revenue**: Earnings after platform fee deduction
+- **Platform Revenue**: 7% commission on each booking
+
+### Database Fields for Financial Tracking
+
+| Model | Field | Purpose |
+|-------|-------|---------|
+| `User` | `totalSpending` | Cumulative customer spending |
+| `User` | `walletBalance` | Available balance (for future prepaid system) |
+| `Provider` | `totalRevenue` | Cumulative provider earnings |
+| `Booking` | `totalAmount` | Base service price |
+| `Booking` | `platformFee` | 7% of totalAmount |
+| `Booking` | `providerEarnings` | totalAmount - platformFee |
+
+### Booking Amount Calculation Flow
+
+```
+Service Base Price: ₹500.00
+      │
+      ├── Platform Fee (7%): ₹35.00 [Goes to platform]
+      │
+      ├── GST on Service (8%): ₹40.00 [Goes to tax pool]
+      │
+      └── Provider Earnings: ₹465.00 [Goes to provider]
+
+Customer Pays: ₹540.00 (Base + GST)
+```
+
+**Backend Calculation** (`bookingService.ts`):
+```typescript
+const platformFeeRate = parseFloat(process.env.PLATFORM_FEE_PERCENT || '7') / 100;
+const platformFee = new Decimal(price).mul(platformFeeRate);
+const providerEarnings = new Decimal(price).minus(platformFee);
+```
+
+### Invoice Generation System
+
+**Endpoint**: `GET /api/bookings/:id/invoice`
+
+**Response Structure**:
+```json
+{
+  "invoiceNumber": "INV-A1B2C3D4",
+  "date": "2025-12-14T10:30:00Z",
+  "booking": { ... },
+  "subtotal": 500.00,
+  "platformFee": 35.00,
+  "gst": 40.00,
+  "total": 540.00,
+  "providerEarnings": 465.00
+}
+```
+
+**Frontend Component**: `InvoicePreviewModal.tsx`
+- Displays professional invoice layout
+- Shows line items, taxes, and totals
+- Includes customer and provider details
+- Print-friendly styling
+
+### PDF Generation (Future Implementation)
+
+Currently, the system generates a **browser-printable invoice** using CSS print styles. For actual PDF generation, the roadmap includes:
+
+1. **Option A: Client-Side PDF** (jsPDF + html2canvas)
+   ```typescript
+   import html2canvas from 'html2canvas';
+   import jsPDF from 'jspdf';
+   
+   const generatePDF = async (element: HTMLElement) => {
+     const canvas = await html2canvas(element);
+     const pdf = new jsPDF();
+     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0);
+     pdf.save('invoice.pdf');
+   };
+   ```
+
+2. **Option B: Server-Side PDF** (Puppeteer/PDFKit)
+   - Backend generates PDF from HTML template
+   - Returns downloadable file
+   - Better for email attachments
+
+### Revenue Reflection Across Actors
+
+When a booking is **COMPLETED**:
+
+| Actor | What Updates | How |
+|-------|--------------|-----|
+| **Customer** | `totalSpending += totalAmount` | Database update |
+| **Provider** | `totalRevenue += providerEarnings` | Database update |
+| **Admin Dashboard** | `platformRevenue += platformFee` | Aggregated from bookings |
+
+**Real-time Updates** (via Socket.io):
+```typescript
+// Emitted on booking completion
+socket.emit('wallet:update', { totalSpending: newTotal });
+socket.emit('revenue:update', { totalRevenue: newTotal });
+```
+
+### Admin Financial Visibility
+
+**Admin Panel Analytics** (`/admin/analytics`):
+- Total platform revenue (sum of all platformFee)
+- Monthly revenue charts
+- Per-provider earnings breakdown
+- Booking value distribution
+
+---
+
 ## 8. Deployment & Production Readiness
+
 
 ### 8.1 Current Deployment Architecture
 

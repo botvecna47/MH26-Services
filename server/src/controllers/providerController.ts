@@ -55,8 +55,19 @@ export const providerController = {
       prisma.provider.count({ where }),
     ]);
 
+    // Map services for frontend compatibility
+    const mappedProviders = providers.map(provider => ({
+      ...provider,
+      services: provider.services.map(service => ({
+        ...service,
+        price: service.basePrice,
+        title: service.name,
+        durationMin: service.estimatedDuration,
+      })),
+    }));
+
     res.json({
-      data: providers,
+      data: mappedProviders,
       pagination: {
         page: parseInt(page as string),
         limit: take,
@@ -65,6 +76,7 @@ export const providerController = {
       },
     });
   },
+
 
   /**
    * Get provider by ID
@@ -93,8 +105,20 @@ export const providerController = {
       throw new AppError('Provider not found', 404);
     }
 
-    res.json(provider);
+    // Map services to frontend format (basePrice -> price)
+    const mappedProvider = {
+      ...provider,
+      services: provider.services.map(service => ({
+        ...service,
+        price: service.basePrice, // Map basePrice to price for frontend
+        title: service.name, // Map name to title for frontend
+        durationMin: service.estimatedDuration, // Map estimatedDuration to durationMin
+      })),
+    };
+
+    res.json(mappedProvider);
   },
+
 
   /**
    * Create provider application
