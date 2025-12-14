@@ -3747,7 +3747,7 @@
 }
 
 /* ============================================
-   Custom Cozy Cursor - Clean & Simple
+   Custom Arrow Cursor - Clean & Simple
    ============================================ */
 
 /* Hide default cursor on desktop */
@@ -3761,66 +3761,32 @@
   }
 }
 
-/* Custom cursor dot */
-.cursor-dot {
+/* Custom arrow cursor container */
+.custom-arrow-cursor {
   position: fixed;
   top: 0;
   left: 0;
-  width: 8px;
-  height: 8px;
-  background: linear-gradient(135deg, #ff6b35, #ff8f5a);
-  border-radius: 50%;
   pointer-events: none;
   z-index: 99999;
-  transform: translate(-50%, -50%);
-  transition: transform 0.1s ease-out, opacity 0.15s;
-  box-shadow: 0 0 10px rgba(255, 107, 53, 0.4);
+  transform: translate(-2px, -2px);
+  transition: transform 0.1s ease-out;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-/* Custom cursor ring */
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 32px;
-  height: 32px;
-  border: 2px solid rgba(255, 107, 53, 0.5);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 99998;
-  transform: translate(-50%, -50%);
-  transition: all 0.15s ease-out;
-  backdrop-filter: blur(1px);
+/* Hover effect - slight scale */
+.custom-arrow-cursor.hover {
+  transform: translate(-2px, -2px) scale(1.15);
 }
 
-/* Hover effects */
-.cursor-dot.hover {
-  transform: translate(-50%, -50%) scale(1.5);
-  background: linear-gradient(135deg, #ff5722, #ff6b35);
-}
-
-.cursor-ring.hover {
-  width: 48px;
-  height: 48px;
-  border-color: rgba(255, 107, 53, 0.3);
-  background: rgba(255, 107, 53, 0.05);
-}
-
-/* Click effect */
-.cursor-dot.click {
-  transform: translate(-50%, -50%) scale(0.8);
-}
-
-.cursor-ring.click {
-  width: 24px;
-  height: 24px;
-  border-width: 3px;
-  border-color: rgba(255, 107, 53, 0.8);
+/* Click effect - slight shrink */
+.custom-arrow-cursor.click {
+  transform: translate(-2px, -2px) scale(0.9);
 }
 
 /* Hide cursor elements on touch devices */
 @media (pointer: coarse) {
-  .cursor-dot, .cursor-ring {
+  .custom-arrow-cursor {
     display: none !important;
   }
 }
+

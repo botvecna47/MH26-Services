@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Custom Cursor Component
- * A clean, cozy cursor with smooth animations
+ * Custom Arrow Cursor Component
+ * A clean, themed arrow cursor matching the site's orange color scheme
  */
 export default function CustomCursor() {
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
 
@@ -16,43 +15,16 @@ export default function CustomCursor() {
       return;
     }
 
-    const dot = dotRef.current;
-    const ring = ringRef.current;
-    if (!dot || !ring) return;
-
-    let mouseX = 0;
-    let mouseY = 0;
-    let ringX = 0;
-    let ringY = 0;
-    let animationFrame: number;
-
-    // Smooth follow animation for the ring
-    const animate = () => {
-      // Ring follows with delay (lerp)
-      ringX += (mouseX - ringX) * 0.15;
-      ringY += (mouseY - ringY) * 0.15;
-      ring.style.left = `${ringX}px`;
-      ring.style.top = `${ringY}px`;
-      
-      animationFrame = requestAnimationFrame(animate);
-    };
+    const cursor = cursorRef.current;
+    if (!cursor) return;
 
     const onMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      
-      // Dot follows instantly
-      dot.style.left = `${mouseX}px`;
-      dot.style.top = `${mouseY}px`;
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
     };
 
-    const onMouseDown = () => {
-      setIsClicking(true);
-    };
-
-    const onMouseUp = () => {
-      setIsClicking(false);
-    };
+    const onMouseDown = () => setIsClicking(true);
+    const onMouseUp = () => setIsClicking(false);
 
     const onMouseEnter = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -71,14 +43,8 @@ export default function CustomCursor() {
       }
     };
 
-    const onMouseLeave = () => {
-      setIsHovering(false);
-    };
+    const onMouseLeave = () => setIsHovering(false);
 
-    // Start animation loop
-    animate();
-
-    // Add listeners
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
@@ -86,7 +52,6 @@ export default function CustomCursor() {
     document.addEventListener('mouseout', onMouseLeave);
 
     return () => {
-      cancelAnimationFrame(animationFrame);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('mouseup', onMouseUp);
@@ -101,15 +66,28 @@ export default function CustomCursor() {
   }
 
   return (
-    <>
-      <div
-        ref={dotRef}
-        className={`cursor-dot ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''}`}
-      />
-      <div
-        ref={ringRef}
-        className={`cursor-ring ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''}`}
-      />
-    </>
+    <div
+      ref={cursorRef}
+      className={`custom-arrow-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''}`}
+    >
+      {/* SVG Arrow Cursor */}
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Arrow shape */}
+        <path
+          d="M4 4L20 12L12 14L10 22L4 4Z"
+          fill={isHovering ? '#ff5722' : '#ff6b35'}
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   );
 }
+
