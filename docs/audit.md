@@ -85,14 +85,35 @@ The booking system handles concurrency and real-time updates.
     *   **Backend**: Updates status to `CONFIRMED`.
     *   **Notification**: Customer receives "Booking Confirmed" alert.
 
-4.  **Service & Completion**:
-    *   Provider marks `IN_PROGRESS` upon arrival.
-    *   **Completion Protocol**:
-        *   Provider clicks "Complete Work".
-        *   Backend generates a random 6-digit OTP and sends it to the **Customer**.
-        *   Provider asks Customer for OTP and enters it into their app.
-        *   **Verify**: Backend matches OTP. If correct -> Status `COMPLETED`.
-    *   **Payment**: Wallet balance updated.
+4.  **Service & Completion (OTP Verification Protocol)**:
+    
+    This is a **critical security feature** ensuring service delivery before payment:
+    
+    **Step A: Provider Initiates Completion**
+    *   Provider clicks "Mark Job Complete" on their dashboard.
+    *   Backend generates a random 6-digit OTP (e.g., `718010`).
+    *   OTP is stored in `booking.completionOtp`.
+    
+    **Step B: OTP Sent to Customer ONLY**
+    *   Customer receives notification: `"Your verification code: 718010"`
+    *   Provider receives notification: `"Ask customer for the 6-digit code"` (**no OTP visible**)
+    *   Provider's Socket.io message has OTP sanitized: `{ ...booking, completionOtp: undefined }`
+    
+    **Step C: Provider Collects OTP Verbally**
+    *   Provider physically asks customer: "What's your verification code?"
+    *   Customer checks their phone and reads: "718010"
+    
+    **Step D: Provider Verifies & Completion**
+    *   Provider enters `718010` in their app.
+    *   Backend validates: `if (booking.completionOtp !== otp) throw 'Invalid OTP'`
+    *   If match → **ONLY THEN** financial updates occur:
+        *   `Provider.totalRevenue += providerEarnings` (e.g., ₹465)
+        *   `Customer.totalSpending += totalAmount` (e.g., ₹500)
+        *   `Booking.status = 'COMPLETED'`
+    *   Real-time Socket updates: `wallet:update`, `revenue:update`
+    
+    > **Security Note**: Revenue/spending NEVER updates until OTP is verified. This prevents fraudulent completion claims.
+
 
 ---
 
