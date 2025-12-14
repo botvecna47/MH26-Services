@@ -145,15 +145,22 @@ export default function CustomCursor() {
       )}
       
       {isHovering ? (
-        // Simple Hand Pointer (on clickable elements)
+        // Pointing Finger (on clickable elements) - classic cursor style
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Pointing finger shape */}
           <path
-            d="M12 3C12 3 12 8 12 10C12 10 16 10 18 10C18.5523 10 19 10.4477 19 11C19 11.5523 18.5523 12 18 12C16 12 12 12 12 12C12 12 12 17 12 19C12 20.1046 11.1046 21 10 21C8.89543 21 8 20.1046 8 19C8 17 8 12 8 12C8 12 5 12 4 12C3.44772 12 3 11.5523 3 11C3 10.4477 3.44772 10 4 10C5 10 8 10 8 10C8 10 8 5 8 4C8 3.44772 8.44772 3 9 3H11C11.5523 3 12 3.44772 12 4V3Z"
+            d="M8 15V11C8 9.89543 8.89543 9 10 9C11.1046 9 12 9.89543 12 11V10C12 8.89543 12.8954 8 14 8C15.1046 8 16 8.89543 16 10V11C16 10.4477 16.4477 10 17 10C17.5523 10 18 10.4477 18 11V16C18 19.3137 15.3137 22 12 22H10C6.68629 22 4 19.3137 4 16V15C4 14.4477 4.44772 14 5 14H6.5C7.32843 14 8 14.6716 8 15Z"
             fill="#ff6b35"
             stroke="white"
-            strokeWidth="1.5"
+            strokeWidth="1.2"
+          />
+          {/* Extended finger */}
+          <path
+            d="M12 9V4C12 2.89543 11.1046 2 10 2C8.89543 2 8 2.89543 8 4V9"
+            fill="#ff6b35"
+            stroke="white"
+            strokeWidth="1.2"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
         </svg>
       ) : (
