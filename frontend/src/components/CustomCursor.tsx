@@ -14,7 +14,7 @@ export default function CustomCursor() {
   const [isVisible, setIsVisible] = useState(true);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-  // Soft ASMR click sound
+  // Crisp click sound
   const playClickSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -24,15 +24,15 @@ export default function CustomCursor() {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Lower frequency, softer sound - ASMR style
-      oscillator.frequency.value = 220; // Lower pitch
-      oscillator.type = 'sine';
+      // Crisp click - higher frequency, quick decay
+      oscillator.frequency.value = 600;
+      oscillator.type = 'square';
       
-      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime); // Very soft
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
+      oscillator.stop(audioContext.currentTime + 0.05);
     } catch (e) {
       // Audio not supported
     }
