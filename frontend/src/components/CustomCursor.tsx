@@ -144,34 +144,16 @@ export default function CustomCursor() {
         />
       )}
       
-      {isHovering ? (
-        // Classic pointer hand - finger pointing top-left
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M6 11.5V7C6 5.89543 6.89543 5 8 5C9.10457 5 10 5.89543 10 7V6C10 4.89543 10.8954 4 12 4C13.1046 4 14 4.89543 14 6V7C14 6.44772 14.4477 6 15 6C15.5523 6 16 6.44772 16 7V12C16 15.3137 13.3137 18 10 18H8C4.68629 18 4 15.3137 4 12V11.5C4 10.9477 4.44772 10.5 5 10.5C5.55228 10.5 6 10.9477 6 11.5Z"
-            fill="#ff6b35"
-            stroke="white"
-            strokeWidth="1.3"
-          />
-          <path
-            d="M10 5L5 2"
-            stroke="#ff6b35"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      ) : (
-        // Arrow Cursor (default)
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M4 4L20 12L12 14L10 22L4 4Z"
-            fill="#ff6b35"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
+      {/* Arrow Cursor - changes color on hover */}
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M4 4L20 12L12 14L10 22L4 4Z"
+          fill={isHovering ? '#ff5722' : '#ff6b35'}
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
     </div>
   );
 }
