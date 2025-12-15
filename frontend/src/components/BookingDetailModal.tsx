@@ -1,12 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Booking, useCancelBooking } from '../api/bookings';
+import { Booking, useCancelBooking, useAcceptBooking, useRejectBooking } from '../api/bookings';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Button } from './ui/button';
-import { MapPin, Phone, Mail, Calendar, Clock, DollarSign, CheckCircle, User, X, XCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Calendar, Clock, DollarSign, CheckCircle, CheckCircle2, User, X, XCircle, FileText } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useState } from 'react';
 import CompletionModal from './CompletionModal';
 import ReviewModal from './ReviewModal';
+import InvoicePreviewModal from './InvoicePreviewModal';
 import { toast } from 'sonner';
 
 
@@ -17,13 +18,40 @@ interface BookingDetailModalProps {
 }
 
 export default function BookingDetailModal({ isOpen, onClose, booking }: BookingDetailModalProps) {
-  const { user, isProvider } = useUser();
+  const { user, isProvider, isAdmin } = useUser();
   const isCustomer = user?.role === 'CUSTOMER';
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const cancelBookingMutation = useCancelBooking();
+  const acceptBookingMutation = useAcceptBooking();
+  const rejectBookingMutation = useRejectBooking();
 
   if (!booking) return null;
+
+  // Provider/Admin can accept or reject PENDING bookings
+  const canManageBooking = isProvider || isAdmin;
+
+  const handleAcceptBooking = async () => {
+    try {
+      await acceptBookingMutation.mutateAsync(booking.id);
+      toast.success('Booking accepted successfully!');
+      onClose();
+    } catch (error) {
+      toast.error('Failed to accept booking');
+    }
+  };
+
+  const handleRejectBooking = async () => {
+    const reason = prompt('Please provide a reason for rejection (optional):');
+    try {
+      await rejectBookingMutation.mutateAsync({ id: booking.id, reason: reason || undefined });
+      toast.success('Booking rejected');
+      onClose();
+    } catch (error) {
+      toast.error('Failed to reject booking');
+    }
+  };
 
   const handleCancelBooking = async () => {
     const reason = prompt('Please provide a reason for cancellation (optional):');
@@ -145,8 +173,31 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
-              {/* Action Buttons */}
-              {(isProvider || user?.role === 'ADMIN') && booking.status === 'CONFIRMED' && (
+              {/* Accept/Reject Buttons for Providers and Admins on PENDING bookings */}
+              {canManageBooking && booking.status === 'PENDING' && (
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 shadow-md text-md py-6 rounded-xl transition-all hover:scale-[1.02]"
+                    onClick={handleAcceptBooking}
+                    disabled={acceptBookingMutation.isPending}
+                  >
+                    <CheckCircle2 className="h-5 w-5 mr-2" />
+                    {acceptBookingMutation.isPending ? 'Accepting...' : 'Accept Booking'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-6 rounded-xl"
+                    onClick={handleRejectBooking}
+                    disabled={rejectBookingMutation.isPending}
+                  >
+                    <XCircle className="h-5 w-5 mr-2" />
+                    {rejectBookingMutation.isPending ? 'Rejecting...' : 'Reject'}
+                  </Button>
+                </div>
+              )}
+
+              {/* Mark Complete Button for Providers and Admins on CONFIRMED bookings */}
+              {canManageBooking && booking.status === 'CONFIRMED' && (
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700 shadow-md text-md py-6 rounded-xl transition-all hover:scale-[1.02]"
                   onClick={() => setShowCompletionModal(true)}
@@ -180,7 +231,13 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
               <div className="flex gap-3 mt-2">
                 <Button variant="outline" className="flex-1 rounded-xl border-gray-200" onClick={onClose}>Close</Button>
                 {booking.status === 'COMPLETED' && (
-                  <Button className="flex-1 bg-gray-900 hover:bg-black rounded-xl text-white">Download Invoice</Button>
+                  <Button 
+                    className="flex-1 bg-gray-900 hover:bg-black rounded-xl text-white"
+                    onClick={() => setShowInvoiceModal(true)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Invoice
+                  </Button>
                 )}
               </div>
             </div>
@@ -206,6 +263,14 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
           bookingId={booking.id}
           providerId={booking.providerId}
           providerName={booking.provider?.businessName || 'Provider'}
+        />
+      )}
+
+      {showInvoiceModal && (
+        <InvoicePreviewModal
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          bookingId={booking.id}
         />
       )}
     </>

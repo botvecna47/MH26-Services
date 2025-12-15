@@ -67,73 +67,178 @@ The platform is built on a high-performance monolithic architecture that emphasi
 *   PostgreSQL (Local or Cloud like Neon/Aiven)
 *   npm (v9+)
 
-### Installation
+### Quick Start (5 Minutes)
 
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/botvecna47/MH26-Services.git
-    cd MH26-Services
-    ```
+```bash
+# Clone and enter the project
+git clone https://github.com/botvecna47/MH26-Services.git
+cd MH26-Services
 
-2.  **Backend Setup**
-    ```bash
-    cd server
-    npm install
-    ```
-    *   Create a `.env` file in `server/` (refer to `.env.example`).
-    *   Set `DATABASE_URL` to your PostgreSQL connection string.
-    *   Set `CORS_ORIGIN` to your frontend URL (or `*` for dev).
+# Install all dependencies (frontend + backend)
+npm run install:all
 
-    **Initialize Database:**
-    ```bash
-    npx prisma migrate deploy  # Apply schema
-    npm run seed               # Populate with initial data
-    ```
-    **Start Server:**
-    ```bash
-    npm run dev
-    ```
+# Start both frontend and backend
+npm run dev
+```
 
-3.  **Frontend Setup**
-    ```bash
-    cd frontend
-    npm install
-    ```
-    *   Create a `.env` file in `frontend/` (refer to `frontend/.env.example`).
-    *   Set `VITE_API_URL` to point to your backend (e.g., `http://localhost:5000/api`).
-    *   Set `VITE_SOCKET_URL` to point to your backend (e.g., `http://localhost:5000`).
+Then open **http://localhost:5173** in your browser.
 
-    **Start Interface:**
-    ```bash
-    npm run dev
-    ```
+### Manual Installation
 
----
+#### 1. Backend Setup
 
-## Deployment Guide (Safety & Best Practices)
+```bash
+cd server
+npm install
+```
 
-To safely host this application, follow the **Split Deployment Strategy** due to the use of WebSockets (Socket.io).
+Create `.env` file in `server/` (copy from `.env.example`):
 
-### 1. Database (PostgreSQL)
-*   **Host**: Use a managed cloud provider like **Neon.tech**, **Supabase**, or **Aiven**.
-*   **Safety Check**: Ensure your database is not accessible to the public internet without a password. Use strong passwords in `DATABASE_URL`.
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?schema=public"
+JWT_ACCESS_SECRET="your-32-char-secret"
+JWT_REFRESH_SECRET="your-32-char-secret"
+CORS_ORIGIN="http://localhost:5173"
+FRONTEND_URL="http://localhost:5173"
+```
 
-### 2. Backend (Render / Railway)
-*   **Host**: Use **Render** or **Railway**.
-*   **Why?**: Vercel/Netlify are "Serverless" and **kill connections**, breaking Socket.io. Render/Railway keep the server alive.
-*   **Environment Variables**:
-    *   `NODE_ENV`: Set to `production`.
-    *   `CORS_ORIGIN`: Set STRICTLY to your frontend domain (e.g., `https://my-frontend.vercel.app`). Do not use `*` in production.
-    *   `JWT_SECRET`: Use a long, complex random string.
+Initialize database and seed:
 
-### 3. Frontend (Vercel)
-*   **Host**: **Vercel** is recommended.
-*   **Configuration**:
-    *   Set `VITE_API_URL` to your Backend URL.
-    *   Set `VITE_SOCKET_URL` to your Backend URL.
-*   **Safety Check**: The frontend contains **no secrets**. All strict logic (payments, data validation) must happen on the backend.
+```bash
+npx prisma db push      # Create tables
+npm run seed            # Seed demo data
+npm run dev             # Start server on :5000
+```
+
+#### 2. Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev             # Start on :5173
+```
 
 ---
 
-**MH26 Services Platform**
+## 🔑 Demo Credentials
+
+After seeding, use these accounts to test:
+
+### Admin
+| Email | Password |
+|-------|----------|
+| `admin@mh26services.com` | `admin123` |
+
+### Providers (by Category)
+Password format: `{Category}@123`
+
+| Business | Email | Password |
+|----------|-------|----------|
+| Sameer Plumbers | `sameer.plumbers@gmail.com` | `Plumbing@123` |
+| Fr Electricals | `fr.electricals@gmail.com` | `Electrical@123` |
+| Signate Beauty Salon | `signate.beauty@gmail.com` | `Salon@123` |
+| Siddhi Mangal Karyalay | `siddhi.mangal@gmail.com` | `Catering@123` |
+| Rama Sales | `rama.sales@gmail.com` | `Carpentry@123` |
+| Sidh Home Cleaning | `sidh.homecleaning@gmail.com` | `Cleaning@123` |
+
+### Customers
+Register at `/auth` with any email to create a customer account.
+
+---
+
+## 🧪 Testing Features
+
+### Provider Booking Flow
+1. **Customer Login** → Browse Services → Book a service
+2. **Provider Login** → Dashboard → View PENDING booking → **Accept/Reject**
+3. **After Accepting** → Click "Mark Job Complete" → OTP is sent to customer
+4. **Customer** sees OTP in their booking details
+5. **Provider** enters OTP → Booking becomes COMPLETED
+6. **Customer** can leave a review
+
+### Admin Features
+1. **Admin Panel** (`/admin`) → View all providers, users, bookings
+2. **Add Provider** → Creates account + sends credentials email
+3. **Approve/Reject** pending provider applications
+4. **Ban/Unban** users
+
+---
+
+## 📧 Email Configuration (Optional)
+
+For emails to actually send (OTP, credentials), configure in `server/.env`:
+
+### Option 1: Resend (Recommended - Works on Render)
+```env
+RESEND_API_KEY="re_xxxxxxxx"
+RESEND_FROM_EMAIL="MH26 Services <noreply@yourdomain.com>"
+```
+
+### Option 2: SMTP (Gmail)
+```env
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"  # Generate at Google Account > Security > App Passwords
+```
+
+> **Note**: Without email config, OTPs and credentials are logged to the **server console** for testing.
+
+---
+
+## Deployment Guide
+
+### Database (PostgreSQL)
+*   **Recommended**: [Aiven.io](https://aiven.io), [Neon.tech](https://neon.tech), [Supabase](https://supabase.com)
+*   Use strong passwords in `DATABASE_URL`
+
+### Backend (Render / Railway)
+*   **Why not Vercel?** Socket.io requires persistent connections; serverless kills them.
+*   Set `NODE_ENV=production`
+*   Set `CORS_ORIGIN` to your frontend domain exactly
+
+### Frontend (Vercel)
+*   Set `VITE_API_URL` and `VITE_SOCKET_URL` to your backend URL
+
+---
+
+## Project Structure
+
+```
+MH26-Services/
+├── frontend/           # React + Vite + TypeScript
+│   ├── src/
+│   │   ├── api/        # API hooks (React Query)
+│   │   ├── components/ # UI Components
+│   │   ├── context/    # Auth, Socket, Notifications
+│   │   └── types/      # TypeScript types
+│   └── .env.example
+├── server/             # Express + TypeScript
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── middleware/
+│   │   └── utils/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   └── .env.example
+└── package.json        # Root scripts for monorepo
+```
+
+---
+
+## Recent Updates
+
+- ✅ Provider Accept/Reject booking buttons
+- ✅ Invoice view and download
+- ✅ OTP-based booking completion
+- ✅ Admin panel provider creation with email credentials
+- ✅ Provider self-registration with email OTP
+
+---
+
+**MH26 Services Platform**  
 *Digital Solutions for Local Needs.*
+
