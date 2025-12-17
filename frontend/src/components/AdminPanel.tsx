@@ -21,13 +21,15 @@ import {
   XCircle,
   Eye,
   LogOut,
-  Download, // Added
-  Edit, // Added
+  Download,
+  Edit,
   Tag, 
   Plus,
   Trash2,
   X,
-  Check
+  Check,
+  Package,
+  Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 // import { useNotifications } from '../context/NotificationContext';
@@ -49,7 +51,10 @@ import {
   useAdminBookings,
   useCreateCategory,
   useUpdateCategory,
-  useDeleteCategory
+  useDeleteCategory,
+  usePendingServices,
+  useApproveService,
+  useRejectService
 } from '../api/admin';
 import { useCategories } from '../api/categories'; // Added
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -92,6 +97,9 @@ export default function AdminPanel() {
   const { data: allProvidersData } = useAllProviders({ limit: 50 });
   const { data: usersData } = useAdminUsers({ limit: 50 });
   const { data: bookingsData } = useAdminBookings({ status: bookingFilter === 'all' ? undefined : bookingFilter.toUpperCase() });
+  const { data: pendingServicesData } = usePendingServices();
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData || [];
 
   // Mutations
   const approveProviderMutation = useApproveProvider();
@@ -100,6 +108,9 @@ export default function AdminPanel() {
   const unsuspendProviderMutation = useUnsuspendProvider();
   const banUserMutation = useBanUser();
   const unbanUserMutation = useUnbanUser();
+  const approveServiceMutation = useApproveService();
+  const rejectServiceMutation = useRejectService();
+  const createCategoryMutation = useCreateCategory();
 
   if (!isAdmin) {
     return (
@@ -112,9 +123,9 @@ export default function AdminPanel() {
     );
   }
 
-  const handleApproveProvider = async (providerId: string) => {
+  const handleApproveProvider = async (providerId: string, category?: string) => {
     try {
-      await approveProviderMutation.mutateAsync(providerId);
+      await approveProviderMutation.mutateAsync({ id: providerId, category });
       toast.success('Provider approved successfully');
     } catch (error) {
       toast.error('Failed to approve provider');
@@ -184,6 +195,7 @@ export default function AdminPanel() {
   const pendingProviders = pendingProvidersData?.data || [];
   const allProviders = allProvidersData?.data || [];
   const recentBookings = analytics?.recentBookings || [];
+  const pendingServices = pendingServicesData?.data || [];
 
   // Derived Stats
   const platformStats = analytics?.stats || {
@@ -267,6 +279,16 @@ export default function AdminPanel() {
               Providers
               {pendingProviders.length > 0 && (
                 <span className="ml-2 bg-[#ff6b35] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">{pendingProviders.length}</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="services"
+              className="flex-1 py-3 text-sm font-medium text-gray-600 rounded-xl transition-all data-[state=active]:bg-white data-[state=active]:text-[#ff6b35] data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-gray-100 hover:bg-gray-50/80"
+            >
+              <Package className="w-4 h-4 mr-2" />
+              Services
+              {pendingServices.length > 0 && (
+                <span className="ml-2 bg-[#ff6b35] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">{pendingServices.length}</span>
               )}
             </TabsTrigger>
             <TabsTrigger
@@ -464,7 +486,6 @@ export default function AdminPanel() {
 
                           <div className="flex gap-2 pt-2 border-t border-gray-100 flex-wrap">
                             <Button size="sm" variant="outline" className="w-full mb-2" onClick={() => {
-                              // Map API provider to VerificationProvider shape
                               const mappedProvider: VerificationProvider = {
                                 id: provider.id,
                                 businessName: provider.businessName,
@@ -472,7 +493,7 @@ export default function AdminPanel() {
                                 documents: provider.documents?.map((d: any) => ({
                                   id: d.id,
                                   type: d.type,
-                                  url: d.fileUrl || d.url // Handle both cases for safety
+                                  url: d.fileUrl || d.url
                                 })) || []
                               };
                               setSelectedVerificationProvider(mappedProvider);
@@ -480,14 +501,66 @@ export default function AdminPanel() {
                               <Eye className="h-4 w-4 mr-2" />
                               Review Docs
                             </Button>
-                            <div className="flex gap-2 w-full">
-                              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => handleApproveProvider(provider.id)}>
-                                Approve
-                              </Button>
-                              <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => handleRejectProvider(provider.id)}>
-                                Reject
-                              </Button>
-                            </div>
+                            
+                            {/* Check if category is custom (not in existing categories) */}
+                            {(() => {
+                              const existingCategories = categories?.map((c: any) => c.name.toLowerCase()) || [];
+                              const isCustomCategory = !existingCategories.includes(provider.primaryCategory?.toLowerCase());
+                              
+                              if (isCustomCategory && provider.primaryCategory) {
+                                return (
+                                  <div className="w-full space-y-2">
+                                    <div className="bg-amber-50 border border-amber-200 p-2 rounded-lg text-sm">
+                                      <p className="text-amber-800 font-medium">Custom Category: <span className="font-bold">{provider.primaryCategory}</span></p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button 
+                                        size="sm" 
+                                        className="flex-1 bg-blue-600 hover:bg-blue-700" 
+                                        onClick={async () => {
+                                          // Create new category and approve with it
+                                          try {
+                                            await createCategoryMutation.mutateAsync({
+                                              name: provider.primaryCategory,
+                                              slug: provider.primaryCategory.toLowerCase().replace(/\s+/g, '-'),
+                                              icon: '📦',
+                                            });
+                                            await handleApproveProvider(provider.id);
+                                            toast.success(`Category "${provider.primaryCategory}" created!`);
+                                          } catch (error) {
+                                            toast.error('Failed to create category');
+                                          }
+                                        }}
+                                      >
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        Create Category
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        className="flex-1 bg-gray-600 hover:bg-gray-700" 
+                                        onClick={() => handleApproveProvider(provider.id, 'Other')}
+                                      >
+                                        Assign to Other
+                                      </Button>
+                                    </div>
+                                    <Button size="sm" variant="outline" className="w-full text-red-600 hover:bg-red-50" onClick={() => handleRejectProvider(provider.id)}>
+                                      Reject
+                                    </Button>
+                                  </div>
+                                );
+                              }
+                              
+                              return (
+                                <div className="flex gap-2 w-full">
+                                  <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => handleApproveProvider(provider.id)}>
+                                    Approve
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:bg-red-50" onClick={() => handleRejectProvider(provider.id)}>
+                                    Reject
+                                  </Button>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </CardContent>
                       </Card>
@@ -778,6 +851,91 @@ export default function AdminPanel() {
             </div>
           </TabsContent>
 
+
+          {/* Services Tab - Pending Services Verification */}
+          <TabsContent value="services" className="space-y-6">
+            <Card className="border-0 shadow-sm bg-white">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-lg">Pending Services</CardTitle>
+                    <p className="text-sm text-gray-500 mt-1">Review and approve services submitted by providers</p>
+                  </div>
+                  <Badge className="bg-orange-100 text-[#ff6b35]">
+                    {pendingServices.length} pending
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {pendingServices.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No pending services to review</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingServices.map((service: any) => (
+                      <div key={service.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-gray-900">{service.title}</h4>
+                              <Badge className="bg-yellow-100 text-yellow-700">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending Review
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{service.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span><strong>Price:</strong> ₹{service.price}</span>
+                              <span><strong>Duration:</strong> {service.durationMin} min</span>
+                              <span><strong>Provider:</strong> {service.provider?.businessName}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  await approveServiceMutation.mutateAsync(service.id);
+                                  toast.success('Service approved and now visible to customers');
+                                } catch (error) {
+                                  toast.error('Failed to approve service');
+                                }
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async () => {
+                                const reason = prompt('Enter reason for rejection:');
+                                if (reason) {
+                                  try {
+                                    await rejectServiceMutation.mutateAsync({ id: service.id, reason });
+                                    toast.success('Service rejected');
+                                  } catch (error) {
+                                    toast.error('Failed to reject service');
+                                  }
+                                }
+                              }}
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="categories">
             <div className="space-y-6">

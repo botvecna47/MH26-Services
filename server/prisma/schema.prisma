@@ -1,4 +1,3 @@
-// MH26 Services Marketplace Database Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,84 +8,86 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  name          String
-  email         String   @unique
-  phone         String?
-  passwordHash  String
-  avatarUrl     String?
-  role          UserRole @default(CUSTOMER)
-  emailVerified Boolean  @default(false)
-  isBanned      Boolean  @default(false)
-  address       String?
-  city          String?
-  walletBalance Decimal  @default(0)
-  totalSpending Decimal  @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  bookings               Booking[]
-  transactions           Transaction[]
-  messagesSent           Message[]               @relation("messages_sent")
-  messagesReceived       Message[]               @relation("messages_received")
-  refreshTokens          RefreshToken[]
-  savedProviders         SavedProvider[]
-  reviews                Review[]
-  auditLogs              AuditLog[]              @relation("userAudit")
-  notifications          Notification[]
-  reports                Report[]
-  provider               Provider?
-  emailVerificationToken EmailVerificationToken?
-  passwordResetTokens    PasswordResetToken[]
+  id                     String                  @id @default(uuid())
+  name                   String
+  email                  String                  @unique
+  phone                  String?
+  passwordHash           String
+  avatarUrl              String?
+  role                   UserRole                @default(CUSTOMER)
+  emailVerified          Boolean                 @default(false)
+  isBanned               Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  address                String?
+  city                   String?
+  totalSpending          Decimal                 @default(0)
+  walletBalance          Decimal                 @default(0)
   reviewedAppeals        Appeal[]                @relation("AppealReviewer")
   appeals                Appeal[]                @relation("UserAppeals")
+  auditLogs              AuditLog[]              @relation("userAudit")
+  bookings               Booking[]
+  emailVerificationToken EmailVerificationToken?
+  messagesReceived       Message[]               @relation("messages_received")
+  messagesSent           Message[]               @relation("messages_sent")
+  notifications          Notification[]
+  passwordResetTokens    PasswordResetToken[]
+  provider               Provider?
+  refreshTokens          RefreshToken[]
+  reports                Report[]
+  reviews                Review[]
+  savedProviders         SavedProvider[]
+  transactions           Transaction[]
+  verifiedProviders      Provider[]              @relation("ProviderVerifier")
 
   @@index([email])
   @@index([phone])
   @@index([role])
 }
 
-enum UserRole {
-  CUSTOMER
-  PROVIDER
-  ADMIN
-}
-
 model Provider {
-  id                String         @id @default(uuid())
-  userId            String         @unique
+  id                String             @id @default(uuid())
+  userId            String             @unique
   businessName      String
   description       String?
   primaryCategory   String
   secondaryCategory String?
   address           String
   city              String
-  state             String         @default("Maharashtra")
+  state             String             @default("Maharashtra")
   pincode           String
   lat               Float?
   lng               Float?
-  averageRating     Float?         @default(0)
-  totalRatings      Int            @default(0)
-  totalRevenue      Decimal        @default(0)
-  status            ProviderStatus @default(PENDING)
-  qrCodeUrl         String? // URL to provider's payment QR code
-  serviceRadius     Int            @default(10) // In km
-  availability      Json? // e.g. { "mon": ["09:00-17:00"] }
-  gallery           String[]       @default([]) // Array of image URLs
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-
-  // Relations
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  documents ProviderDocument[]
-  services  Service[]
-  bookings  Booking[]
-  payouts   Payout[]
-  reviews   Review[]
-  savedBy   SavedProvider[]
-  reports   Report[]
-  appeals   Appeal[]
+  averageRating     Float?             @default(0)
+  totalRatings      Int                @default(0)
+  status            ProviderStatus     @default(PENDING)
+  qrCodeUrl         String?
+  gallery           String[]           @default([])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  availability      Json?
+  serviceRadius     Int                @default(10)
+  totalRevenue      Decimal            @default(0)
+  aadharPanUrl      String?
+  adminNotes        String?
+  insuranceInfo     String?
+  portfolioUrls     String[]           @default([])
+  rejectionReason   String?
+  socialMediaLinks  Json?
+  termsAccepted     Boolean            @default(false)
+  termsAcceptedAt   DateTime?
+  verifiedById      String?            // Admin who verified
+  verifiedAt        DateTime?          // When verification happened
+  verifiedBy        User?              @relation("ProviderVerifier", fields: [verifiedById], references: [id])
+  appeals           Appeal[]
+  bookings          Booking[]
+  payouts           Payout[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents         ProviderDocument[]
+  reports           Report[]
+  reviews           Review[]
+  savedBy           SavedProvider[]
+  services          Service[]
 
   @@index([city, primaryCategory])
   @@index([status])
@@ -94,17 +95,10 @@ model Provider {
   @@index([lat, lng])
 }
 
-enum ProviderStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  SUSPENDED
-}
-
 model ProviderDocument {
   id         String   @id @default(uuid())
   providerId String
-  type       String // 'aadhar', 'trade_license', 'gst', 'shop_photo', etc.
+  type       String
   url        String
   filename   String
   uploadedAt DateTime @default(now())
@@ -114,20 +108,21 @@ model ProviderDocument {
 }
 
 model Service {
-  id                String    @id @default(uuid())
+  id                String        @id @default(uuid())
   providerId        String
-  name              String
   description       String?
-  category          String
-  basePrice         Float
-  priceUnit         String    @default("per service")
-  estimatedDuration Int // in minutes
   imageUrl          String?
-  isActive          Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  provider          Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  basePrice         Float
+  category          String
+  estimatedDuration Int
+  isActive          Boolean       @default(true)
+  name              String
+  priceUnit         String        @default("per service")
+  status            ServiceStatus @default(PENDING)
   bookings          Booking[]
+  provider          Provider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, name])
   @@index([providerId])
@@ -135,31 +130,29 @@ model Service {
 }
 
 model Booking {
-  id               String        @id @default(uuid())
+  id               String               @id @default(uuid())
   userId           String
   providerId       String
   serviceId        String
   scheduledAt      DateTime
-  status           BookingStatus @default(PENDING)
-  paymentStatus    PaymentStatus @default(PENDING) // Track payment status independently
+  status           BookingStatus        @default(PENDING)
+  paymentStatus    PaymentStatus        @default(PENDING)
   totalAmount      Decimal
   platformFee      Decimal
   providerEarnings Decimal
   address          String?
-  city             String? // Added for structured address
-  pincode          String? // Added for structured address
+  city             String?
+  pincode          String?
   requirements     String?
-  completionOtp    String? // OTP for service completion verification
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  // Relations
-  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider     Provider             @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  service      Service              @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  cancellation BookingCancellation?
-  transaction  Transaction?
-  review       Review?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  completionOtp    String?
+  provider         Provider             @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service          Service              @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cancellation     BookingCancellation?
+  review           Review?
+  transaction      Transaction?
 
   @@index([userId, status])
   @@index([providerId, scheduledAt])
@@ -169,18 +162,10 @@ model Booking {
   @@index([createdAt])
 }
 
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-  REJECTED
-}
-
 model BookingCancellation {
   id          String   @id @default(uuid())
   bookingId   String   @unique
-  cancelledBy String // userId
+  cancelledBy String
   reason      String?
   createdAt   DateTime @default(now())
   booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
@@ -199,28 +184,13 @@ model Transaction {
   metadata         Json?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  booking          Booking?          @relation(fields: [bookingId], references: [id])
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([bookingId])
   @@index([status])
   @@index([gatewayOrderId])
-}
-
-enum TransactionStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
 }
 
 model Message {
@@ -232,9 +202,8 @@ model Message {
   attachments    Json?
   read           Boolean  @default(false)
   createdAt      DateTime @default(now())
-
-  sender   User @relation("messages_sent", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("messages_received", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver       User     @relation("messages_received", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender         User     @relation("messages_sent", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
   @@index([senderId])
@@ -251,8 +220,7 @@ model Notification {
   payload   Json?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, read, createdAt])
   @@index([type])
@@ -263,14 +231,13 @@ model Review {
   bookingId  String?  @unique
   providerId String
   userId     String
-  rating     Int // 1-5
+  rating     Int
   comment    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
-  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  booking  Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  booking    Booking? @relation(fields: [bookingId], references: [id])
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([providerId])
   @@index([userId])
@@ -289,20 +256,12 @@ model Report {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   resolvedAt  DateTime?
-
-  reporter User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
-  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider    Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@index([providerId])
   @@index([status])
   @@index([reporterId])
-}
-
-enum ReportStatus {
-  OPEN
-  INVESTIGATING
-  RESOLVED
-  DISMISSED
 }
 
 model RefreshToken {
@@ -312,8 +271,7 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime  @default(now())
   revokedAt DateTime?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -326,8 +284,7 @@ model EmailVerificationToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([expiresAt])
@@ -340,8 +297,7 @@ model PasswordResetToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   used      Boolean  @default(false)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([expiresAt])
@@ -359,8 +315,7 @@ model AuditLog {
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
-
-  user User? @relation("userAudit", fields: [userId], references: [id], onDelete: SetNull)
+  user      User?    @relation("userAudit", fields: [userId], references: [id])
 
   @@index([userId])
   @@index([tableName, recordId])
@@ -376,18 +331,10 @@ model Payout {
   metadata   Json?
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-
-  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider   Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId])
   @@index([status])
-}
-
-enum PayoutStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
 }
 
 model SavedProvider {
@@ -395,9 +342,8 @@ model SavedProvider {
   userId     String
   providerId String
   createdAt  DateTime @default(now())
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, providerId])
   @@index([userId])
@@ -416,29 +362,14 @@ model Appeal {
   reviewedAt DateTime?
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-
-  user     User?     @relation("UserAppeals", fields: [userId], references: [id], onDelete: Cascade)
-  provider Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  reviewer User?     @relation("AppealReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  provider   Provider?    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  reviewer   User?        @relation("AppealReviewer", fields: [reviewedBy], references: [id])
+  user       User?        @relation("UserAppeals", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([providerId])
   @@index([status])
   @@index([type])
-}
-
-enum AppealType {
-  UNBAN_REQUEST
-  REJECTION_APPEAL
-  SUSPENSION_APPEAL
-  OTHER
-}
-
-enum AppealStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  UNDER_REVIEW
 }
 
 model Category {
@@ -453,4 +384,73 @@ model Category {
   updatedAt   DateTime @updatedAt
 
   @@index([slug])
+}
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum ProviderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ServiceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AppealType {
+  UNBAN_REQUEST
+  REJECTION_APPEAL
+  SUSPENSION_APPEAL
+  OTHER
+}
+
+enum AppealStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  UNDER_REVIEW
 }

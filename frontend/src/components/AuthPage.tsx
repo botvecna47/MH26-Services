@@ -17,6 +17,7 @@ import {
   AlertCircle,
   ArrowRight,
   Loader2,
+  MapPin,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -57,6 +58,7 @@ export default function AuthPage() {
     confirmPassword: '',
     name: '',
     phone: '',
+    address: '',
     businessName: '',
     otp: '',
   });
@@ -116,6 +118,10 @@ export default function AuthPage() {
       } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
         newErrors.phone = 'Invalid phone format (10 digits starting with 6-9)';
       }
+      // Address required only for customer signup, not provider join
+      if (mode === 'signup' && (!formData.address || formData.address.trim().length < 5)) {
+        newErrors.address = 'Address is required (min 5 characters)';
+      }
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
       }
@@ -171,6 +177,14 @@ export default function AuthPage() {
         setUser(response.user);
         
         toast.success('Welcome back!');
+        
+        // Check if provider needs to complete/resubmit onboarding
+        if ((response.user as any).requiresOnboarding) {
+          toast.info('Please complete your provider application.');
+          navigate('/provider-onboarding?step=3');
+          return;
+        }
+        
         // Check if admin
         if (response.user.role === 'ADMIN') {
             navigate('/admin');
@@ -184,6 +198,7 @@ export default function AuthPage() {
             email: formData.email,
             phone: formData.phone,
             password: formData.password,
+            address: formData.address,
             role: 'CUSTOMER'
         });
         
@@ -530,6 +545,26 @@ export default function AuthPage() {
                         />
                       </div>
                       {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                    </div>
+                  )}
+
+                  {/* Address (for signup only - not join since providers have business address) */}
+                  {mode === 'signup' && (
+                    <div className="space-y-2">
+                      <label className="text-sm text-gray-700">Address</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <Input
+                          type="text"
+                          placeholder="Your address in Nanded"
+                          value={formData.address}
+                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          className={`pl-10 h-11 ${errors.address ? 'border-red-500' : ''}`}
+                          autoComplete="street-address"
+                          name="address"
+                        />
+                      </div>
+                      {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
                     </div>
                   )}
 

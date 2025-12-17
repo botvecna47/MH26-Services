@@ -2,74 +2,66 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useProvider, useUpdateProvider } from '../api/providers';
 import { Button } from './ui/button';
-import { Clock, Save, Loader } from 'lucide-react';
+import { Clock, Save, Loader2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 /**
  * Type for Availability Schedule
- * Example: { "mon": ["09:00-17:00"], "tue": [] }
+ * Format: { "monday": { enabled: true, start: "09:00", end: "17:00" }, ... }
  */
-type Schedule = Record<string, string[]>;
+interface DaySchedule {
+  enabled: boolean;
+  start: string;
+  end: string;
+}
+
+type Schedule = Record<string, DaySchedule>;
 
 const DAYS = [
-    { key: 'mon', label: 'Monday' },
-    { key: 'tue', label: 'Tuesday' },
-    { key: 'wed', label: 'Wednesday' },
-    { key: 'thu', label: 'Thursday' },
-    { key: 'fri', label: 'Friday' },
-    { key: 'sat', label: 'Saturday' },
-    { key: 'sun', label: 'Sunday' },
+    { key: 'monday', label: 'Monday', short: 'Mon' },
+    { key: 'tuesday', label: 'Tuesday', short: 'Tue' },
+    { key: 'wednesday', label: 'Wednesday', short: 'Wed' },
+    { key: 'thursday', label: 'Thursday', short: 'Thu' },
+    { key: 'friday', label: 'Friday', short: 'Fri' },
+    { key: 'saturday', label: 'Saturday', short: 'Sat' },
+    { key: 'sunday', label: 'Sunday', short: 'Sun' },
 ];
+
+const DEFAULT_SCHEDULE: Schedule = {
+  monday: { enabled: true, start: '09:00', end: '18:00' },
+  tuesday: { enabled: true, start: '09:00', end: '18:00' },
+  wednesday: { enabled: true, start: '09:00', end: '18:00' },
+  thursday: { enabled: true, start: '09:00', end: '18:00' },
+  friday: { enabled: true, start: '09:00', end: '18:00' },
+  saturday: { enabled: true, start: '10:00', end: '16:00' },
+  sunday: { enabled: false, start: '09:00', end: '17:00' },
+};
 
 export default function ProviderSchedulePage() {
     const { user } = useUser();
-    // Fetch provider data to get current availability
-    // Assuming useProvider(user.id) logic handles logic. user.id is User ID. Provider ID needed?
-    // providersApi.getProvider(id) usually expects Provider ID. 
-    // But we might need to find provider by User ID first or rely on context if provider info is there.
-    // Let's assume user.id is cleaner for now or fetch by user.
-    // Actually, `useProvider` hook in `providers.ts` takes an ID. 
-    // We should probably rely on `useUser` expanding to include `providerId` or similar.
-    // For now, let's assume we can get it. If not, we fetch /providers?userId=... or assume user has it.
-    // Based on `useUser`, `isProvider` is true. `user` object might not have `providerId`.
-    // We might need to fetch "my provider profile".
-    
-    // Workaround: If `useUser` doesn't have provider details, we might need to fetch it.
-    // But let's check `providers.ts`. There isn't a "getMe" for provider.
-    // We can filter `useProviders` or just assume we have the ID. 
-    // Let's try to assume we can get it from the user context or a new API call.
-    // For this specific file, I'll assume we can pass the provider ID or fetch it.
-    
-    const { data: provider, isLoading } = useProvider(user?.id || ''); // This is likely wrong if ID is provider ID, not user ID.
-    // Checking `providerController.getById` -> `where: { id }`.
-    // Checking `providerController.create` -> `userId` is used.
-    // Checking `schema` -> Provider has `id` (UUID) and `userId` (String).
-    // So we need Provider ID.
-    // However, `useUser` hook might not expose it.
-    // I will add a fetch to find my provider or assume specific prop.
-    
-    // Temporary Hack: In a real app, UserContext should have providerId.
-    // For now, I will create a simpler UI and assume we can patch `availability`.
-    // Or I can add a `getMyProvider` endpoint.
-    
-    const [schedule, setSchedule] = useState<Schedule>({});
+    const { data: provider, isLoading } = useProvider(user?.id || '');
+    const [schedule, setSchedule] = useState<Schedule>(DEFAULT_SCHEDULE);
     const updateProviderMutation = useUpdateProvider();
 
     useEffect(() => {
         if (provider?.availability) {
-            setSchedule(provider.availability as Schedule);
-        } else {
-             // Default 9-5
-             const defaultSchedule: Schedule = {};
-             DAYS.forEach(d => defaultSchedule[d.key] = ['09:00-17:00']);
-             setSchedule(defaultSchedule);
+            // Merge with defaults to ensure all days exist
+            const savedSchedule = provider.availability as unknown as Schedule;
+            setSchedule({ ...DEFAULT_SCHEDULE, ...savedSchedule });
         }
     }, [provider]);
 
-    const handleTimeChange = (day: string, value: string) => {
+    const handleToggleDay = (day: string) => {
         setSchedule(prev => ({
             ...prev,
-            [day]: value ? [value] : []
+            [day]: { ...prev[day], enabled: !prev[day].enabled }
+        }));
+    };
+
+    const handleTimeChange = (day: string, field: 'start' | 'end', value: string) => {
+        setSchedule(prev => ({
+            ...prev,
+            [day]: { ...prev[day], [field]: value }
         }));
     };
 
@@ -78,54 +70,123 @@ export default function ProviderSchedulePage() {
         try {
             await updateProviderMutation.mutateAsync({
                 id: provider.id,
-                data: { availability: schedule }
+                data: { availability: schedule as unknown as Record<string, string[]> }
             });
-            toast.success('Schedule updated successfully');
+            toast.success('Availability saved successfully!');
         } catch (error) {
-            toast.error('Failed to update schedule');
+            toast.error('Failed to save availability');
             console.error(error);
         }
     };
 
-    if (isLoading) return <div className="p-8 text-center">Loading schedule...</div>;
-    if (!provider) return <div className="p-8 text-center">Provider profile not found.</div>;
+    if (isLoading) {
+        return (
+            <div className="p-8 text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                <p className="mt-2 text-gray-500">Loading schedule...</p>
+            </div>
+        );
+    }
+    
+    if (!provider) {
+        return (
+            <div className="p-8 text-center bg-red-50 rounded-lg">
+                <p className="text-red-700">Provider profile not found. Please contact support.</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6 max-w-2xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[#ff6b35]" />
-                    Weekly Availability
-                </h2>
-                <Button onClick={handleSave} disabled={updateProviderMutation.isPending}>
-                    {updateProviderMutation.isPending ? <Loader className="w-4 h-4 animate-spin mr-2"/> : <Save className="w-4 h-4 mr-2"/>}
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-[#ff6b35]" />
+                        Weekly Availability
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">Set your working hours for each day</p>
+                </div>
+                <Button 
+                    onClick={handleSave} 
+                    disabled={updateProviderMutation.isPending}
+                    className="bg-[#ff6b35] hover:bg-[#ff5722]"
+                >
+                    {updateProviderMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2"/>
+                    ) : (
+                        <Save className="w-4 h-4 mr-2"/>
+                    )}
                     Save Changes
                 </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {DAYS.map((day) => (
-                    <div key={day.key} className="flex items-center gap-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="w-32 font-medium text-gray-700">{day.label}</div>
-                        <div className="flex-1">
-                             <select 
-                                className="w-full border-gray-300 rounded-md shadow-sm focus:border-[#ff6b35] focus:ring-[#ff6b35]"
-                                value={schedule[day.key]?.[0] || ''}
-                                onChange={(e) => handleTimeChange(day.key, e.target.value)}
-                             >
-                                 <option value="">Unavailable</option>
-                                 <option value="09:00-17:00">09:00 AM - 05:00 PM</option>
-                                 <option value="08:00-16:00">08:00 AM - 04:00 PM</option>
-                                 <option value="10:00-18:00">10:00 AM - 06:00 PM</option>
-                                 <option value="00:00-23:59">24 Hours</option>
-                             </select>
+                    <div 
+                        key={day.key} 
+                        className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
+                            schedule[day.key]?.enabled 
+                                ? 'bg-white border-gray-200 hover:border-[#ff6b35]/30' 
+                                : 'bg-gray-50 border-gray-100'
+                        }`}
+                    >
+                        {/* Day Toggle */}
+                        <button
+                            onClick={() => handleToggleDay(day.key)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                                schedule[day.key]?.enabled
+                                    ? 'bg-green-100 text-green-600'
+                                    : 'bg-gray-200 text-gray-400'
+                            }`}
+                        >
+                            {schedule[day.key]?.enabled ? (
+                                <Check className="w-5 h-5" />
+                            ) : (
+                                <X className="w-5 h-5" />
+                            )}
+                        </button>
+
+                        {/* Day Label */}
+                        <div className="w-28">
+                            <span className={`font-medium ${
+                                schedule[day.key]?.enabled ? 'text-gray-900' : 'text-gray-400'
+                            }`}>
+                                {day.label}
+                            </span>
                         </div>
+
+                        {/* Time Inputs */}
+                        {schedule[day.key]?.enabled ? (
+                            <div className="flex items-center gap-2 flex-1">
+                                <input
+                                    type="time"
+                                    value={schedule[day.key]?.start || '09:00'}
+                                    onChange={(e) => handleTimeChange(day.key, 'start', e.target.value)}
+                                    className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#ff6b35]/20 focus:border-[#ff6b35] outline-none"
+                                />
+                                <span className="text-gray-400">to</span>
+                                <input
+                                    type="time"
+                                    value={schedule[day.key]?.end || '18:00'}
+                                    onChange={(e) => handleTimeChange(day.key, 'end', e.target.value)}
+                                    className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#ff6b35]/20 focus:border-[#ff6b35] outline-none"
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex-1 text-gray-400 text-sm italic">
+                                Not available
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
-             <p className="mt-4 text-sm text-gray-500">
-                Note: Bookings outside these hours will be automatically rejected or hidden (future feature).
-            </p>
+
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                    <strong>Tip:</strong> Customers can only book during your available hours. 
+                    Click the circle to toggle each day on/off.
+                </p>
+            </div>
         </div>
     );
 }

@@ -94,6 +94,16 @@ async function main() {
         isActive: true,
       },
     }),
+    prisma.category.create({
+      data: {
+        name: 'Other',
+        slug: 'other',
+        description: 'Miscellaneous services that do not fit other categories',
+        icon: '📦',
+        imageUrl: '',
+        isActive: true,
+      },
+    }),
   ]);
   console.log(`✅ Created ${categories.length} categories\n`);
 
@@ -448,6 +458,8 @@ async function main() {
         passwordHash: password,
         role: UserRole.PROVIDER,
         emailVerified: true,
+        address: providerData.address,
+        city: 'Nanded',
       },
     });
 
@@ -466,7 +478,7 @@ async function main() {
         lng: 77.3210 + (Math.random() - 0.5) * 0.1,
         status: 'APPROVED',
         qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider',
-        serviceRadius: 15,
+        serviceRadius: 6,
         availability: {
           mon: ["09:00-18:00"],
           tue: ["09:00-18:00"],

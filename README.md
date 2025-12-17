@@ -231,11 +231,32 @@ MH26-Services/
 
 ## Recent Updates
 
+### December 2024 - Provider Enhancement Release
+- ✅ **Provider Step 3 Resume** - PENDING/REJECTED providers can login and complete their application
+- ✅ **Admin Category Handling** - Create new category or assign to "Other" for custom categories
+- ✅ **Provider Profile Settings** - Business settings visible in Profile tab
+- ✅ **Service Delete** - Providers can delete services with confirmation
+- ✅ **Detailed Availability Editor** - Per-day time slot management with toggle and custom times
+- ✅ **Email Notifications** - Automatic emails on provider approval/rejection
+
+### Previous Updates
 - ✅ Provider Accept/Reject booking buttons
 - ✅ Invoice view and download
 - ✅ OTP-based booking completion
 - ✅ Admin panel provider creation with email credentials
 - ✅ Provider self-registration with email OTP
+
+---
+
+## 📄 Documentation
+
+- **[Comprehensive Technical Audit](./docs/audit.md)** - In-depth architecture documentation covering:
+  - Frontend stack (React, Vite, TanStack Query) with alternative comparisons
+  - Backend stack (Express, Prisma, Socket.io) with problem-solution pairs
+  - Database design (PostgreSQL) with relationship diagrams
+  - Real-time notification flow
+  - Authentication system
+  - Best practices for all layers
 
 ---
 

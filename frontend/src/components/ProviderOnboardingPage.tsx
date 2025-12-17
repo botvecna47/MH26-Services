@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -13,7 +13,7 @@ import { authApi } from '../api/auth';
 import { 
   Briefcase, MapPin, Mail, Phone, Lock, User, 
   Upload, CheckCircle, ArrowRight, ArrowLeft, Loader2,
-  Camera, FileText, Image as ImageIcon
+  Link, FileText, AlertCircle, X
 } from 'lucide-react';
 import { useCategories } from '../api/categories';
 
@@ -35,22 +35,36 @@ interface FormData {
   city: string;
   pincode: string;
   serviceRadius: string;
-  // Documents
-  businessCardImage: File | null;
-  workImage: File | null;
-  certificatePdf: File | null;
+  // Document URLs (Google Drive links)
+  businessCardUrl: string;
+  workSampleUrl: string;
+  certificateUrl: string;
+  aadharPanUrl: string;
+  // Optional fields
+  portfolioUrl1: string;
+  portfolioUrl2: string;
+  portfolioUrl3: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  websiteUrl: string;
+  insuranceInfo: string;
+  // Terms
+  termsAccepted: boolean;
 }
 
 export default function ProviderOnboardingPage() {
   const { user, setUser, refreshProfile } = useUser();
   const navigate = useNavigate();
   const { data: categoriesData } = useCategories();
+  const [searchParams] = useSearchParams();
   
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [showOtherCategory, setShowOtherCategory] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState<'terms' | 'privacy' | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -65,25 +79,41 @@ export default function ProviderOnboardingPage() {
     address: '',
     city: 'Nanded',
     pincode: '',
-    serviceRadius: '10',
-    businessCardImage: null,
-    workImage: null,
-    certificatePdf: null,
+    serviceRadius: '6',
+    businessCardUrl: '',
+    workSampleUrl: '',
+    certificateUrl: '',
+    aadharPanUrl: '',
+    portfolioUrl1: '',
+    portfolioUrl2: '',
+    portfolioUrl3: '',
+    instagramUrl: '',
+    facebookUrl: '',
+    websiteUrl: '',
+    insuranceInfo: '',
+    termsAccepted: false,
   });
 
-  // Preview URLs for uploaded images
-  const [previews, setPreviews] = useState({
-    businessCard: '',
-    workImage: '',
-    certificate: '',
-  });
-
-  // If user is already logged in and is a provider, redirect
+  // Check for step=3 URL param (for REJECTED/PENDING providers re-applying)
   useEffect(() => {
-    if (user?.role === 'PROVIDER') {
+    const stepParam = searchParams.get('step');
+    if (stepParam === '3' && user?.role === 'PROVIDER') {
+      setStep(3);
+      // Pre-fill name and email from user context
+      setFormData(prev => ({ ...prev, name: user.name || '', email: user.email || '' }));
+    }
+  }, [searchParams, user]);
+
+  // If user is already logged in and is an APPROVED provider, redirect
+  useEffect(() => {
+    // Skip if we're on step 3 - user is completing their profile
+    if (step === 3) return;
+    
+    // Only redirect if provider is APPROVED (not PENDING/REJECTED)
+    if (user?.role === 'PROVIDER' && !user?.requiresOnboarding) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, step]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -91,27 +121,23 @@ export default function ProviderOnboardingPage() {
   };
 
   const handleSelectChange = (value: string) => {
-    setFormData(prev => ({ ...prev, primaryCategory: value }));
+    if (value === '__OTHER__') {
+      setShowOtherCategory(true);
+      setFormData(prev => ({ ...prev, primaryCategory: '' }));
+    } else {
+      setShowOtherCategory(false);
+      setFormData(prev => ({ ...prev, primaryCategory: value }));
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'businessCardImage' | 'workImage' | 'certificatePdf') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, [field]: file }));
-      
-      // Create preview for images
-      if (field !== 'certificatePdf') {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviews(prev => ({
-            ...prev,
-            [field === 'businessCardImage' ? 'businessCard' : 'workImage']: reader.result as string
-          }));
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setPreviews(prev => ({ ...prev, certificate: file.name }));
-      }
+  // URL validation helper
+  const isValidUrl = (url: string) => {
+    if (!url) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   };
 
@@ -169,18 +195,23 @@ export default function ProviderOnboardingPage() {
       setLoading(true);
       const response = await authApi.verifyRegistrationOTP(pendingEmail, otp);
       
-      // Store tokens and user
+      // Store tokens
       if (response.tokens) {
         localStorage.setItem('accessToken', response.tokens.accessToken);
         localStorage.setItem('refreshToken', response.tokens.refreshToken);
       }
+      
+      // IMPORTANT: Set step to 3 BEFORE setting user to prevent redirect
+      // The useEffect skips redirect when step === 3
+      setStep(3);
+      
+      // Now safely set the user - step is already 3 so redirect won't happen
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
         setUser(response.user);
       }
       
       toast.success('Email verified! Now complete your business profile.');
-      setStep(3);
     } catch (error: any) {
       console.error('OTP verification error:', error);
       toast.error(error.response?.data?.error || 'Invalid or expired OTP');
@@ -211,20 +242,45 @@ export default function ProviderOnboardingPage() {
       toast.error('Please fill all required business details');
       return;
     }
-    if (!formData.businessCardImage || !formData.workImage) {
-      toast.error('Please upload business card and work sample images');
+    if (!formData.businessCardUrl || !isValidUrl(formData.businessCardUrl)) {
+      toast.error('Please provide a valid Google Drive URL for your business card image');
       return;
+    }
+    if (!formData.workSampleUrl || !isValidUrl(formData.workSampleUrl)) {
+      toast.error('Please provide a valid Google Drive URL for your work sample image');
+      return;
+    }
+    if (!formData.aadharPanUrl || !isValidUrl(formData.aadharPanUrl)) {
+      toast.error('Please provide a valid Google Drive URL for your Aadhaar/PAN card');
+      return;
+    }
+    if (!formData.termsAccepted) {
+      toast.error('You must accept the Terms & Conditions to proceed');
+      return;
+    }
+    // Validate optional URLs if provided
+    const optionalUrls = [formData.certificateUrl, formData.portfolioUrl1, formData.portfolioUrl2, formData.portfolioUrl3];
+    for (const url of optionalUrls) {
+      if (url && !isValidUrl(url)) {
+        toast.error('Please provide valid URLs for optional documents or leave them empty');
+        return;
+      }
     }
 
     try {
       setLoading(true);
       
-      // For now, we'll use placeholder URLs for the images
-      // In production, you'd upload to cloud storage first
-      const businessCardUrl = previews.businessCard || '';
-      const workImageUrl = previews.workImage || '';
+      // Build portfolio URLs array
+      const portfolioUrls = [formData.portfolioUrl1, formData.portfolioUrl2, formData.portfolioUrl3].filter(Boolean);
       
-      // Create provider profile
+      // Build social media links object
+      const socialMediaLinks = {
+        instagram: formData.instagramUrl || '',
+        facebook: formData.facebookUrl || '',
+        website: formData.websiteUrl || '',
+      };
+      
+      // Create provider profile with all fields
       await axiosClient.post('/providers', {
         businessName: formData.businessName,
         primaryCategory: formData.primaryCategory,
@@ -233,19 +289,29 @@ export default function ProviderOnboardingPage() {
         address: formData.address,
         city: formData.city,
         pincode: formData.pincode,
-        serviceRadius: parseInt(formData.serviceRadius) || 10,
+        serviceRadius: parseInt(formData.serviceRadius) || 6,
         status: 'PENDING',
-        gallery: [businessCardUrl, workImageUrl].filter(Boolean),
+        gallery: [formData.businessCardUrl, formData.workSampleUrl, formData.certificateUrl].filter(Boolean),
+        aadharPanUrl: formData.aadharPanUrl,
+        portfolioUrls,
+        socialMediaLinks,
+        insuranceInfo: formData.insuranceInfo || null,
+        termsAccepted: true,
+        termsAcceptedAt: new Date().toISOString(),
       });
 
-      toast.success('Application submitted successfully! Awaiting admin approval.');
+      toast.success('Application submitted! Please wait for admin approval. You will receive an email once verified.');
       
-      // Refresh user profile
-      if (refreshProfile) await refreshProfile();
-
+      // Clear session - provider can't access until approved
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setUser(null);
+      
+      // Navigate to pending page
       setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+        navigate('/provider-pending');
+      }, 1500);
 
     } catch (error: any) {
       console.error('Application error:', error);
@@ -298,13 +364,13 @@ export default function ProviderOnboardingPage() {
 
         {/* Step 1: Contact Information */}
         {step === 1 && (
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border border-orange-200">
             <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Step 1: Contact Information
               </CardTitle>
-              <CardDescription className="text-orange-100">
+              <CardDescription className="text-white/90">
                 Enter your personal details to get started
               </CardDescription>
             </CardHeader>
@@ -420,7 +486,7 @@ export default function ProviderOnboardingPage() {
 
         {/* Step 2: OTP Verification */}
         {step === 2 && (
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border border-orange-200">
             <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
@@ -496,7 +562,7 @@ export default function ProviderOnboardingPage() {
         {/* Step 3: Business Details */}
         {step === 3 && (
           <form onSubmit={handleSubmitApplication}>
-            <Card className="shadow-xl border-0 mb-6">
+            <Card className="shadow-xl border border-orange-200 mb-6">
               <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5" />
@@ -535,8 +601,22 @@ export default function ProviderOnboardingPage() {
                         {categories.map(cat => (
                           <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                         ))}
+                        <SelectItem value="__OTHER__" className="text-[#ff6b35] font-medium">Other (Enter Custom)</SelectItem>
                       </SelectContent>
                     </Select>
+                    {showOtherCategory && (
+                      <div className="mt-2">
+                        <Input
+                          name="primaryCategory"
+                          placeholder="Enter your category (e.g., Tiffins, Yoga, Tailoring)"
+                          value={formData.primaryCategory}
+                          onChange={handleInputChange}
+                          className="border-[#ff6b35]"
+                          required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Enter a custom category that best describes your service</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -614,128 +694,274 @@ export default function ProviderOnboardingPage() {
               </CardContent>
             </Card>
 
-            {/* Document Uploads */}
-            <Card className="shadow-xl border-0 mb-6">
+            {/* Document Links (Google Drive) */}
+            <Card className="shadow-xl border border-orange-200 mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Upload Documents
+                  <Link className="h-5 w-5" />
+                  Document Links
                 </CardTitle>
                 <CardDescription>
-                  Upload images of your business card, work samples, and optional certificate
+                  Provide Google Drive links to your documents for verification
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                {/* Business Card Image */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Camera className="h-4 w-4" />
-                    Business Card Image *
-                  </Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
-                    {previews.businessCard ? (
-                      <div className="relative">
-                        <img src={previews.businessCard} alt="Business Card" className="max-h-32 mx-auto rounded" />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, businessCardImage: null }));
-                            setPreviews(prev => ({ ...prev, businessCard: '' }));
-                          }}
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <Camera className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Click to upload business card image</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden"
-                          onChange={(e) => handleFileChange(e, 'businessCardImage')}
-                        />
-                      </label>
-                    )}
-                  </div>
+                {/* Instructions Box */}
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    How to share from Google Drive
+                  </h4>
+                  <ol className="text-sm text-orange-700 space-y-1 list-decimal list-inside">
+                    <li>Upload your image/document to Google Drive</li>
+                    <li>Right-click the file → <strong>"Share"</strong></li>
+                    <li>Under "General access", select <strong>"Anyone with the link"</strong></li>
+                    <li>Set permission to <strong>"Viewer"</strong></li>
+                    <li>Click <strong>"Copy link"</strong> and paste below</li>
+                  </ol>
                 </div>
 
-                {/* Work Sample Image */}
+                {/* Business Card URL */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4" />
-                    Work/Service Sample Image *
+                    <Link className="h-4 w-4" />
+                    Business Card Image URL *
                   </Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
-                    {previews.workImage ? (
-                      <div className="relative">
-                        <img src={previews.workImage} alt="Work Sample" className="max-h-32 mx-auto rounded" />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, workImage: null }));
-                            setPreviews(prev => ({ ...prev, workImage: '' }));
-                          }}
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <ImageIcon className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Click to upload a sample of your work</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden"
-                          onChange={(e) => handleFileChange(e, 'workImage')}
-                        />
-                      </label>
-                    )}
-                  </div>
+                  <Input 
+                    name="businessCardUrl"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
+                    value={formData.businessCardUrl}
+                    onChange={handleInputChange}
+                    className={`${!formData.businessCardUrl ? '' : isValidUrl(formData.businessCardUrl) ? 'border-green-500' : 'border-red-500'}`}
+                    required
+                  />
+                  <p className="text-xs text-gray-500">Photo of your business card or ID</p>
                 </div>
 
-                {/* Certificate (Optional) */}
+                {/* Work Sample URL */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Link className="h-4 w-4" />
+                    Work/Service Sample Image URL *
+                  </Label>
+                  <Input 
+                    name="workSampleUrl"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
+                    value={formData.workSampleUrl}
+                    onChange={handleInputChange}
+                    className={`${!formData.workSampleUrl ? '' : isValidUrl(formData.workSampleUrl) ? 'border-green-500' : 'border-red-500'}`}
+                    required
+                  />
+                  <p className="text-xs text-gray-500">Photo of your recent work or service</p>
+                </div>
+
+                {/* Certificate URL (Optional) */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Certificate (Optional - PDF)
+                    Certificate URL (Optional)
                   </Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
-                    {previews.certificate ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <FileText className="h-6 w-6 text-orange-500" />
-                        <span className="text-sm">{previews.certificate}</span>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, certificatePdf: null }));
-                            setPreviews(prev => ({ ...prev, certificate: '' }));
-                          }}
-                          className="bg-red-500 text-white rounded-full p-1 text-xs"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <FileText className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500">Click to upload certificate (PDF)</span>
-                        <input 
-                          type="file" 
-                          accept=".pdf" 
-                          className="hidden"
-                          onChange={(e) => handleFileChange(e, 'certificatePdf')}
-                        />
-                      </label>
-                    )}
-                  </div>
+                  <Input 
+                    name="certificateUrl"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
+                    value={formData.certificateUrl}
+                    onChange={handleInputChange}
+                    className={`${!formData.certificateUrl ? '' : isValidUrl(formData.certificateUrl) ? 'border-green-500' : 'border-red-500'}`}
+                  />
+                  <p className="text-xs text-gray-500">Any relevant certification or license (optional)</p>
+                </div>
+
+                {/* Aadhaar/PAN URL (Required) */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Link className="h-4 w-4" />
+                    Aadhaar or PAN Card URL *
+                  </Label>
+                  <Input 
+                    name="aadharPanUrl"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
+                    value={formData.aadharPanUrl}
+                    onChange={handleInputChange}
+                    className={`${!formData.aadharPanUrl ? '' : isValidUrl(formData.aadharPanUrl) ? 'border-green-500' : 'border-red-500'}`}
+                    required
+                  />
+                  <p className="text-xs text-gray-500">Required for identity verification</p>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Optional Information */}
+            <Card className="shadow-xl border border-orange-200 mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Additional Information (Optional)
+                </CardTitle>
+                <CardDescription>
+                  Add more details to strengthen your profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {/* Portfolio URLs */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <Link className="h-4 w-4" />
+                    Portfolio / Work Samples (Up to 3)
+                  </Label>
+                  <Input 
+                    name="portfolioUrl1"
+                    type="url"
+                    placeholder="Portfolio image URL 1"
+                    value={formData.portfolioUrl1}
+                    onChange={handleInputChange}
+                    className={`${!formData.portfolioUrl1 ? '' : isValidUrl(formData.portfolioUrl1) ? 'border-green-500' : 'border-red-500'}`}
+                  />
+                  <Input 
+                    name="portfolioUrl2"
+                    type="url"
+                    placeholder="Portfolio image URL 2"
+                    value={formData.portfolioUrl2}
+                    onChange={handleInputChange}
+                    className={`${!formData.portfolioUrl2 ? '' : isValidUrl(formData.portfolioUrl2) ? 'border-green-500' : 'border-red-500'}`}
+                  />
+                  <Input 
+                    name="portfolioUrl3"
+                    type="url"
+                    placeholder="Portfolio image URL 3"
+                    value={formData.portfolioUrl3}
+                    onChange={handleInputChange}
+                    className={`${!formData.portfolioUrl3 ? '' : isValidUrl(formData.portfolioUrl3) ? 'border-green-500' : 'border-red-500'}`}
+                  />
+                </div>
+
+                {/* Social Media Links */}
+                <div className="space-y-3">
+                  <Label>Social Media Links</Label>
+                  <Input 
+                    name="instagramUrl"
+                    type="url"
+                    placeholder="Instagram profile URL"
+                    value={formData.instagramUrl}
+                    onChange={handleInputChange}
+                  />
+                  <Input 
+                    name="facebookUrl"
+                    type="url"
+                    placeholder="Facebook page URL"
+                    value={formData.facebookUrl}
+                    onChange={handleInputChange}
+                  />
+                  <Input 
+                    name="websiteUrl"
+                    type="url"
+                    placeholder="Website URL"
+                    value={formData.websiteUrl}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                {/* Insurance Info */}
+                <div className="space-y-2">
+                  <Label>Insurance / Bond Information</Label>
+                  <Input 
+                    name="insuranceInfo"
+                    type="text"
+                    placeholder="e.g., Licensed & Insured, Bond Number: XYZ123"
+                    value={formData.insuranceInfo}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Terms and Conditions */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="termsAccepted"
+                  checked={formData.termsAccepted}
+                  onChange={(e) => setFormData(prev => ({ ...prev, termsAccepted: e.target.checked }))}
+                  className="mt-1 h-5 w-5 rounded border-gray-300 text-[#ff6b35] focus:ring-[#ff6b35]"
+                />
+                <label htmlFor="termsAccepted" className="text-sm text-gray-700">
+                  I have read and agree to the{' '}
+                  <button 
+                    type="button" 
+                    onClick={() => setShowTermsModal('terms')} 
+                    className="text-[#ff6b35] hover:underline font-medium"
+                  >
+                    Terms & Conditions
+                  </button>{' '}
+                  and{' '}
+                  <button 
+                    type="button" 
+                    onClick={() => setShowTermsModal('privacy')} 
+                    className="text-[#ff6b35] hover:underline font-medium"
+                  >
+                    Privacy Policy
+                  </button>. I confirm that all information provided is accurate and I consent to verification of my documents. *
+                </label>
+              </div>
+            </div>
+
+            {/* Terms/Privacy Modal */}
+            {showTermsModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                  <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {showTermsModal === 'terms' ? 'Terms & Conditions' : 'Privacy Policy'}
+                    </h3>
+                    <button 
+                      onClick={() => setShowTermsModal(null)} 
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="p-6 overflow-y-auto max-h-[60vh] text-sm text-gray-600 space-y-4">
+                    {showTermsModal === 'terms' ? (
+                      <>
+                        <h4 className="font-semibold text-gray-800">1. Service Provider Agreement</h4>
+                        <p>By registering as a service provider on MH26 Services, you agree to provide accurate information about your services, qualifications, and business details.</p>
+                        <h4 className="font-semibold text-gray-800">2. Service Standards</h4>
+                        <p>You agree to maintain professional standards, respond to customer inquiries promptly, and complete booked services as agreed.</p>
+                        <h4 className="font-semibold text-gray-800">3. Fees and Payments</h4>
+                        <p>Platform fees (7%) and applicable taxes (8% GST) will be deducted from each completed booking. Payments are processed after service completion.</p>
+                        <h4 className="font-semibold text-gray-800">4. Cancellation Policy</h4>
+                        <p>Providers must honor confirmed bookings. Repeated cancellations may result in account suspension.</p>
+                        <h4 className="font-semibold text-gray-800">5. Verification</h4>
+                        <p>Your submitted documents will be verified by our admin team. False information may result in account termination.</p>
+                      </>
+                    ) : (
+                      <>
+                        <h4 className="font-semibold text-gray-800">Information We Collect</h4>
+                        <p>We collect your name, contact details, business information, and uploaded documents for verification purposes.</p>
+                        <h4 className="font-semibold text-gray-800">How We Use Your Information</h4>
+                        <p>Your information is used to verify your identity, list your services, process payments, and facilitate customer bookings.</p>
+                        <h4 className="font-semibold text-gray-800">Data Security</h4>
+                        <p>We implement security measures to protect your personal information. Your documents are stored securely.</p>
+                        <h4 className="font-semibold text-gray-800">Third-Party Sharing</h4>
+                        <p>We do not sell your personal information. Limited data may be shared with payment processors and verification services.</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="p-4 border-t bg-gray-50">
+                    <Button 
+                      onClick={() => setShowTermsModal(null)} 
+                      className="w-full bg-[#ff6b35] hover:bg-[#ff5722]"
+                    >
+                      I Understand
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <Button 

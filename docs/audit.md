@@ -1,486 +1,1459 @@
-# MH26 Services: Comprehensive Technical Audit & Architecture Report
+# MH26 Services - Comprehensive Technical Audit
 
-## 1. Executive Summary
-
-**Project Title**: MH26 Services - Hyperlocal On-Demand Service Marketplace
-**Target Region**: Nanded, Maharashtra (RTO Code: MH-26)
-**Core Value Proposition**: Digitizing the unorganized home service sector (plumbers, electricians, cleaners) by providing a unified platform for discovery, booking, and payment.
-
-**Technical Philosophy**:
-The project runs on a robust **PERN Stack** (PostgreSQL, Express, React, Node.js) with a strong emphasis on **Type Safety** (TypeScript throughout) and **Real-Time Responsiveness** (Socket.io). Unlike simple CRUD apps, this platform implements complex business logic including collision detection for bookings, state-managed provider onboarding, and role-based access control.
+## Executive Summary
+MH26 Services is a full-stack service marketplace platform connecting service providers with customers. Built with modern technologies following industry best practices.
 
 ---
 
-## 2. Codebase Architecture
+# PART 1: FRONTEND ARCHITECTURE
 
-### 2.1 Directory Structure & Purpose
+## 1.1 Technology Stack
 
-#### **Frontend (`/frontend/src`)**
-*   **`api/`**: Centralized Axios instances with interceptors for JWT token rotation.
-    *   `auth.ts`: Login, Register, OTP verification endpoints.
-    *   `bookings.ts`: Booking creation and management.
-*   **`components/`**: Reusable UI blocks.
-    *   `ui/`: Shadcn/Radix primitive components (Buttons, Dialogs, Inputs).
-    *   `ProviderOnboardingPage.tsx`: Complex 3-step wizard form.
-    *   `BookingModal.tsx`: The core booking interface.
-    *   `AdminPanel.tsx`: "God Mode" dashboard for verification and stats.
-*   **`context/`**: React Context for global state.
-    *   `UserContext.tsx`: Stores current user profile and role.
-    *   `SocketContext.tsx`: Manages WebSocket connection lifecycle.
-*   **`App.tsx`**: Main entry point handling Routing (React Router v6) and Layouts.
-
-#### **Backend (`/server/src`)**
-*   **`config/`**: Environment variable validation (Zod) and Database/Redis connection logic.
-*   **`controllers/`**: HTTP Request handlers. Separates entry points from business logic.
-*   **`middleware/`**: Request processing chain.
-    *   `auth.ts`: Verifies JWT headers and checks `isBanned` status.
-    *   `validate.ts`: Uses Zod schemas to validate request bodies before controllers run.
-    *   `rateLimit.ts`: Prevents DDoS attacks.
-*   **`models/`**: Zod schemas shared with frontend.
-*   **`routes/`**: Express Router definitions mapping URLs to controllers.
-*   **`services/`**: Pure business logic (e.g., "Check if provider is free at 10 AM").
-*   **`socket/`**: WebSocket event handlers (`new_booking`, `status_update`).
-*   **`prisma/schema.prisma`**: The source of truth for the Database structure.
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **React** | 18.2.0 | UI Library |
+| **TypeScript** | 5.2.2 | Type Safety |
+| **Vite** | 5.0.8 | Build Tool |
+| **TanStack Query** | 5.17.0 | Server State Management |
+| **React Router** | 6.21.1 | Client-Side Routing |
+| **Tailwind CSS** | 3.4.18 | Styling |
+| **Radix UI** | Latest | Accessible Components |
+| **Axios** | 1.6.2 | HTTP Client |
+| **Socket.io Client** | 4.6.1 | Real-time Communication |
+| **Zod** | 3.22.4 | Runtime Validation |
 
 ---
 
-## 3. Deep Dive: Core Critical Workflows
+## 1.2 Why This Stack? (vs Alternatives)
 
-### 3.1 Provider Onboarding (The "3-Step Wizard")
+### React vs Vue vs Angular
 
-This flow is critical for maintaining quality. It is implemented in `ProviderOnboardingPage.tsx`.
+| Criteria | React ✓ | Vue | Angular |
+|----------|---------|-----|---------|
+| **Learning Curve** | Moderate | Easy | Steep |
+| **Ecosystem** | Massive | Growing | Large |
+| **Performance** | Excellent | Excellent | Good |
+| **Flexibility** | High | Medium | Low |
+| **Jobs/Community** | #1 | #3 | #2 |
 
-1.  **Step 1: Identity (Registration)**
-    *   User inputs Name, Email, Phone, Password.
-    *   **Backend**: `POST /auth/register` creates a user with `role: PROVIDER` and `emailVerified: false`.
-    *   **Action**: Sends 6-digit OTP via Email (Nodemailer).
+**Decision:** React chosen for:
+- Largest ecosystem and community support
+- Component-based architecture perfect for service cards, modals
+- Hooks provide clean state management
+- Better TypeScript integration
+- More third-party libraries (Radix, TanStack)
 
-2.  **Step 2: Verification**
-    *   User enters OTP.
-    *   **Backend**: `POST /auth/verify-registration-otp` checks Redis/Database for the code.
-    *   **Result**: Sets `emailVerified: true`, issues JWT Tokens (Access + Refresh).
+### Vite vs Create React App vs Next.js
 
-3.  **Step 3: Business Profile**
-    *   User inputs Business Name, Category (Dropdown), Radius, Experience.
-    *   **Documents**: Uploads Business Card & Work Samples (Base64/URL).
-    *   **Status**: Profile is set to `PENDING`.
-    *   **Outcome**: User is redirected to Dashboard but sees "Awaiting Approval" banner.
+| Criteria | Vite ✓ | CRA | Next.js |
+|----------|--------|-----|---------|
+| **Dev Server Speed** | <300ms | 20-30s | ~5s |
+| **HMR** | Instant | Slow | Fast |
+| **Bundle Size** | Smallest | Large | Medium |
+| **SSR** | Optional | No | Built-in |
+| **Complexity** | Low | Low | Medium |
 
-### 3.2 The Booking Lifecycle (The "Heart" of the App)
+**Decision:** Vite chosen for:
+- **10x faster** development builds via ESM
+- Native TypeScript support
+- Smaller production bundles (tree-shaking)
+- No SSR needed for this SPA
 
-The booking system handles concurrency and real-time updates.
+### TanStack Query vs Redux vs Zustand
 
-1.  **Intent & Validation**:
-    *   Customer opens `BookingModal`.
-    *   Selects Date (Min: Today, Max: Today + 3 days) and Time Slot.
-    *   **Frontend Validation**: Checks for empty fields and past dates.
+| Criteria | TanStack Query ✓ | Redux | Zustand |
+|----------|------------------|-------|---------|
+| **Server State** | ✓ Built-in | Manual | Manual |
+| **Caching** | ✓ Automatic | Manual | Manual |
+| **Boilerplate** | Minimal | Heavy | Minimal |
+| **Devtools** | Excellent | Excellent | Basic |
 
-2.  **Creation (`POST /bookings`)**:
-    *   **Collision Check**: Backend queries database: *Does this provider have a 'CONFIRMED' booking at this `scheduleAt` time?*
-    *   If Free: Creates Booking (`status: PENDING`).
-    *   **Real-Time Trigger**: Server emits `new_booking` via Socket.io to `provider_${providerId}` room.
+**Decision:** TanStack Query chosen for:
+- **Automatic caching** and background refetching
+- Built-in loading/error states
+- Optimistic updates
+- Perfect for API-heavy apps
 
-3.  **Provider Acceptance**:
-    *   Provider sees instant popup. Clicks "Accept".
-    *   **Backend**: Updates status to `CONFIRMED`.
-    *   **Notification**: Customer receives "Booking Confirmed" alert.
+### Tailwind CSS vs CSS Modules vs Styled Components
 
-4.  **Service & Completion (OTP Verification Protocol)**:
-    
-    This is a **critical security feature** ensuring service delivery before payment:
-    
-    **Step A: Provider Initiates Completion**
-    *   Provider clicks "Mark Job Complete" on their dashboard.
-    *   Backend generates a random 6-digit OTP (e.g., `718010`).
-    *   OTP is stored in `booking.completionOtp`.
-    
-    **Step B: OTP Sent to Customer ONLY**
-    *   Customer receives notification: `"Your verification code: 718010"`
-    *   Provider receives notification: `"Ask customer for the 6-digit code"` (**no OTP visible**)
-    *   Provider's Socket.io message has OTP sanitized: `{ ...booking, completionOtp: undefined }`
-    
-    **Step C: Provider Collects OTP Verbally**
-    *   Provider physically asks customer: "What's your verification code?"
-    *   Customer checks their phone and reads: "718010"
-    
-    **Step D: Provider Verifies & Completion**
-    *   Provider enters `718010` in their app.
-    *   Backend validates: `if (booking.completionOtp !== otp) throw 'Invalid OTP'`
-    *   If match → **ONLY THEN** financial updates occur:
-        *   `Provider.totalRevenue += providerEarnings` (e.g., ₹465)
-        *   `Customer.totalSpending += totalAmount` (e.g., ₹500)
-        *   `Booking.status = 'COMPLETED'`
-    *   Real-time Socket updates: `wallet:update`, `revenue:update`
-    
-    > **Security Note**: Revenue/spending NEVER updates until OTP is verified. This prevents fraudulent completion claims.
+| Criteria | Tailwind ✓ | CSS Modules | Styled Components |
+|----------|-----------|-------------|-------------------|
+| **Speed** | Fastest | Medium | Slowest |
+| **Bundle Size** | Smallest | Medium | Largest |
+| **Learning** | New syntax | Standard CSS | JS-in-CSS |
+| **Consistency** | Design system | Manual | Manual |
 
+**Decision:** Tailwind chosen for:
+- Utility-first approach = rapid development
+- Design system via tailwind.config.js
+- Purging removes unused CSS (tiny bundles)
+- Consistent spacing, colors, responsive design
 
 ---
 
-## 4. API Architecture & Key Endpoints
-
-The API is RESTful, versioned (implicit v1), and secured.
-
-### **Authentication (`/api/auth`)**
-*   `POST /register`: Create account.
-*   `POST /login`: Get JWT tokens.
-*   `POST /refresh`: Rotate access token using httpOnly cookie.
-*   `POST /verify-registration-otp`: Finalize sign-up.
-
-### **Bookings (`/api/bookings`)**
-*   `POST /`: Create new booking request.
-*   `GET /`: List my bookings (Customer) or Assigned bookings awaitings (Provider).
-*   `POST /:id/accept`: Provider accepts job.
-*   `POST /:id/reject`: Provider declines job.
-*   `POST /:id/completion-verify`: OTP verification endpoint.
-
-### **Provider Management (`/api/providers`)**
-*   `GET /:id`: Public profile (for customers).
-*   `PATCH /profile`: Update service radius, images, or description.
-*   `GET /availability`: Fetch open slots.
-
----
-
-## 5. Database Schema & Data Integrity
-
-The database is **PostgreSQL**, managed by **Prisma ORM**.
-
-### **Key Models**
-
-*   **`User`**:
-    *   `id`: UUID (Primary Key).
-    *   `role`: Enum (`CUSTOMER`, `PROVIDER`, `ADMIN`).
-    *   `walletBalance`: Decimal (Money type).
-    *   `isBanned`: Boolean (Security flag).
-
-*   **`Provider`**:
-    *   `userId`: Foreign Key (1:1 with User).
-    *   `status`: Enum (`PENDING`, `APPROVED`, `REJECTED`).
-    *   `serviceRadius`: Int (Kilometers).
-    *   `primaryCategory`: String (Indexed for search).
-
-*   **`Booking`**:
-    *   `providerId` & `userId`: Foreign Keys.
-    *   `status`: Enum (`PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
-    *   `scheduledAt`: DateTime (Indexed for collision checks).
-    *   `completionOtp`: String (Nullable, stores the verification code).
-
-### **Constraints**
-*   **Unique Email/Phone**: Prevents duplicate accounts.
-*   **Foreign Keys**: `Booking` cannot exist without valid `User` and `Provider`.
-*   **Cascading Deletes**: If a User is deleted, their potential PENDING bookings are removed (handled by Prisma).
-
----
-
-## 6. Security Implementation
-
-1.  **Helmet**: Adds HTTP headers (HSTS, X-Frame-Options) to prevent Clickjacking and MITM.
-2.  **Rate Limiting**: `express-rate-limit` is applied to `/auth` routes (5 attempts per 15 mins) to stop Brute Force password guessing.
-3.  **Zod Middleware**: Every POST/PUT request body is strictly validated against a schema. Extra fields are stripped; missing fields cause 400 Bad Request.
-4.  **JWT Strategy**:
-    *   **Access Token**: Short-lived (15 mins). Sent in Header `Authorization: Bearer ...`.
-    *   **Refresh Token**: Long-lived (7 days). Stored in Database (for revocation capability).
-5.  **Banning Logic**: `requireNotBanned` middleware runs on *every* protected route. Banned users are instantly rejected, even with valid tokens.
-
----
-
-## 7. Frontend Technical Details
-
-*   **State Management**:
-    *   **Server State**: `TanStack Query` (React Query). Handles caching, loading states, and auto-refetching.
-    *   **UI State**: Local `useState` for forms.
-    *   **Auth State**: React Context (`UserContext`).
-*   **Lazy Loading**:
-    *   Routes are wrapped in `Suspense` and `lazy()` imports.
-    *   This ensures the "Admin Panel" code is not downloaded by a regular Customer, reducing initial bundle size.
-*   **Styling**:
-    *   **Tailwind CSS**: For layout and spacing.
-    *   **Shadcn UI**: For accessible interactive components (modals, dropdowns).
-    *   **Lucide React**: For scalable vector icons.
-
----
-
-## 7.1 Financial System: Invoicing, Revenue & Spending
-
-### Overview
-
-The platform implements a complete mock financial system that tracks:
-- **Customer Spending**: Total amount spent on services
-- **Provider Revenue**: Earnings after platform fee deduction
-- **Platform Revenue**: 7% commission on each booking
-
-### Database Fields for Financial Tracking
-
-| Model | Field | Purpose |
-|-------|-------|---------|
-| `User` | `totalSpending` | Cumulative customer spending |
-| `User` | `walletBalance` | Available balance (for future prepaid system) |
-| `Provider` | `totalRevenue` | Cumulative provider earnings |
-| `Booking` | `totalAmount` | Base service price |
-| `Booking` | `platformFee` | 7% of totalAmount |
-| `Booking` | `providerEarnings` | totalAmount - platformFee |
-
-### Booking Amount Calculation Flow
+## 1.3 Frontend Architecture
 
 ```
-Service Base Price: ₹500.00
-      │
-      ├── Platform Fee (7%): ₹35.00 [Goes to platform]
-      │
-      ├── GST on Service (8%): ₹40.00 [Goes to tax pool]
-      │
-      └── Provider Earnings: ₹465.00 [Goes to provider]
-
-Customer Pays: ₹540.00 (Base + GST)
+frontend/
+├── src/
+│   ├── api/              # API layer (axios + TanStack Query hooks)
+│   │   ├── admin.ts      # Admin API calls
+│   │   ├── auth.ts       # Authentication API
+│   │   ├── bookings.ts   # Booking CRUD
+│   │   ├── categories.ts # Categories API
+│   │   ├── providers.ts  # Provider API
+│   │   ├── services.ts   # Services API
+│   │   └── axiosClient.ts # Configured Axios instance
+│   │
+│   ├── components/       # React Components
+│   │   ├── ui/           # Reusable UI primitives (56 components)
+│   │   ├── AdminPanel.tsx
+│   │   ├── AuthPage.tsx
+│   │   ├── DashboardPage.tsx
+│   │   ├── HomePage.tsx
+│   │   └── ... (48 components total)
+│   │
+│   ├── context/          # React Context Providers
+│   │   ├── UserContext.tsx    # User authentication state
+│   │   └── NotificationContext.tsx
+│   │
+│   ├── hooks/            # Custom React Hooks
+│   ├── lib/              # Utility functions
+│   └── main.tsx          # Entry point
 ```
 
-**Backend Calculation** (`bookingService.ts`):
-```typescript
-const platformFeeRate = parseFloat(process.env.PLATFORM_FEE_PERCENT || '7') / 100;
-const platformFee = new Decimal(price).mul(platformFeeRate);
-const providerEarnings = new Decimal(price).minus(platformFee);
+---
+
+## 1.4 Component Design Patterns
+
+### Pattern 1: Container/Presentational Split
+```tsx
+// Container: DashboardPage.tsx (handles data fetching)
+const { data: analytics } = useAnalytics();
+const { data: bookings } = useBookings();
+
+// Presentational: Renders UI with props
+<StatCard title="Revenue" value={analytics.revenue} />
 ```
 
-### Invoice Generation System
+### Pattern 2: Custom Hooks for API Calls
+```tsx
+// api/bookings.ts
+export function useBookings(filters?: BookingFilters) {
+  return useQuery({
+    queryKey: ['bookings', filters],
+    queryFn: () => bookingsApi.getBookings(filters)
+  });
+}
 
-**Endpoint**: `GET /api/bookings/:id/invoice`
+// Usage in component
+const { data, isLoading, error } = useBookings({ status: 'PENDING' });
+```
 
-**Response Structure**:
-```json
-{
-  "invoiceNumber": "INV-A1B2C3D4",
-  "date": "2025-12-14T10:30:00Z",
-  "booking": { ... },
-  "subtotal": 500.00,
-  "platformFee": 35.00,
-  "gst": 40.00,
-  "total": 540.00,
-  "providerEarnings": 465.00
+### Pattern 3: Mutation with Optimistic Updates
+```tsx
+export function useCreateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: servicesApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    }
+  });
 }
 ```
 
-**Frontend Component**: `InvoicePreviewModal.tsx`
-- Displays professional invoice layout
-- Shows line items, taxes, and totals
-- Includes customer and provider details
-- Print-friendly styling
+---
 
-### PDF Generation (Future Implementation)
+## 1.5 State Management Strategy
 
-Currently, the system generates a **browser-printable invoice** using CSS print styles. For actual PDF generation, the roadmap includes:
+```mermaid
+flowchart TB
+    subgraph "State Types"
+        Server["Server State<br/>(TanStack Query)"]
+        Local["Local UI State<br/>(useState)"]
+        Global["Global State<br/>(Context)"]
+    end
+    
+    Server --> |"API Data"|Data["Bookings, Services,<br/>Providers, Users"]
+    Local --> |"Component State"|UI["Form inputs, Modals,<br/>Dropdowns"]
+    Global --> |"Auth State"|Auth["User, Token,<br/>isLoggedIn"]
+```
 
-1. **Option A: Client-Side PDF** (jsPDF + html2canvas)
-   ```typescript
-   import html2canvas from 'html2canvas';
-   import jsPDF from 'jspdf';
-   
-   const generatePDF = async (element: HTMLElement) => {
-     const canvas = await html2canvas(element);
-     const pdf = new jsPDF();
-     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0);
-     pdf.save('invoice.pdf');
-   };
+---
+
+## 1.6 API Integration Pattern
+
+```tsx
+// axiosClient.ts - Centralized configuration
+const axiosClient = axios.create({
+  baseURL: '/api',
+  headers: { 'Content-Type': 'application/json' }
+});
+
+// Request interceptor - adds auth token
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Response interceptor - handles 401
+axiosClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Redirect to login
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+---
+
+# PART 2: BACKEND ARCHITECTURE
+
+## 2.1 Technology Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Node.js** | 20.x | Runtime |
+| **Express** | 4.18.2 | Web Framework |
+| **TypeScript** | 5.3.2 | Type Safety |
+| **Prisma** | 5.22.0 | ORM |
+| **PostgreSQL** | 15.x | Database |
+| **Socket.io** | 4.5.4 | WebSockets |
+| **JWT** | 9.0.2 | Authentication |
+| **Bcrypt** | 5.1.1 | Password Hashing |
+| **Winston** | 3.11.0 | Logging |
+| **Zod** | 3.22.4 | Validation |
+
+---
+
+## 2.2 Why This Stack?
+
+### Express vs Fastify vs NestJS
+
+| Criteria | Express ✓ | Fastify | NestJS |
+|----------|-----------|---------|--------|
+| **Maturity** | 10+ years | 5 years | 6 years |
+| **Performance** | Good | Best | Good |
+| **Ecosystem** | Massive | Growing | Large |
+| **Learning** | Easy | Easy | Moderate |
+| **Flexibility** | Maximum | High | Opinionated |
+
+**Decision:** Express chosen for:
+- Most mature Node.js framework
+- Largest middleware ecosystem
+- Team familiarity
+- Simple to understand and debug
+
+### Prisma vs TypeORM vs Sequelize
+
+| Criteria | Prisma ✓ | TypeORM | Sequelize |
+|----------|----------|---------|-----------|
+| **Type Safety** | ✓ Auto-generated | Manual | None |
+| **Migrations** | ✓ Automatic | Manual | Manual |
+| **Schema** | ✓ Declarative | Code | Code |
+| **DevX** | Best | Good | Moderate |
+| **Studio** | ✓ Built-in | No | No |
+
+**Decision:** Prisma chosen for:
+- **Auto-generated TypeScript types** from schema
+- Declarative schema = single source of truth
+- Prisma Studio for visual DB management
+- Excellent migration system
+
+---
+
+## 2.3 Backend Architecture
+
+```
+server/
+├── src/
+│   ├── controllers/      # Request handlers
+│   │   ├── adminController.ts     (34KB - largest)
+│   │   ├── authController.ts      (22KB)
+│   │   ├── providerController.ts
+│   │   ├── bookingController.ts
+│   │   └── ... (11 controllers)
+│   │
+│   ├── routes/           # Express routers
+│   │   ├── auth.ts
+│   │   ├── bookings.ts
+│   │   └── ...
+│   │
+│   ├── middleware/       # Express middleware
+│   │   ├── auth.ts       # JWT verification
+│   │   ├── errorHandler.ts
+│   │   └── validation.ts
+│   │
+│   ├── services/         # Business logic
+│   │   ├── emailService.ts
+│   │   └── socketService.ts
+│   │
+│   └── index.ts          # Entry point
+│
+├── prisma/
+│   ├── schema.prisma     # Database schema
+│   ├── migrations/       # SQL migrations
+│   └── seed.ts           # Seed data
+```
+
+---
+
+## 2.4 Request Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant M as Middleware
+    participant R as Router
+    participant Ctrl as Controller
+    participant DB as Prisma/PostgreSQL
+    
+    C->>M: HTTP Request
+    M->>M: Rate Limit Check
+    M->>M: CORS Check
+    M->>M: JWT Verification
+    M->>R: Pass to Router
+    R->>Ctrl: Route Handler
+    Ctrl->>DB: Query Database
+    DB-->>Ctrl: Return Data
+    Ctrl-->>C: JSON Response
+```
+
+---
+
+## 2.5 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as Server
+    participant DB as Database
+    
+    Note over U,DB: Registration
+    U->>S: POST /auth/register
+    S->>S: Hash password (bcrypt)
+    S->>DB: Create User
+    S->>U: Send verification email
+    
+    Note over U,DB: Login
+    U->>S: POST /auth/login
+    S->>DB: Find user by email
+    S->>S: Verify password
+    S->>S: Generate JWT (15min)
+    S->>S: Generate Refresh Token (7d)
+    S-->>U: Return tokens
+    
+    Note over U,DB: Protected Request
+    U->>S: GET /api/bookings (with JWT)
+    S->>S: Verify JWT signature
+    S->>DB: Fetch data
+    S-->>U: Return data
+```
+
+---
+
+# PART 3: DATABASE DESIGN
+
+## 3.1 Why PostgreSQL?
+
+### PostgreSQL vs MySQL vs MongoDB
+
+| Criteria | PostgreSQL ✓ | MySQL | MongoDB |
+|----------|--------------|-------|---------|
+| **ACID Compliance** | ✓ Full | Full | Partial |
+| **JSON Support** | ✓ Native (JSONB) | JSON type | Native |
+| **Full-Text Search** | ✓ Built-in | Basic | Atlas only |
+| **Geographic** | ✓ PostGIS | Limited | Geospatial |
+| **Complex Queries** | Excellent | Good | Aggregation |
+| **Scalability** | Excellent | Excellent | Excellent |
+| **Data Integrity** | ✓ Strict | Strict | Flexible |
+
+**Decision:** PostgreSQL chosen for:
+
+1. **JSONB Support** - Storing `availability` as JSON:
+   ```sql
+   availability JSONB
+   -- Stores: {"monday": {"enabled": true, "start": "09:00", "end": "18:00"}}
    ```
 
-2. **Option B: Server-Side PDF** (Puppeteer/PDFKit)
-   - Backend generates PDF from HTML template
-   - Returns downloadable file
-   - Better for email attachments
+2. **Strong ACID** - Financial transactions need atomicity:
+   ```sql
+   -- Booking creation is atomic
+   BEGIN;
+     UPDATE users SET wallet_balance = wallet_balance - 500;
+     INSERT INTO bookings (...) VALUES (...);
+     INSERT INTO transactions (...) VALUES (...);
+   COMMIT;
+   ```
 
-### Revenue Reflection Across Actors
+3. **Advanced Indexing**:
+   ```sql
+   @@index([city, primaryCategory])  -- Composite for provider search
+   @@index([lat, lng])               -- Geographic queries
+   ```
 
-When a booking is **COMPLETED**:
+4. **Prisma Integration** - Best ORM support for PostgreSQL
 
-| Actor | What Updates | How |
-|-------|--------------|-----|
-| **Customer** | `totalSpending += totalAmount` | Database update |
-| **Provider** | `totalRevenue += providerEarnings` | Database update |
-| **Admin Dashboard** | `platformRevenue += platformFee` | Aggregated from bookings |
+---
 
-**Real-time Updates** (via Socket.io):
+## 3.2 Database Schema Overview
+
+### Core Entities
+
+```mermaid
+erDiagram
+    User ||--o| Provider : "has"
+    User ||--o{ Booking : "makes"
+    Provider ||--o{ Service : "offers"
+    Provider ||--o{ Booking : "receives"
+    Service }|--|| Category : "belongs to"
+    Booking ||--o| Review : "has"
+    Booking ||--o{ Transaction : "has"
+    User ||--o{ Notification : "receives"
+```
+
+### Key Models
+
+| Model | Purpose | Key Fields |
+|-------|---------|------------|
+| **User** | All users | `role` (CUSTOMER/PROVIDER/ADMIN) |
+| **Provider** | Service providers | `status`, `availability`, `serviceRadius` |
+| **Service** | Offered services | `price`, `durationMin`, `status` |
+| **Booking** | Transactions | `status`, `totalAmount`, `scheduledAt` |
+| **Review** | Ratings | `rating`, `comment` |
+| **Transaction** | Payments | `type`, `amount`, `status` |
+
+---
+
+## 3.3 Schema Design Decisions
+
+### 1. UUID vs Auto-Increment IDs
+```prisma
+id String @id @default(uuid())
+```
+**Why UUID:**
+- No sequential exposure (security)
+- Distributed ID generation
+- URL-friendly
+
+### 2. Soft Deletes via Status
+```prisma
+status ProviderStatus @default(PENDING)
+// PENDING | APPROVED | REJECTED | SUSPENDED
+```
+**Why:** Never delete data, change status for audit trail
+
+### 3. Denormalization for Performance
+```prisma
+// User stores totalSpending (calculated)
+totalSpending Decimal @default(0)
+
+// Provider stores averageRating (calculated)
+averageRating Float? @default(0)
+totalRatings  Int    @default(0)
+```
+**Why:** Avoid expensive JOINs for common queries
+
+### 4. JSON for Flexible Data
+```prisma
+availability     Json?    // Weekly schedule
+socialMediaLinks Json?    // Dynamic social links
+```
+**Why:** Schema-less within structured database
+
+---
+
+## 3.4 Indexes for Performance
+
+```prisma
+// User lookups
+@@index([email])          // Login
+@@index([phone])          // OTP verification
+@@index([role])           // Admin filtering
+
+// Provider search
+@@index([city, primaryCategory])  // Location + category
+@@index([status])                 // Admin approval queue
+@@index([lat, lng])               // Geographic proximity
+
+// Booking queries
+@@index([userId])         // User's bookings
+@@index([providerId])     // Provider's bookings
+@@index([status])         // Filter by status
+@@index([scheduledAt])    // Calendar view
+```
+
+---
+
+## 3.5 Relationships
+
+```prisma
+// One-to-One: User <-> Provider
+model User {
+  provider Provider?
+}
+model Provider {
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+// One-to-Many: Provider -> Services
+model Provider {
+  services Service[]
+}
+model Service {
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id])
+}
+
+// Many-to-Many: User <-> SavedProvider (via junction)
+model SavedProvider {
+  userId     String
+  providerId String
+  @@id([userId, providerId])
+}
+```
+
+---
+
+# PART 4: DATA FLOW
+
+## 4.1 Complete Request Flow Example
+
+**Scenario: Customer books a service**
+
+```mermaid
+sequenceDiagram
+    participant UI as React UI
+    participant API as Axios/API Layer
+    participant Server as Express
+    participant Auth as JWT Middleware
+    participant Controller as bookingController
+    participant Prisma as Prisma ORM
+    participant DB as PostgreSQL
+    participant Socket as Socket.io
+    participant Email as Email Service
+    
+    UI->>API: createBooking(serviceId, date)
+    API->>Server: POST /api/bookings
+    Server->>Auth: Verify JWT
+    Auth->>Controller: Request + User
+    Controller->>Prisma: prisma.booking.create()
+    Prisma->>DB: INSERT INTO bookings
+    DB-->>Prisma: New booking record
+    Controller->>Prisma: prisma.notification.create()
+    Controller->>Socket: emit('new_booking')
+    Controller->>Email: sendBookingConfirmation()
+    Controller-->>UI: { booking, success: true }
+    Socket-->>Provider: Real-time notification
+```
+
+---
+
+## 4.2 State Synchronization
+
+```mermaid
+flowchart TB
+    subgraph Frontend
+        TQ[TanStack Query Cache]
+        UI[React Components]
+    end
+    
+    subgraph Backend
+        API[Express API]
+        WS[Socket.io]
+    end
+    
+    subgraph Database
+        PG[(PostgreSQL)]
+    end
+    
+    UI -->|mutate()| TQ
+    TQ -->|HTTP Request| API
+    API -->|Prisma Query| PG
+    PG -->|Response| API
+    API -->|JSON Response| TQ
+    TQ -->|Re-render| UI
+    
+    API -->|Emit Event| WS
+    WS -->|Push Update| TQ
+    TQ -->|invalidateQueries()| UI
+```
+
+---
+
+# PART 5: BEST PRACTICES
+
+## 5.1 Frontend Best Practices
+
+| Practice | Implementation |
+|----------|----------------|
+| **Type Safety** | TypeScript + Zod validation |
+| **Code Splitting** | React.lazy() for routes |
+| **Error Boundaries** | ErrorBoundary.tsx wraps app |
+| **Accessibility** | Radix UI primitives (ARIA) |
+| **Responsive** | Tailwind responsive prefixes |
+| **Loading States** | isLoading from TanStack Query |
+| **Optimistic Updates** | useMutation onMutate |
+| **Form Validation** | react-hook-form + zod |
+
+## 5.2 Backend Best Practices
+
+| Practice | Implementation |
+|----------|----------------|
+| **Input Validation** | Zod schemas + express-validator |
+| **Authentication** | JWT with refresh tokens |
+| **Authorization** | Role-based middleware |
+| **Rate Limiting** | express-rate-limit |
+| **Security Headers** | Helmet.js |
+| **Error Handling** | Centralized AppError class |
+| **Logging** | Winston (structured JSON) |
+| **Password Security** | Bcrypt (12 rounds) |
+
+## 5.3 Database Best Practices
+
+| Practice | Implementation |
+|----------|----------------|
+| **Migrations** | Prisma migrate |
+| **Seeding** | prisma/seed.ts |
+| **Indexing** | Composite indexes for common queries |
+| **Transactions** | Prisma $transaction() |
+| **Soft Deletes** | Status fields, never DELETE |
+| **Audit Trail** | AuditLog model |
+| **Normalization** | 3NF with strategic denorm |
+| **Constraints** | @unique, foreign keys |
+
+---
+
+# PART 6: SUMMARY
+
+## Technology Justifications
+
+| Layer | Choice | Key Reason |
+|-------|--------|------------|
+| **Frontend** | React + TypeScript | Type safety + ecosystem |
+| **Build** | Vite | 10x faster dev builds |
+| **State** | TanStack Query | Server state caching |
+| **Styling** | Tailwind | Rapid, consistent design |
+| **UI** | Radix | Accessible primitives |
+| **Backend** | Express | Mature, flexible |
+| **ORM** | Prisma | Type-safe, migrations |
+| **Database** | PostgreSQL | JSONB, ACID, indexes |
+| **Auth** | JWT | Stateless, scalable |
+| **Real-time** | Socket.io | Cross-browser WebSockets |
+
+## Files Changed in This Session
+
+| Component | Files |
+|-----------|-------|
+| Frontend | 48 components, 7 API modules |
+| Backend | 11 controllers, 6 route files |
+| Database | 15+ models in schema.prisma |
+
+---
+
+*Generated for MH26 Services demo presentation*
+
+---
+
+# PART 7: PROBLEM-SOLUTION DEEP DIVE
+
+This section explains **WHY** specific technologies were introduced when facing specific problems during development.
+
+---
+
+## 7.1 Real-Time Notifications (Socket.io)
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Provider receives a new booking from a customer
+
+Without real-time:
+1. Provider must manually refresh dashboard to see new bookings
+2. Provider might miss urgent bookings
+3. Customer waits for provider response (poor UX)
+4. Polling every 5 seconds = 12 requests/minute = 17,280 requests/day per user
+   (This kills server performance and wastes bandwidth)
+```
+
+### ✅ THE SOLUTION: Socket.io
+
+```
+WHY Socket.io instead of alternatives?
+
+| Technology | Problem |
+|------------|---------|
+| **HTTP Polling** | ❌ Too many requests, high latency |
+| **Long Polling** | ❌ Complex connection management |
+| **Server-Sent Events** | ❌ One-way only (server→client), no bidirectional |
+| **Raw WebSockets** | ❌ No fallback for old browsers, manual reconnection |
+| **Socket.io** ✓ | ✓ Bidirectional, auto-reconnect, fallback to polling |
+```
+
+### Implementation
+
+**Backend (socketService.ts):**
 ```typescript
-// Emitted on booking completion
-socket.emit('wallet:update', { totalSpending: newTotal });
-socket.emit('revenue:update', { totalRevenue: newTotal });
+// Initialize Socket.io with Express server
+const io = new Server(httpServer, {
+  cors: { origin: process.env.FRONTEND_URL }
+});
+
+// Authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    socket.data.userId = decoded.sub;
+    next();
+  } catch (err) {
+    next(new Error('Authentication failed'));
+  }
+});
+
+// Emit notification to specific user
+export function emitNotification(userId: string, notification: any) {
+  io.to(`user:${userId}`).emit('notification', notification);
+}
 ```
 
-### Admin Financial Visibility
+**Frontend (UserSocketSync.tsx):**
+```tsx
+useEffect(() => {
+  const socket = io(API_URL, {
+    auth: { token: localStorage.getItem('token') }
+  });
 
-**Admin Panel Analytics** (`/admin/analytics`):
-- Total platform revenue (sum of all platformFee)
-- Monthly revenue charts
-- Per-provider earnings breakdown
-- Booking value distribution
+  socket.on('notification', (data) => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    toast.info(data.message);
+  });
+
+  socket.on('booking_update', (data) => {
+    queryClient.invalidateQueries({ queryKey: ['bookings'] });
+  });
+
+  return () => socket.disconnect();
+}, []);
+```
+
+### Real-Time Events in MH26
+
+| Event | Trigger | Recipients |
+|-------|---------|------------|
+| `new_booking` | Customer creates booking | Provider |
+| `booking_accepted` | Provider accepts | Customer |
+| `booking_rejected` | Provider rejects | Customer |
+| `provider_approved` | Admin approves provider | Provider |
+| `new_message` | User sends message | Other user |
 
 ---
 
-## 8. Deployment & Production Readiness
+## 7.2 Authentication System (JWT + Refresh Tokens)
 
+### ❌ THE PROBLEM
 
-### 8.1 Current Deployment Architecture
-
-| Component | Service | Region | Status |
-|-----------|---------|--------|--------|
-| **Frontend** | Vercel | Mumbai (ap-south-1) | ✅ Live |
-| **Backend** | Render Free Tier | Singapore | ✅ Live |
-| **Database** | Aiven PostgreSQL | Mumbai | ✅ Live |
-| **Redis (OTP)** | Upstash | Mumbai | ✅ Configured |
-| **Email** | Resend API | Global | ⚠️ Limited (see below) |
-
-### 8.2 Issues Encountered & Solutions
-
-#### Issue 1: SMTP Blocked on Render Free Tier
-**Problem**: Render blocks outbound SMTP ports (25, 465, 587) on free tier.
-**Impact**: Gmail SMTP emails fail with `Connection timeout`.
-**Solution**: Integrated **Resend API** (HTTP-based, bypasses port restrictions).
-
-#### Issue 2: Resend Domain Verification Required
-**Problem**: Resend free tier without verified domain only sends to account owner's email.
-**Impact**: Cannot send OTP emails to arbitrary users.
-**Workaround (Demo)**: OTP codes are prominently logged in Render console:
 ```
-═══════════════════════════════════════════════════════
-📧 EMAIL FOR: user@example.com
-🔐 OTP CODE: 718010
-═══════════════════════════════════════════════════════
+SCENARIO: User sessions need to be secure yet user-friendly
+
+Problems with session-based auth:
+1. Sessions stored in server memory = doesn't scale
+2. Session files on disk = I/O bottleneck
+3. Redis session store = additional infrastructure
+4. User must re-login every time session expires
 ```
-**Production Fix**: Verify a custom domain in Resend (~₹100/year for .xyz domain).
 
-#### Issue 3: Redis Connection Delay
-**Problem**: Initial Redis connection shows "Stream isn't writeable" warning.
-**Impact**: First OTP may use in-memory fallback.
-**Status**: Self-recovers within seconds; not a critical issue.
+### ✅ THE SOLUTION: JWT + Refresh Tokens
 
-#### Issue 4: Service Idling (Free Tier)
-**Problem**: Render free tier sleeps after 15 minutes of inactivity.
-**Impact**: 30-60 second cold start on first request.
-**Solution**: Use [UptimeRobot](https://uptimerobot.com) to ping `/` endpoint every 5 minutes.
+```
+WHY JWT?
+- Stateless: No server-side session storage
+- Scalable: Multiple servers can verify tokens independently
+- Mobile-friendly: Works perfectly with React Native
+
+WHY Short-lived Access Token + Long Refresh Token?
+- Access Token (15 min): If stolen, limited damage
+- Refresh Token (7 days): Stored in DB, can be revoked
+```
+
+### Token Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant DB as Database
+    
+    Note over U,DB: Initial Login
+    U->>F: Enter credentials
+    F->>B: POST /auth/login
+    B->>DB: Verify password
+    B->>B: Generate Access Token (15min)
+    B->>DB: Store Refresh Token (7 days)
+    B-->>F: { accessToken, refreshToken }
+    F->>F: Store in localStorage
+    
+    Note over U,DB: Token Expiry
+    F->>B: API call with expired token
+    B-->>F: 401 Unauthorized
+    F->>B: POST /auth/refresh { refreshToken }
+    B->>DB: Verify refresh token valid & not revoked
+    B-->>F: New { accessToken, refreshToken }
+    F->>B: Retry original request
+```
+
+### Security Measures
+
+```typescript
+// Password hashing with bcrypt (12 rounds)
+const hashedPassword = await bcrypt.hash(password, 12);
+// 12 rounds = ~250ms to hash, prevents brute force
+
+// JWT configuration
+const accessToken = jwt.sign(
+  { sub: user.id, role: user.role },
+  process.env.JWT_SECRET!,
+  { expiresIn: '15m' }  // Short-lived
+);
+
+// Refresh token stored in DB (can be revoked)
+await prisma.refreshToken.create({
+  data: {
+    token: refreshToken,
+    userId: user.id,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  }
+});
+```
 
 ---
 
-## 9. Payment Integration & Platform Fee Analysis
+## 7.3 Email Notifications (Nodemailer + Resend)
 
-### 9.1 Current Implementation
-- **Status**: Mock wallet system with simulated transactions.
-- **Platform Fee**: 7% configured in environment (`PLATFORM_FEE_PERCENT=7`).
-- **GST**: 8% (standard rate for service charges).
+### ❌ THE PROBLEM
 
-### 9.2 Fee Breakdown Per Booking
-
-For a ₹500 service booking:
-
-| Component | Calculation | Amount |
-|-----------|-------------|--------|
-| Base Service Price | - | ₹500.00 |
-| Platform Fee (7%) | ₹500 × 0.07 | ₹35.00 |
-| GST on Platform Fee (8%) | ₹35 × 0.08 | ₹2.80 |
-| **Customer Pays** | | **₹537.80** |
-| **Provider Receives** | ₹500 - ₹35 | **₹465.00** |
-
-### 9.3 Razorpay Integration Feasibility
-
-#### Razorpay Charges (2024)
-
-| Payment Method | Razorpay Fee | Net After Razorpay |
-|----------------|--------------|-------------------|
-| UPI | 0% (bank-to-bank) | ₹0 |
-| Debit Cards | 2% + GST (2.36%) | ₹11.80 on ₹500 |
-| Credit Cards | 2% + GST (2.36%) | ₹11.80 on ₹500 |
-| Net Banking | 2% + GST (2.36%) | ₹11.80 on ₹500 |
-| EMI | 3% + GST (3.54%) | ₹17.70 on ₹500 |
-
-#### Marketplace Split Payment (Razorpay Route)
-
-Razorpay Route enables automatic payment splitting:
 ```
-Customer Payment (₹537.80)
-    ├── Razorpay Fee (~2.36%): ₹12.70
-    ├── Platform Income (7%): ₹35.00
-    ├── GST Pool (8%): ₹2.80
-    └── Provider Payout: ₹487.30
+SCENARIO: Provider application approved - how to notify them?
+
+Problems:
+1. User might not be logged in
+2. Push notifications require app installation
+3. SMS is expensive for every notification
+4. Email is universal and expected
 ```
 
-#### Feasibility Assessment
+### ✅ THE SOLUTION: Email via Resend API
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| **Technical** | ✅ Feasible | Razorpay SDK already in `package.json` |
-| **Business Model** | ✅ Viable | 7% platform fee standard for marketplaces |
-| **Profitability** | ⚠️ Marginal | After Razorpay fees (~2.5%), net margin ~4.5% |
-| **Compliance** | ⚠️ Required | GST registration, KYC for payouts |
+```
+WHY Resend over alternatives?
 
-#### Monthly Revenue Projection (Nanded City Scale)
+| Service | Problem |
+|---------|---------|
+| **Gmail SMTP** | ❌ 500 emails/day limit, auth issues |
+| **SendGrid** | ❌ Complex setup, expensive |
+| **AWS SES** | ❌ Requires AWS account, sandbox mode |
+| **Resend** ✓ | ✓ Simple API, 3000 free emails/month |
+```
 
-| Daily Bookings | Avg. Booking Value | Monthly GMV | Platform Revenue (7%) | Net After Razorpay (~4.5%) |
-|----------------|-------------------|-------------|----------------------|--------------------------|
-| 50 | ₹500 | ₹7,50,000 | ₹52,500 | ₹33,750 |
-| 100 | ₹500 | ₹15,00,000 | ₹1,05,000 | ₹67,500 |
-| 200 | ₹500 | ₹30,00,000 | ₹2,10,000 | ₹1,35,000 |
+### Implementation
 
----
+```typescript
+// emailService.ts
+import { Resend } from 'resend';
 
-## 10. Deployment Cost Summary
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-### Demo Mode (Current - ₹0/month)
+export async function sendProviderApprovalEmail(
+  email: string,
+  businessName: string,
+  approved: boolean,
+  reason?: string
+) {
+  const subject = approved 
+    ? '🎉 Your Provider Application is Approved!'
+    : '❌ Provider Application Status Update';
 
-| Service | Cost | Limitation |
-|---------|------|-----------|
-| Vercel | Free | 100GB bandwidth |
-| Render | Free | Idles, SMTP blocked |
-| Aiven | Free | 5GB, 20 connections |
-| Upstash | Free | 10K requests/day |
-| Resend | Free | Own email only |
-| **Total** | **₹0** | OTP via logs |
+  const html = approved
+    ? `<h1>Congratulations!</h1>
+       <p>Your business "${businessName}" has been approved.</p>
+       <p>You can now start receiving bookings.</p>
+       <a href="${process.env.FRONTEND_URL}/dashboard">Go to Dashboard</a>`
+    : `<h1>Application Update</h1>
+       <p>Your application for "${businessName}" was not approved.</p>
+       <p>Reason: ${reason}</p>
+       <p>You can reapply after addressing the issues.</p>`;
 
-### Production Mode (Recommended - ~₹600-1,200/month)
+  await resend.emails.send({
+    from: 'MH26 Services <noreply@mh26.com>',
+    to: email,
+    subject,
+    html
+  });
+}
+```
 
-| Service | Cost | Benefit |
-|---------|------|---------|
-| Render Starter | ₹600 ($7) | No idle, SMTP works |
-| Verified Domain | ₹100 | Real email delivery |
-| Upstash Pro | ₹850 ($10) | 100K requests/day |
-| **Total** | **~₹1,550** | Full functionality |
+### Email Triggers
 
-### City-Scale Production (~₹12,000-18,000/month)
-
-| Service | Cost | Capacity |
-|---------|------|----------|
-| AWS EC2 (Mumbai) | ₹2,500 | 1000 concurrent users |
-| RDS PostgreSQL | ₹5,000 | 50GB, auto-backup |
-| ElastiCache | ₹1,200 | Redis cluster |
-| Load Balancer | ₹1,500 | Multi-instance |
-| **Total** | **~₹12,000-18,000** | 25K+ users |
-
----
-
-## 11. Future Roadmap
-
-### Phase 1: Demo Ready ✅
-- [x] Core booking flow
-- [x] OTP verification (via logs)
-- [x] Admin panel
-- [x] Real-time notifications
-
-### Phase 2: Beta Launch (Month 1-3)
-- [ ] Verify custom domain for Resend
-- [ ] Upgrade Render to Starter plan
-- [ ] Integrate Razorpay Test Mode
-- [ ] Add provider payout system
-
-### Phase 3: Production Launch (Month 3-6)
-- [ ] Razorpay Live Mode activation
-- [ ] GST registration & compliance
-- [ ] Provider KYC verification
-- [ ] Customer support system
-- [ ] Mobile app (React Native)
-
-### Phase 4: Scale (Month 6+)
-- [ ] Migrate to AWS Mumbai
-- [ ] Multi-city expansion
-- [ ] Subscription plans for providers
-- [ ] Map-based live tracking
-- [ ] Machine learning for matching
+| Event | Email Sent | Recipient |
+|-------|------------|-----------|
+| Registration | Verification link | New user |
+| Provider approved | Welcome + next steps | Provider |
+| Provider rejected | Reason + reapply instructions | Provider |
+| Booking created | Confirmation details | Customer + Provider |
+| Booking completed | Invoice + review request | Customer |
+| Password reset | Reset link | User |
 
 ---
 
-**Audit Conclusion**: The MH26 Services platform is production-ready with minor adjustments. The current demo deployment successfully demonstrates all core features. For live payments, Razorpay integration is technically feasible with a sustainable 7% platform fee model. Recommended next step: Verify a custom domain and upgrade to Render Starter plan for full email functionality.
+## 7.4 Form Validation (Zod + React Hook Form)
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Provider registration form with many fields
+
+Problems:
+1. Client-side validation only = security hole
+2. Server-side only = poor UX (submit then error)
+3. Different validation logic = inconsistency
+4. TypeScript types ≠ runtime validation
+```
+
+### ✅ THE SOLUTION: Zod (Shared Schema)
+
+```
+WHY Zod?
+
+1. Single schema defines:
+   - TypeScript types (compile-time)
+   - Runtime validation (server)
+   - Form validation (client)
+
+2. Same validation runs everywhere
+3. Type inference = no duplicate definitions
+```
+
+### Shared Schema Pattern
+
+```typescript
+// shared/schemas.ts (used by both frontend and backend)
+import { z } from 'zod';
+
+export const providerRegistrationSchema = z.object({
+  businessName: z.string()
+    .min(3, 'Business name must be at least 3 characters')
+    .max(100, 'Business name too long'),
+  
+  email: z.string()
+    .email('Invalid email format'),
+  
+  phone: z.string()
+    .regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
+  
+  category: z.string()
+    .min(1, 'Please select a category'),
+  
+  serviceRadius: z.number()
+    .min(1, 'Minimum 1 km')
+    .max(50, 'Maximum 50 km'),
+});
+
+// Type inference - no manual typing needed!
+export type ProviderRegistration = z.infer<typeof providerRegistrationSchema>;
+```
+
+**Frontend (react-hook-form integration):**
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { providerRegistrationSchema, ProviderRegistration } from '@/schemas';
+
+function ProviderForm() {
+  const form = useForm<ProviderRegistration>({
+    resolver: zodResolver(providerRegistrationSchema),
+    defaultValues: { serviceRadius: 10 }
+  });
+
+  // Validation runs automatically on blur/submit
+  // Errors display inline with correct types
+}
+```
+
+**Backend (Express middleware):**
+```typescript
+// middleware/validation.ts
+export function validate(schema: z.ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ 
+        errors: result.error.flatten().fieldErrors 
+      });
+    }
+    req.body = result.data; // Typed and validated!
+    next();
+  };
+}
+
+// Usage in route
+router.post('/providers', 
+  validate(providerRegistrationSchema),
+  providerController.create
+);
+```
+
+---
+
+## 7.5 State Management Strategy
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Managing different types of state
+
+Types of state in MH26:
+1. Server State: Bookings, providers, services (from API)
+2. UI State: Modal open/closed, form inputs
+3. Global State: Current user, theme
+
+Problems with Redux for everything:
+- Too much boilerplate for simple UI state
+- Manual cache management for API data
+- Stale data issues when multiple components fetch same data
+```
+
+### ✅ THE SOLUTION: Layered State Management
+
+```
+| State Type | Solution | Why |
+|------------|----------|-----|
+| Server State | TanStack Query | Automatic caching, refetching |
+| UI State | useState | Simple, component-scoped |
+| Global State | React Context | Prop drilling avoidance |
+```
+
+### TanStack Query Benefits
+
+```tsx
+// WITHOUT TanStack Query (manual approach)
+function BookingsPage() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/bookings')
+      .then(res => res.json())
+      .then(data => setBookings(data))
+      .catch(err => setError(err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Problems:
+  // - No caching (refetches on every mount)
+  // - No background updates
+  // - Manual loading/error state
+}
+
+// WITH TanStack Query
+function BookingsPage() {
+  const { data, isLoading, error } = useBookings();
+  
+  // Benefits:
+  // ✓ Automatic caching (5 min default)
+  // ✓ Background refetch when window focused
+  // ✓ Shared cache across components
+  // ✓ Built-in loading/error states
+  // ✓ Optimistic updates via useMutation
+}
+```
+
+---
+
+## 7.6 File Upload Strategy
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Provider uploads business documents
+
+Problems:
+1. Storing files in local filesystem:
+   - Not scalable (single server)
+   - Lost on server restart (containers)
+   - No CDN benefits
+
+2. Base64 in database:
+   - Database bloat
+   - Slow queries
+   - No streaming
+```
+
+### ✅ THE SOLUTION: Cloud Storage URLs
+
+```
+For MH26, we use a hybrid approach:
+
+1. Development: Local filesystem with serve
+2. Production: Google Drive / Cloudinary URLs
+
+Provider documents are stored as:
+- businessCardUrl: String (Google Drive link)
+- workSampleUrl: String (Google Drive link)  
+- certificateUrl: String (optional PDF link)
+```
+
+### Implementation
+
+```typescript
+// providerController.ts
+async create(req: Request, res: Response) {
+  const { 
+    businessCardUrl,  // Already a Google Drive URL
+    workSampleUrl,
+    certificateUrl
+  } = req.body;
+
+  // Store URLs directly - no file handling needed
+  const provider = await prisma.provider.create({
+    data: {
+      // ... other fields
+      documents: {
+        create: [
+          { type: 'BUSINESS_CARD', fileUrl: businessCardUrl },
+          { type: 'WORK_SAMPLE', fileUrl: workSampleUrl },
+          certificateUrl && { type: 'CERTIFICATE', fileUrl: certificateUrl }
+        ].filter(Boolean)
+      }
+    }
+  });
+}
+```
+
+---
+
+## 7.7 Rate Limiting & Security
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Protecting API from abuse
+
+Attacks to prevent:
+1. Brute force login attempts
+2. DDoS overwhelming server
+3. Scraping provider data
+4. OTP spamming (SMS costs money!)
+```
+
+### ✅ THE SOLUTION: Multi-Layer Protection
+
+```typescript
+// 1. Rate Limiting (express-rate-limit)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: 'Too many login attempts, try again in 15 minutes'
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 1, // 1 OTP per minute
+  message: 'Please wait before requesting another OTP'
+});
+
+app.use('/auth/login', loginLimiter);
+app.use('/auth/send-otp', otpLimiter);
+
+// 2. Security Headers (Helmet)
+app.use(helmet()); // Sets X-Frame-Options, CSP, etc.
+
+// 3. CORS Configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}));
+
+// 4. Input Sanitization (Zod)
+// All inputs validated before reaching database
+```
+
+---
+
+## 7.8 Database Transactions
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Creating a booking involves multiple operations
+
+Operations needed:
+1. Create booking record
+2. Deduct from customer wallet
+3. Create transaction record
+4. Create notification
+5. Send email
+
+What if step 3 fails after step 2?
+→ Money deducted but no transaction record = data corruption!
+```
+
+### ✅ THE SOLUTION: Prisma Transactions
+
+```typescript
+// bookingController.ts
+async createBooking(req: Request, res: Response) {
+  const { serviceId, scheduledAt, totalAmount } = req.body;
+  const userId = req.user!.id;
+
+  // All operations in single transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // 1. Verify wallet balance
+    const user = await tx.user.findUnique({ where: { id: userId } });
+    if (Number(user!.walletBalance) < totalAmount) {
+      throw new Error('Insufficient balance');
+    }
+
+    // 2. Deduct wallet balance
+    await tx.user.update({
+      where: { id: userId },
+      data: { walletBalance: { decrement: totalAmount } }
+    });
+
+    // 3. Create booking
+    const booking = await tx.booking.create({
+      data: { userId, serviceId, scheduledAt, totalAmount, status: 'PENDING' }
+    });
+
+    // 4. Create transaction record
+    await tx.transaction.create({
+      data: {
+        userId,
+        bookingId: booking.id,
+        amount: totalAmount,
+        type: 'PAYMENT',
+        status: 'COMPLETED'
+      }
+    });
+
+    // 5. Create notification
+    await tx.notification.create({
+      data: {
+        userId: service.provider.userId,
+        type: 'NEW_BOOKING',
+        message: `New booking from ${user!.name}`
+      }
+    });
+
+    return booking;
+  });
+
+  // If ANY step fails, ALL changes are rolled back
+  // Database remains consistent
+}
+```
+
+---
+
+## 7.9 Real-Time Provider Approval Flow
+
+### Complete Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant P as Provider
+    participant F as Frontend
+    participant B as Backend
+    participant DB as PostgreSQL
+    participant S as Socket.io
+    participant E as Email Service
+    participant A as Admin
+
+    Note over P,A: Provider Registration
+    P->>F: Fill registration form
+    F->>B: POST /auth/provider-register
+    B->>DB: Create User (role: PROVIDER)
+    B->>DB: Create Provider (status: PENDING)
+    B->>DB: Create Documents
+    B->>E: Send welcome email
+    B-->>F: Registration successful
+
+    Note over P,A: Admin Review
+    A->>F: Open Admin Panel
+    F->>B: GET /admin/providers?status=PENDING
+    B->>DB: Query pending providers
+    DB-->>F: List of providers with docs
+
+    A->>F: Click "Approve"
+    F->>B: POST /admin/providers/:id/approve
+    B->>DB: Update provider.status = APPROVED
+    B->>DB: Set verifiedById, verifiedAt
+    B->>E: sendProviderApprovalEmail()
+    B->>S: emitProviderApproval(id, 'APPROVED')
+    B->>DB: Create notification
+    S-->>P: Real-time notification popup
+    B-->>A: Success response
+
+    Note over P,A: Provider Can Now Work
+    P->>F: Login
+    F->>B: POST /auth/login
+    B-->>F: { user, requiresOnboarding: false }
+    F->>F: Redirect to Dashboard
+```
+
+---
+
+## 7.10 Custom Category Handling
+
+### ❌ THE PROBLEM
+
+```
+SCENARIO: Provider enters "Tattoo Artist" as category
+
+Problem:
+- "Tattoo Artist" doesn't exist in predefined categories
+- Admin needs to either:
+  a) Create new "Tattoo Artist" category
+  b) Assign to existing "Other" category
+```
+
+### ✅ THE SOLUTION: Admin Category Actions
+
+```typescript
+// adminController.ts
+async approveProvider(req: Request, res: Response) {
+  const { id } = req.params;
+  const { category } = req.body; // Optional category override
+
+  const updateData: any = { 
+    status: 'APPROVED',
+    verifiedById: req.user?.userId,
+    verifiedAt: new Date(),
+  };
+  
+  // If admin provided a category override, use it
+  if (category) {
+    updateData.primaryCategory = category;
+  }
+
+  const updated = await prisma.provider.update({
+    where: { id },
+    data: updateData,
+  });
+}
+```
+
+**Frontend shows action buttons for custom categories:**
+```tsx
+{isCustomCategory && (
+  <div className="space-y-2">
+    <div className="bg-amber-50 p-2 rounded-lg">
+      <p>Custom Category: <strong>{provider.primaryCategory}</strong></p>
+    </div>
+    <div className="flex gap-2">
+      <Button onClick={() => {
+        // Create new category
+        await createCategoryMutation.mutateAsync({
+          name: provider.primaryCategory,
+          slug: provider.primaryCategory.toLowerCase().replace(/\s+/g, '-'),
+          icon: '📦',
+        });
+        // Then approve
+        await handleApproveProvider(provider.id);
+      }}>
+        Create Category
+      </Button>
+      <Button onClick={() => handleApproveProvider(provider.id, 'Other')}>
+        Assign to Other
+      </Button>
+    </div>
+  </div>
+)}
+```
+
+---
+
+# PART 8: COMPONENT INTERACTION MAP
+
+## 8.1 Dashboard Components
+
+```mermaid
+flowchart TB
+    subgraph DashboardPage
+        Tabs[Tab Navigation]
+        Stats[KPI Cards]
+        Bookings[Booking Cards]
+    end
+
+    subgraph APIs
+        useAnalytics
+        useBookings
+        useServices
+    end
+
+    subgraph Modals
+        BookingDetailModal
+        ReviewModal
+        CompletionModal
+    end
+
+    Tabs --> |"tab=overview"| Stats
+    Tabs --> |"tab=profile"| CustomerProfilePage
+    Tabs --> |"tab=schedule"| ProviderSchedulePage
+    Tabs --> |"tab=services"| MyServicesSection
+
+    Stats --> useAnalytics
+    Bookings --> useBookings
+    Bookings --> BookingDetailModal
+    BookingDetailModal --> ReviewModal
+    BookingDetailModal --> CompletionModal
+```
+
+## 8.2 Admin Panel Flow
+
+```mermaid
+flowchart TB
+    subgraph AdminPanel
+        PendingProviders[Pending Providers]
+        AllProviders[All Providers Table]
+        Categories[Category Management]
+        Users[User Management]
+    end
+
+    subgraph Actions
+        Approve
+        Reject
+        Suspend
+        Ban
+        CreateCategory
+    end
+
+    subgraph Effects
+        Socket[Socket Notification]
+        Email[Email Notification]
+        DBUpdate[Database Update]
+    end
+
+    PendingProviders --> Approve
+    PendingProviders --> Reject
+    AllProviders --> Suspend
+    Users --> Ban
+    Categories --> CreateCategory
+
+    Approve --> DBUpdate
+    DBUpdate --> Socket
+    DBUpdate --> Email
+```
+
+---
+
+*End of Comprehensive Technical Audit*
+

@@ -12,6 +12,7 @@ export interface Service {
   price: number;
   durationMin: number;
   imageUrl?: string;
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED'; // Admin verification status
   createdAt: string;
   updatedAt: string;
   provider: {

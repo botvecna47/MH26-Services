@@ -225,7 +225,7 @@ export default function ProviderDetailPage() {
                 )}
                 {!isAuthenticated && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    Join MH26 Services to view contact details
+                    Sign in to view contact details
                   </p>
                 )}
               </div>

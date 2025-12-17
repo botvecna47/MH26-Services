@@ -37,6 +37,11 @@ router.get('/appeals', asyncHandler(adminController.getAppeals));
 // Reports (already handled in reports route, but keeping for consistency)
 router.get('/reports', asyncHandler(adminController.getReports));
 
+// Services
+router.get('/services/pending', asyncHandler(adminController.getPendingServices));
+router.post('/services/:id/approve', asyncHandler(adminController.approveService));
+router.post('/services/:id/reject', asyncHandler(adminController.rejectService));
+
 // Bookings
 router.get('/bookings', asyncHandler(adminController.getAllBookings));
 

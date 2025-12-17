@@ -73,8 +73,8 @@ export const adminApi = {
     return response.data;
   },
 
-  approveProvider: async (id: string) => {
-    const response = await axiosClient.post(`/admin/providers/${id}/approve`);
+  approveProvider: async (id: string, category?: string) => {
+    const response = await axiosClient.post(`/admin/providers/${id}/approve`, { category });
     return response.data;
   },
 
@@ -146,6 +146,22 @@ export const adminApi = {
 
   createProvider: async (data: any) => {
     const response = await axiosClient.post('/admin/providers/create', data);
+    return response.data;
+  },
+
+  // Service verification
+  getPendingServices: async () => {
+    const response = await axiosClient.get('/admin/services/pending');
+    return response.data;
+  },
+
+  approveService: async (id: string) => {
+    const response = await axiosClient.post(`/admin/services/${id}/approve`);
+    return response.data;
+  },
+
+  rejectService: async (id: string, reason?: string) => {
+    const response = await axiosClient.post(`/admin/services/${id}/reject`, { reason });
     return response.data;
   },
 };
@@ -243,14 +259,15 @@ export const useProviderDetails = (providerId: string | null) => {
 export const useApproveProvider = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { data } = await axiosClient.put(`/admin/providers/${id}/approve`);
+    mutationFn: async ({ id, category }: { id: string; category?: string }) => {
+      const { data } = await axiosClient.post(`/admin/providers/${id}/approve`, { category });
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-pending-providers'] });
       queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] }); // Invalidate details
+      queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
   });
 };
@@ -348,6 +365,36 @@ export function useDeleteCategory() {
     mutationFn: adminApi.deleteCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+}
+
+// Pending Services Hooks
+export function usePendingServices() {
+  return useQuery({
+    queryKey: ['pending-services'],
+    queryFn: adminApi.getPendingServices,
+  });
+}
+
+export function useApproveService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminApi.approveService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-services'] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+}
+
+export function useRejectService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => adminApi.rejectService(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-services'] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
     },
   });
 }

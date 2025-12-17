@@ -1,6 +1,6 @@
-import { X, UserPlus, Star, Shield } from 'lucide-react';
+import { X, LogIn, Star, Shield } from 'lucide-react';
 import { Button } from './ui/button';
-import { useUser } from '../context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 interface PhoneRevealModalProps {
   providerName: string;
@@ -8,18 +8,11 @@ interface PhoneRevealModalProps {
 }
 
 export default function PhoneRevealModal({ providerName, onClose }: PhoneRevealModalProps) {
-  const { setUser } = useUser();
+  const navigate = useNavigate();
 
-  const handleQuickJoin = () => {
-    // Mock quick sign up
-    setUser({
-      id: '1',
-      name: 'Rajesh Kumar',
-      email: 'rajesh@example.com',
-      phone: '+91-9876543210',
-      role: 'CUSTOMER'
-    });
+  const handleSignIn = () => {
     onClose();
+    navigate('/auth');
   };
 
   return (
@@ -34,11 +27,11 @@ export default function PhoneRevealModal({ providerName, onClose }: PhoneRevealM
 
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserPlus className="h-8 w-8 text-[#ff6b35]" />
+            <LogIn className="h-8 w-8 text-[#ff6b35]" />
           </div>
-          <h2 className="text-gray-900 mb-2">Join MH26 Services</h2>
+          <h2 className="text-gray-900 text-xl font-semibold mb-2">Sign In Required</h2>
           <p className="text-gray-600">
-            Sign up to view contact details for <span className="font-medium">{providerName}</span> and book services instantly
+            Please sign in to view contact details for <span className="font-medium">{providerName}</span>
           </p>
         </div>
 
@@ -60,29 +53,16 @@ export default function PhoneRevealModal({ providerName, onClose }: PhoneRevealM
           </div>
         </div>
 
-        {/* Quick Join Form */}
-        <div className="space-y-3 mb-4">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6b35]"
-          />
-          <input
-            type="tel"
-            placeholder="Enter your phone number"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff6b35]"
-          />
-        </div>
-
         <Button
-          onClick={handleQuickJoin}
+          onClick={handleSignIn}
           className="w-full bg-[#ff6b35] hover:bg-[#ff5722] mb-3"
         >
-          Join & View Contact Details
+          <LogIn className="h-4 w-4 mr-2" />
+          Sign In to Continue
         </Button>
 
         <p className="text-xs text-center text-gray-500">
-          By joining, you agree to our Terms of Service and Privacy Policy
+          Don't have an account? You can create one on the sign in page.
         </p>
       </div>
     </div>

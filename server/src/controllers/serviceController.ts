@@ -17,10 +17,14 @@ export const serviceController = {
       const skip = (Number(page) - 1) * Number(limit);
       const where: any = {};
       
-      // ... (rest of list logic)
-      
+      // If providerId is specified, show all services for that provider (including PENDING)
+      // Otherwise, only show APPROVED services in public listings
       if (providerId) {
         where.providerId = providerId;
+        // Show all statuses for provider's own services list
+      } else {
+        // Public listing - only show APPROVED services
+        where.status = 'APPROVED';
       }
 
       if (q) {
@@ -225,6 +229,7 @@ export const serviceController = {
           estimatedDuration: durationMin, // Mapped from durationMin
           imageUrl: finalImageUrl,
           isActive: true,
+          status: 'APPROVED', // Auto-approve - provider is already verified
         },
         include: {
           provider: {

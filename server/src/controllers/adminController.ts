@@ -324,6 +324,7 @@ export const adminController = {
   async approveProvider(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const { category } = req.body; // Optional category override
 
       const provider = await prisma.provider.findUnique({
         where: { id },
@@ -337,9 +338,21 @@ export const adminController = {
         return;
       }
 
+      // Build update data
+      const updateData: any = { 
+        status: 'APPROVED',
+        verifiedById: (req as any).user?.userId,
+        verifiedAt: new Date(),
+      };
+      
+      // If admin provided a category override, use it
+      if (category) {
+        updateData.primaryCategory = category;
+      }
+
       const updated = await prisma.provider.update({
         where: { id },
-        data: { status: 'APPROVED' },
+        data: updateData,
         include: {
           user: {
             select: { id: true, name: true, email: true },
@@ -393,7 +406,10 @@ export const adminController = {
 
       const updated = await prisma.provider.update({
         where: { id },
-        data: { status: 'REJECTED' },
+        data: { 
+          status: 'REJECTED',
+          rejectionReason: reason || 'Application did not meet requirements',
+        },
         include: {
           user: {
             select: { id: true, name: true, email: true },
@@ -1078,6 +1094,87 @@ export const adminController = {
     } catch (error) {
       logger.error('Get all bookings error:', error);
       res.status(500).json({ error: 'Failed to fetch bookings' });
+    }
+  },
+
+  /**
+   * Get pending services for admin verification
+   */
+  async getPendingServices(req: Request, res: Response): Promise<void> {
+    try {
+      const services = await prisma.service.findMany({
+        where: { status: 'PENDING' },
+        include: {
+          provider: {
+            include: {
+              user: { select: { id: true, name: true, email: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Transform for frontend
+      const transformed = services.map(s => ({
+        ...s,
+        title: s.name,
+        price: s.basePrice,
+        durationMin: s.estimatedDuration,
+      }));
+
+      res.json({ data: transformed });
+    } catch (error) {
+      logger.error('Get pending services error:', error);
+      res.status(500).json({ error: 'Failed to fetch pending services' });
+    }
+  },
+
+  /**
+   * Approve a service
+   */
+  async approveService(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const service = await prisma.service.update({
+        where: { id },
+        data: { status: 'APPROVED' },
+        include: {
+          provider: {
+            include: {
+              user: { select: { id: true, name: true, email: true } },
+            },
+          },
+        },
+      });
+
+      res.json({ message: 'Service approved', service });
+    } catch (error) {
+      logger.error('Approve service error:', error);
+      res.status(500).json({ error: 'Failed to approve service' });
+    }
+  },
+
+  /**
+   * Reject a service
+   */
+  async rejectService(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      const service = await prisma.service.update({
+        where: { id },
+        data: { status: 'REJECTED' },
+      });
+
+      // TODO: Send notification to provider with rejection reason
+      logger.info(`Service ${id} rejected. Reason: ${reason}`);
+
+      res.json({ message: 'Service rejected', service });
+    } catch (error) {
+      logger.error('Reject service error:', error);
+      res.status(500).json({ error: 'Failed to reject service' });
     }
   },
 };

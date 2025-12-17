@@ -13,6 +13,7 @@ const router = Router();
 
 // Public routes
 router.get('/stats', authenticate, requireRole('PROVIDER'), asyncHandler(providerController.getStats));
+router.get('/status/:email', asyncHandler(providerController.getStatusByEmail)); // Public - check application status
 router.get('/', asyncHandler(providerController.list));
 router.get('/:id', asyncHandler(providerController.getById));
 

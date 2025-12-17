@@ -15,6 +15,8 @@ export interface User {
   city?: string;
   walletBalance?: number;
   totalSpending?: number;
+  providerStatus?: string | null;     // Provider status: PENDING, APPROVED, REJECTED, SUSPENDED
+  requiresOnboarding?: boolean;       // True if provider needs to complete/resubmit step 3
   provider?: {
     businessName: string;
     status: string;

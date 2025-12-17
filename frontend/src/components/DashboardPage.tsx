@@ -9,6 +9,7 @@ import { useAnalytics } from '../api/admin';
 
 import CustomerProfilePage from './CustomerProfilePage';
 import ProviderSchedulePage from './ProviderSchedulePage';
+import MyServicesSection from './MyServicesSection';
 import BookingDetailModal from './BookingDetailModal';
 import { useState, useEffect } from 'react';
 import { useProviderStats } from '../api/providers';
@@ -158,6 +159,14 @@ export default function DashboardPage() {
                     Schedule
                   </button>
                 )}
+                {isProvider && (
+                  <button
+                    onClick={() => setSearchParams({ tab: 'services' })}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${currentTab === 'services' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                  >
+                    My Services
+                  </button>
+                )}
                 <button
                   onClick={() => setSearchParams({ tab: 'profile' })}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${currentTab === 'profile' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
@@ -176,6 +185,10 @@ export default function DashboardPage() {
         ) : currentTab === 'schedule' && isProvider ? (
             <div className="max-w-4xl mx-auto">
                <ProviderSchedulePage />
+            </div>
+        ) : currentTab === 'services' && isProvider ? (
+            <div className="max-w-5xl mx-auto">
+               <MyServicesSection />
             </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-6">

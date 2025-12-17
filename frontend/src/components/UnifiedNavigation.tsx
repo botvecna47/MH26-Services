@@ -51,16 +51,16 @@ export default function UnifiedNavigation() {
             <Link
               to="/"
               className={`${
-                isActive('/') ? 'text-[#ff6b35]' : 'text-gray-700 hover:text-[#ff6b35]'
-              } transition-colors font-medium`}
+                isActive('/') ? 'text-[#ff6b35]' : 'text-gray-700 hover:bg-[#ff6b35] hover:text-white'
+              } transition-all font-medium px-3 py-1.5 rounded-lg`}
             >
               Home
             </Link>
             <Link
               to="/services"
               className={`${
-                isActive('/services') ? 'text-[#ff6b35]' : 'text-gray-700 hover:text-[#ff6b35]'
-              } transition-colors font-medium`}
+                isActive('/services') ? 'text-[#ff6b35]' : 'text-gray-700 hover:bg-[#ff6b35] hover:text-white'
+              } transition-all font-medium px-3 py-1.5 rounded-lg`}
             >
               Services
             </Link>
@@ -69,8 +69,8 @@ export default function UnifiedNavigation() {
               <Link
                 to="/dashboard"
                 className={`${
-                  isActive('/dashboard') ? 'text-[#ff6b35]' : 'text-gray-700 hover:text-[#ff6b35]'
-                } transition-colors font-medium`}
+                  isActive('/dashboard') ? 'text-[#ff6b35]' : 'text-gray-700 hover:bg-[#ff6b35] hover:text-white'
+                } transition-all font-medium px-3 py-1.5 rounded-lg`}
               >
                 Dashboard
               </Link>
@@ -79,8 +79,8 @@ export default function UnifiedNavigation() {
               <Link
                 to="/messages"
                 className={`${
-                  isActive('/messages') ? 'text-[#ff6b35]' : 'text-gray-700 hover:text-[#ff6b35]'
-                } transition-colors font-medium`}
+                  isActive('/messages') ? 'text-[#ff6b35]' : 'text-gray-700 hover:bg-[#ff6b35] hover:text-white'
+                } transition-all font-medium px-3 py-1.5 rounded-lg`}
               >
                 Messages
               </Link>
@@ -89,15 +89,15 @@ export default function UnifiedNavigation() {
               <Link
                 to="/admin"
                 className={`${
-                  isActive('/admin') ? 'text-[#ff6b35]' : 'text-gray-700 hover:text-[#ff6b35]'
-                } transition-colors font-medium`}
+                  isActive('/admin') ? 'text-[#ff6b35]' : 'text-gray-700 hover:bg-[#ff6b35] hover:text-white'
+                } transition-all font-medium px-3 py-1.5 rounded-lg`}
               >
                 Admin
               </Link>
             )}
             {!isAuthenticated && !isProvider && (
               <Link to="/provider-onboarding">
-                <Button variant="outline" size="sm" className="border-white/30 hover:bg-white/20">
+                <Button variant="outline" size="sm" className="border-[#ff6b35] text-[#ff6b35] hover:bg-[#ff6b35] hover:text-white">
                   Become a Provider
                 </Button>
               </Link>

@@ -19,7 +19,7 @@ export const authController = {
    */
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { name, email, phone, password, role } = req.body;
+      const { name, email, phone, password, role, address } = req.body;
 
       logger.debug('Registration attempt:', { email, phone: phone?.substring(0, 3) + '***' });
 
@@ -65,6 +65,7 @@ export const authController = {
         phone,
         password, // Ideally hashed, but keeping raw for now to match flow until hash step
         role: role || 'CUSTOMER',
+        address: address || '',
         timestamp: Date.now() 
       });
 
@@ -216,6 +217,8 @@ export const authController = {
         phone: registrationData.phone,
         passwordHash,
         role: registrationData.role,
+        address: registrationData.address || '',
+        city: 'Nanded', // Hardcoded for local service
         emailVerified: true, // Mark as verified since OTP was verified
       },
       select: {
@@ -272,9 +275,19 @@ export const authController = {
       throw new AppError('Invalid credentials', 401);
     }
 
-    // Check if provider is suspended
-    if (user.role === 'PROVIDER' && user.provider?.status === 'SUSPENDED') {
-      throw new AppError('Your account has been suspended. Please contact support.', 403);
+    // Check provider status - only block SUSPENDED
+    let providerStatus: string | null = null;
+    let requiresOnboarding = false;
+    
+    if (user.role === 'PROVIDER' && user.provider) {
+      providerStatus = user.provider.status;
+      if (user.provider.status === 'SUSPENDED') {
+        throw new AppError('Your account has been suspended. Please contact support.', 403);
+      }
+      // PENDING or REJECTED - allow login but flag for step 3 redirect
+      if (user.provider.status === 'PENDING' || user.provider.status === 'REJECTED') {
+        requiresOnboarding = true;
+      }
     }
 
     // Verify password
@@ -301,6 +314,8 @@ export const authController = {
         emailVerified: user.emailVerified,
         walletBalance: user.walletBalance,
         totalSpending: user.totalSpending,
+        providerStatus,
+        requiresOnboarding,
       },
       tokens: {
         accessToken,

@@ -29,6 +29,7 @@ const ProviderProfilePage = lazy(() => import('./components/ProviderProfilePage'
 const ProviderOnboardingPage = lazy(() => import('./components/ProviderOnboardingPage'));
 const NotificationsPage = lazy(() => import('./components/NotificationsPage'));
 const BannedPage = lazy(() => import('./components/BannedPage'));
+const ProviderPendingPage = lazy(() => import('./components/ProviderPendingPage'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 const TermsPage = lazy(() => import('./components/TermsPage'));
 const CookiePolicyPage = lazy(() => import('./components/CookiePolicyPage'));
@@ -62,6 +63,7 @@ export default function App() {
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/verify-email" element={<VerifyEmailPage />} />
                       <Route path="/provider-onboarding" element={<ProviderOnboardingPage />} />
+                      <Route path="/provider-pending" element={<ProviderPendingPage />} />
                       <Route path="/services" element={<ServicesPage />} />
                       <Route path="/provider/services" element={<ProviderServicesPage />} />
                       <Route path="/provider/profile" element={<ProviderProfilePage />} />

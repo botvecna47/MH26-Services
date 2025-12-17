@@ -185,6 +185,37 @@ export default function CustomerProfilePage() {
             </div>
         </div>
       </div>
+
+      {/* Provider Settings - Only shown for Provider role */}
+      {user?.role === 'PROVIDER' && user?.provider && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <LayoutDashboard className="h-5 w-5 text-[#ff6b35]" />
+            Business Settings
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+              <p className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 text-gray-900">
+                {user.provider.businessName}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Contact support to change business name</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Service Radius</label>
+              <p className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 text-gray-900">
+                {(user.provider as any).serviceRadius || 10} km
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Maximum distance you serve from your location</p>
+            </div>
+          </div>
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Tip:</strong> To manage your services and pricing, go to the <strong>My Services</strong> tab.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

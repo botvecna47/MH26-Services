@@ -458,5 +458,31 @@ export const providerController = {
       email: provider.user.email
     });
   },
-};
 
+  // Get provider application status by email (for pending page)
+  async getStatusByEmail(req: Request, res: Response): Promise<void> {
+    const { email } = req.params;
+    
+    if (!email) {
+      throw new AppError('Email is required', 400);
+    }
+
+    // Find user by email and their provider profile
+    const user = await prisma.user.findUnique({
+      where: { email: decodeURIComponent(email) },
+      include: {
+        provider: true,
+      },
+    });
+
+    if (!user || !user.provider) {
+      throw new AppError('No provider application found for this email', 404);
+    }
+
+    res.json({
+      status: user.provider.status,
+      businessName: user.provider.businessName,
+      rejectionReason: user.provider.rejectionReason,
+    });
+  },
+};
