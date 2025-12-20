@@ -506,6 +506,7 @@ async function main() {
           priceUnit: 'per service',
           estimatedDuration: serviceData.duration,
           isActive: true,
+          status: 'APPROVED',
           imageUrl: serviceData.image || providerData.gallery[0],
         },
       });
