@@ -624,28 +624,38 @@ export default function AuthPage() {
                       <label className="text-sm text-gray-700">Phone Number</label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <span className="absolute left-10 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">+91</span>
                         <Input
                           type="tel"
                           placeholder="9876543210"
                           value={formData.phone}
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className={`pl-10 pr-10 h-11 ${
+                          onChange={(e) => {
+                            // Only allow numeric input
+                            const numericValue = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            handleInputChange('phone', numericValue);
+                          }}
+                          className={`pl-16 pr-10 h-11 ${
                             errors.phone || phoneStatus === 'invalid' || phoneStatus === 'taken' 
                               ? 'border-red-500' 
                               : phoneStatus === 'valid' ? 'border-green-500' : ''
                           }`}
                           autoComplete="tel"
                           name="phone"
+                          maxLength={10}
+                          inputMode="numeric"
+                          pattern="[6-9][0-9]{9}"
                         />
                         {/* Validation indicator */}
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                           {isCheckingPhone && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
                           {!isCheckingPhone && phoneStatus === 'valid' && <CheckCircle className="w-4 h-4 text-green-500" />}
                           {!isCheckingPhone && phoneStatus === 'invalid' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                          {!isCheckingPhone && phoneStatus === 'taken' && <AlertCircle className="w-4 h-4 text-orange-500" />}
                         </div>
                       </div>
                       {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-                      {!errors.phone && phoneStatus === 'invalid' && <p className="text-sm text-red-500">Invalid phone (10 digits starting with 6-9)</p>}
+                      {!errors.phone && phoneStatus === 'invalid' && <p className="text-sm text-red-500">Must be 10 digits starting with 6, 7, 8, or 9</p>}
+                      {!errors.phone && phoneStatus === 'taken' && <p className="text-sm text-orange-500">This phone number is already registered</p>}
                     </div>
                   )}
 
