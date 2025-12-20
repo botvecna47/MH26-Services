@@ -29,7 +29,7 @@ export const serviceController = {
 
       if (q) {
         where.OR = [
-          { title: { contains: q as string, mode: 'insensitive' } },
+          { name: { contains: q as string, mode: 'insensitive' } },
           { description: { contains: q as string, mode: 'insensitive' } },
           { provider: { businessName: { contains: q as string, mode: 'insensitive' } } },
         ];
