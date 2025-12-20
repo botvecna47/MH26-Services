@@ -42,6 +42,11 @@ if (!isProduction) {
     new winston.transports.File({ 
       filename: 'logs/combined.log',
       format: fileFormat,
+    }),
+    // Dedicated email log for tracking all email-related activity
+    new winston.transports.File({ 
+      filename: 'logs/email.log',
+      format: fileFormat,
     })
   );
 }
