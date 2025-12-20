@@ -126,11 +126,11 @@ export const updateProviderSchema = z.object({
 // Service Schemas
 export const createServiceSchema = z.object({
   body: z.object({
-    providerId: z.string().uuid(),
     title: z.string().min(3, 'Title must be at least 3 characters'),
     description: z.string().optional(),
     price: z.number().positive('Price must be positive'),
     durationMin: z.number().int().positive('Duration must be positive'),
+    imageUrl: z.string().optional(),
   }),
 });
 

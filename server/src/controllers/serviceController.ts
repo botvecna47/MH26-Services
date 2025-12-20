@@ -91,6 +91,11 @@ export const serviceController = {
                     avatarUrl: true,
                   },
                 },
+                bookings: {
+                  where: { status: 'IN_PROGRESS' },
+                  select: { id: true },
+                  take: 1,
+                },
               },
             },
           },
@@ -98,12 +103,20 @@ export const serviceController = {
         prisma.service.count({ where }),
       ]);
 
-      // Transform services to include frontend-compatible fields
-      const transformedServices = services.map(service => ({
-        ...service,
-        price: service.basePrice, // Map basePrice to price for frontend
-        title: service.name, // Map name to title for frontend
-      }));
+      // Transform services to include frontend-compatible fields + availability
+      const transformedServices = services.map(service => {
+        const { bookings: providerBookings, ...providerRest } = service.provider;
+        return {
+          ...service,
+          price: service.basePrice, // Map basePrice to price for frontend
+          title: service.name, // Map name to title for frontend
+          durationMin: service.estimatedDuration, // Map estimatedDuration to durationMin
+          provider: {
+            ...providerRest,
+            isAvailable: providerBookings.length === 0, // Available if no IN_PROGRESS bookings
+          },
+        };
+      });
 
       res.json({
         data: transformedServices,
@@ -197,20 +210,21 @@ export const serviceController = {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req as AuthRequest).user!.id;
-      const { providerId, title, description, price, durationMin, imageUrl } = req.body;
+      const { title, description, price, durationMin, imageUrl } = req.body;
 
-      // Verify provider belongs to user
-      const provider = await prisma.provider.findFirst({
+      // Verify provider belongs to user (1:1 relationship)
+      const provider = await prisma.provider.findUnique({
         where: {
-          id: providerId,
           userId,
         },
       });
 
       if (!provider) {
-        res.status(404).json({ error: 'Provider not found or unauthorized' });
+        res.status(404).json({ error: 'Provider profile not found. Please complete onboarding.' });
         return;
       }
+      
+      const providerId = provider.id;
 
       // Image Fallback Logic: Service Image -> Provider Gallery [0] -> Empty String
       let finalImageUrl = imageUrl || '';

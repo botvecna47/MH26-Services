@@ -12,7 +12,7 @@ export interface Booking {
   scheduledAt?: string; // Legacy/Optional
   scheduledDate: string;
   scheduledTime: string;
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
+  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
   totalAmount?: number; // Legacy
   estimatedPrice: number;
   actualPrice?: number;
@@ -73,7 +73,7 @@ export interface CreateBookingData {
 }
 
 export interface UpdateBookingData {
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
+  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
 }
 
 export const bookingsApi = {
@@ -244,5 +244,16 @@ export function useVerifyCompletion() {
        queryClient.invalidateQueries({ queryKey: ['bookings'] });
        queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
     }
+  });
+}
+
+export function useStartService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => bookingsApi.updateBooking(id, { status: 'IN_PROGRESS' }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', data.id] });
+    },
   });
 }

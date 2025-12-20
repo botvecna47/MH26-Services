@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -41,6 +41,14 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Real-time validation states
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken'>('idle');
+  const [phoneStatus, setPhoneStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken'>('idle');
+  const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const phoneTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -66,6 +74,56 @@ export default function AuthPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+
+  // Debounced email check
+  const checkEmailAvailability = useCallback(async (email: string) => {
+    if (!email || email.length < 5) {
+      setEmailStatus('idle');
+      return;
+    }
+    
+    setIsCheckingEmail(true);
+    try {
+      const result = await authApi.checkAvailability({ email });
+      if (!result.emailValid) {
+        setEmailStatus('invalid');
+      } else if (!result.emailAvailable) {
+        setEmailStatus('taken');
+      } else {
+        setEmailStatus('valid');
+      }
+    } catch (error) {
+      console.error('Email check failed:', error);
+      setEmailStatus('idle');
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  }, []);
+
+  // Debounced phone check
+  const checkPhoneAvailability = useCallback(async (phone: string) => {
+    if (!phone || phone.length < 10) {
+      setPhoneStatus('idle');
+      return;
+    }
+    
+    setIsCheckingPhone(true);
+    try {
+      const result = await authApi.checkAvailability({ phone });
+      if (!result.phoneValid) {
+        setPhoneStatus('invalid');
+      } else if (!result.phoneAvailable) {
+        setPhoneStatus('taken');
+      } else {
+        setPhoneStatus('valid');
+      }
+    } catch (error) {
+      console.error('Phone check failed:', error);
+      setPhoneStatus('idle');
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  }, []);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,6 +350,24 @@ export default function AuthPage() {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+
+    // Debounced email check (only for signup/join modes)
+    if (field === 'email' && mode !== 'signin') {
+      if (emailTimeoutRef.current) clearTimeout(emailTimeoutRef.current);
+      setEmailStatus('idle');
+      emailTimeoutRef.current = setTimeout(() => {
+        checkEmailAvailability(value);
+      }, 500);
+    }
+
+    // Debounced phone check (only for signup/join modes)
+    if (field === 'phone' && mode !== 'signin') {
+      if (phoneTimeoutRef.current) clearTimeout(phoneTimeoutRef.current);
+      setPhoneStatus('idle');
+      phoneTimeoutRef.current = setTimeout(() => {
+        checkPhoneAvailability(value);
+      }, 500);
+    }
   };
 
   return (
@@ -502,12 +578,26 @@ export default function AuthPage() {
                         placeholder="you@example.com"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        className={`pl-10 h-11 ${errors.email ? 'border-red-500' : ''}`}
+                        className={`pl-10 pr-10 h-11 ${
+                          errors.email || emailStatus === 'invalid' || emailStatus === 'taken' 
+                            ? 'border-red-500' 
+                            : emailStatus === 'valid' ? 'border-green-500' : ''
+                        }`}
                         autoComplete="email"
                         name="email"
                       />
+                      {/* Validation indicator - only show in signup/join modes */}
+                      {mode !== 'signin' && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          {isCheckingEmail && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                          {!isCheckingEmail && emailStatus === 'valid' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          {!isCheckingEmail && (emailStatus === 'invalid' || emailStatus === 'taken') && <AlertCircle className="w-4 h-4 text-red-500" />}
+                        </div>
+                      )}
                     </div>
                     {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                    {!errors.email && emailStatus === 'invalid' && <p className="text-sm text-red-500">Invalid email format</p>}
+                    {!errors.email && emailStatus === 'taken' && <p className="text-sm text-red-500">This email is already registered</p>}
                   </div>
 
                   {/* Name (for signup and join) */}
@@ -539,12 +629,23 @@ export default function AuthPage() {
                           placeholder="9876543210"
                           value={formData.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className={`pl-10 h-11 ${errors.phone ? 'border-red-500' : ''}`}
+                          className={`pl-10 pr-10 h-11 ${
+                            errors.phone || phoneStatus === 'invalid' || phoneStatus === 'taken' 
+                              ? 'border-red-500' 
+                              : phoneStatus === 'valid' ? 'border-green-500' : ''
+                          }`}
                           autoComplete="tel"
                           name="phone"
                         />
+                        {/* Validation indicator */}
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          {isCheckingPhone && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                          {!isCheckingPhone && phoneStatus === 'valid' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          {!isCheckingPhone && phoneStatus === 'invalid' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                        </div>
                       </div>
                       {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                      {!errors.phone && phoneStatus === 'invalid' && <p className="text-sm text-red-500">Invalid phone (10 digits starting with 6-9)</p>}
                     </div>
                   )}
 

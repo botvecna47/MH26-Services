@@ -120,17 +120,34 @@ export default function AddProviderModal({ isOpen, onClose }: AddProviderModalPr
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
-                <Select onValueChange={handleSelectChange} value={formData.primaryCategory} disabled={categoriesLoading}>
+                <Select onValueChange={handleSelectChange} value={formData.primaryCategory === '' || categoriesData?.some((c: any) => c.name === formData.primaryCategory) ? formData.primaryCategory : '__custom__'} disabled={categoriesLoading}>
                   <SelectTrigger>
                     <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select Category"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100] max-h-60 overflow-y-auto">
                     {categoriesData?.map((cat: any) => (
                       <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                     ))}
+                    {/* Option to use custom category */}
+                    <SelectItem value="__custom__">+ Add Custom Category</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {/* Custom category input - shown when "Add Custom Category" is selected */}
+              {(formData.primaryCategory === '__custom__' || (!categoriesData?.some((c: any) => c.name === formData.primaryCategory) && formData.primaryCategory !== '' && formData.primaryCategory !== '__custom__')) && (
+                <div className="space-y-2">
+                  <Label htmlFor="customCategory">Custom Category Name <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="customCategory" 
+                    name="customCategory" 
+                    placeholder="e.g., Pet Grooming, Interior Design" 
+                    value={formData.primaryCategory === '__custom__' ? '' : formData.primaryCategory}
+                    onChange={(e) => setFormData(prev => ({ ...prev, primaryCategory: e.target.value }))}
+                    className="border-orange-200 focus:border-orange-400"
+                  />
+                  <p className="text-xs text-amber-600">This category will be created when the provider is added.</p>
+                </div>
+              )}
               <div className="space-y-2">
                  <Label htmlFor="serviceRadius">Service Radius (km)</Label>
                  <Input id="serviceRadius" name="serviceRadius" type="number" placeholder="10" value={formData.serviceRadius} onChange={handleInputChange} />

@@ -192,25 +192,23 @@ export default function BookingModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time Slot</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Preferred Time</label>
               <div className="relative">
                 <Clock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <select
+                <input
+                  type="time"
                   name="time"
                   value={formData.time}
                   onChange={handleChange}
-                   className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#ff6b35] focus:border-transparent outline-none transition-all appearance-none bg-white ${errors.time ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
-                >
-                  <option value="">Select Time</option>
-                  <option value="09:00">09:00 AM - 11:00 AM</option>
-                  <option value="11:00">11:00 AM - 01:00 PM</option>
-                  <option value="13:00">01:00 PM - 03:00 PM</option>
-                  <option value="15:00">03:00 PM - 05:00 PM</option>
-                  <option value="17:00">05:00 PM - 07:00 PM</option>
-                  <option value="19:00">07:00 PM - 09:00 PM</option>
-                </select>
+                  min={formData.date === format(new Date(), 'yyyy-MM-dd') 
+                    ? format(new Date(Date.now() + 30 * 60 * 1000), 'HH:mm') 
+                    : '08:00'}
+                  max="21:00"
+                  className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#ff6b35] focus:border-transparent outline-none transition-all bg-white ${errors.time ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
+                />
               </div>
               {errors.time && <p className="text-xs text-red-500">{errors.time}</p>}
+              <p className="text-xs text-gray-500">Service hours: 8:00 AM - 9:00 PM</p>
             </div>
           </div>
 

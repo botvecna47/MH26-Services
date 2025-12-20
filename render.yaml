@@ -1,0 +1,23 @@
+# Render Blueprint for MH26 Services Backend
+# Deploy at: https://dashboard.render.com/blueprints
+
+services:
+  - type: web
+    name: mh26-services-api
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false  # Set this manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false  # Set to your Vercel frontend URL
+      - key: RESEND_API_KEY
+        sync: false  # Optional: for email notifications
+    healthCheckPath: /api/health

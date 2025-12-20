@@ -18,6 +18,7 @@ export interface User {
   providerStatus?: string | null;     // Provider status: PENDING, APPROVED, REJECTED, SUSPENDED
   requiresOnboarding?: boolean;       // True if provider needs to complete/resubmit step 3
   provider?: {
+    id: string;
     businessName: string;
     status: string;
     totalRevenue?: number;

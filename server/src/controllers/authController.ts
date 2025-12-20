@@ -265,6 +265,8 @@ export const authController = {
       include: {
         provider: {
           select: {
+            id: true,
+            businessName: true,
             status: true,
           },
         },
@@ -316,6 +318,11 @@ export const authController = {
         totalSpending: user.totalSpending,
         providerStatus,
         requiresOnboarding,
+        provider: user.provider ? {
+          id: user.provider.id,
+          businessName: user.provider.businessName,
+          status: user.provider.status,
+        } : undefined,
       },
       tokens: {
         accessToken,
@@ -657,6 +664,37 @@ export const authController = {
     await sendVerificationEmail(newEmail, tokenString);
 
     res.json({ message: 'Verification link sent to new email address.' });
+  },
+
+  /**
+   * Check email/phone availability for real-time validation
+   */
+  async checkAvailability(req: Request, res: Response): Promise<void> {
+    const { email, phone } = req.query;
+    const result: { emailAvailable?: boolean; phoneAvailable?: boolean; emailValid?: boolean; phoneValid?: boolean } = {};
+
+    if (email && typeof email === 'string') {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      result.emailValid = emailRegex.test(email);
+      
+      if (result.emailValid) {
+        const existingEmail = await prisma.user.findUnique({ where: { email } });
+        result.emailAvailable = !existingEmail;
+      } else {
+        result.emailAvailable = false;
+      }
+    }
+
+    if (phone && typeof phone === 'string') {
+      // Validate phone format (10 digits starting with 6-9)
+      // Note: Phone numbers can be duplicated, only format is validated
+      const phoneRegex = /^[6-9]\d{9}$/;
+      result.phoneValid = phoneRegex.test(phone);
+      result.phoneAvailable = true; // Always available - duplicates allowed
+    }
+
+    res.json(result);
   },
 };
 

@@ -675,9 +675,25 @@ export default function AdminPanel() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <Badge variant={u.userType === 'admin' ? 'default' : u.userType === 'provider' ? 'secondary' : 'outline'}>
-                            {u.userType}
-                          </Badge>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant={
+                              (u as any).role === 'ADMIN' ? 'default' : 
+                              (u as any).role === 'PROVIDER' ? 'secondary' : 
+                              'outline'
+                            }>
+                              {(u as any).role || 'CUSTOMER'}
+                            </Badge>
+                            {/* Show provider onboarding status if applicable */}
+                            {(u as any).provider?.status && (u as any).provider?.status !== 'APPROVED' && (
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                (u as any).provider?.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                (u as any).provider?.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                Provider: {(u as any).provider?.status}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           {u.isBanned ? (

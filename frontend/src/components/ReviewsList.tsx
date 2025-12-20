@@ -73,15 +73,19 @@ export default function ReviewsList({ reviews, providerId }: ReviewsListProps) {
 
   return (
     <div>
-      {/* Add Review */}
+      {/* Add Review - Highlighted Call-to-Action */}
       {isAuthenticated && !showAddReview && (
-        <Button
-          onClick={() => setShowAddReview(true)}
-          variant="outline"
-          className="mb-4"
-        >
-          Write a Review
-        </Button>
+        <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl text-center">
+          <p className="text-gray-700 mb-3 text-sm">Have you used this service? Share your experience!</p>
+          <Button
+            onClick={() => setShowAddReview(true)}
+            className="bg-[#ff6b35] hover:bg-[#ff5722] text-white font-bold px-6 py-3 text-base shadow-lg hover:shadow-xl transition-all hover:scale-105 animate-pulse"
+            size="lg"
+          >
+            <Star className="h-5 w-5 mr-2 fill-white" />
+            Write a Review
+          </Button>
+        </div>
       )}
 
       {showAddReview && (

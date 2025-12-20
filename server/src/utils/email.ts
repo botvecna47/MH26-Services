@@ -123,6 +123,15 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       logger.info('═══════════════════════════════════════════════════════');
     }
   }
+
+  // Log booking confirmation/cancellation emails (for Render where SMTP is blocked)
+  if (options.subject.includes('Booking') || options.subject.includes('Confirmed') || options.subject.includes('Cancelled')) {
+    logger.info('═══════════════════════════════════════════════════════');
+    logger.info(`📧 BOOKING EMAIL FOR: ${options.to}`);
+    logger.info(`📋 SUBJECT: ${options.subject}`);
+    logger.info(`📝 CONTENT: ${options.text || 'See HTML version'}`);
+    logger.info('═══════════════════════════════════════════════════════');
+  }
 }
 
 /**
@@ -281,4 +290,148 @@ export async function sendProviderApprovalEmail(
       text: `Your provider application status has been updated. ${reason ? `Reason: ${reason}` : ''} Contact support for more information.`,
     });
   }
+}
+
+/**
+ * Send booking confirmation email to customer
+ */
+export async function sendBookingConfirmationToCustomer(
+  email: string,
+  customerName: string,
+  providerName: string,
+  serviceName: string,
+  scheduledAt: Date,
+  address: string,
+  totalAmount: number
+): Promise<void> {
+  const formattedDate = scheduledAt.toLocaleString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  await sendEmail({
+    to: email,
+    subject: '✅ Booking Confirmed - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #10b981;">Booking Confirmed!</h2>
+        <p>Dear ${customerName},</p>
+        <p>Great news! Your booking has been <strong>confirmed</strong> by the provider.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #ff6b35;">Booking Details</h3>
+          <p><strong>Service:</strong> ${serviceName}</p>
+          <p><strong>Provider:</strong> ${providerName}</p>
+          <p><strong>Scheduled:</strong> ${formattedDate}</p>
+          <p><strong>Address:</strong> ${address}</p>
+          <p><strong>Amount:</strong> ₹${totalAmount}</p>
+        </div>
+        
+        <p>The provider will arrive at the scheduled time. Please ensure someone is available at the address.</p>
+        
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `Booking Confirmed! Service: ${serviceName}, Provider: ${providerName}, Scheduled: ${formattedDate}, Amount: ₹${totalAmount}`,
+  });
+}
+
+/**
+ * Send booking confirmation email to provider
+ */
+export async function sendBookingConfirmationToProvider(
+  email: string,
+  providerName: string,
+  customerName: string,
+  customerPhone: string,
+  serviceName: string,
+  scheduledAt: Date,
+  address: string,
+  totalAmount: number
+): Promise<void> {
+  const formattedDate = scheduledAt.toLocaleString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  await sendEmail({
+    to: email,
+    subject: '📋 New Booking Confirmed - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ff6b35;">New Booking Confirmed!</h2>
+        <p>Dear ${providerName},</p>
+        <p>You have a new confirmed booking. Please be ready to provide the service at the scheduled time.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #ff6b35;">Booking Details</h3>
+          <p><strong>Service:</strong> ${serviceName}</p>
+          <p><strong>Customer:</strong> ${customerName}</p>
+          <p><strong>Phone:</strong> ${customerPhone}</p>
+          <p><strong>Scheduled:</strong> ${formattedDate}</p>
+          <p><strong>Address:</strong> ${address}</p>
+          <p><strong>Your Earnings:</strong> ₹${totalAmount}</p>
+        </div>
+        
+        <p style="color: #666;">Remember to mark the service as complete and collect the OTP from the customer after finishing.</p>
+        
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `New Booking Confirmed! Customer: ${customerName}, Phone: ${customerPhone}, Service: ${serviceName}, Scheduled: ${formattedDate}, Address: ${address}`,
+  });
+}
+
+/**
+ * Send booking cancellation email to provider
+ */
+export async function sendBookingCancellationToProvider(
+  email: string,
+  providerName: string,
+  customerName: string,
+  serviceName: string,
+  scheduledAt: Date,
+  reason?: string
+): Promise<void> {
+  const formattedDate = scheduledAt.toLocaleString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  await sendEmail({
+    to: email,
+    subject: '❌ Booking Cancelled - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ef4444;">Booking Cancelled</h2>
+        <p>Dear ${providerName},</p>
+        <p>A booking has been <strong>cancelled</strong> by the customer.</p>
+        
+        <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+          <h3 style="margin-top: 0;">Cancelled Booking</h3>
+          <p><strong>Service:</strong> ${serviceName}</p>
+          <p><strong>Customer:</strong> ${customerName}</p>
+          <p><strong>Was Scheduled:</strong> ${formattedDate}</p>
+          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        </div>
+        
+        <p>This time slot is now available for other bookings.</p>
+        
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `Booking Cancelled. Customer: ${customerName}, Service: ${serviceName}, Was Scheduled: ${formattedDate}${reason ? `, Reason: ${reason}` : ''}`,
+  });
 }

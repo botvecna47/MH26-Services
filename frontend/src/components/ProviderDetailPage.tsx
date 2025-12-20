@@ -25,7 +25,7 @@ import BookingModal from './BookingModal';
 
 export default function ProviderDetailPage() {
   const { id } = useParams();
-  const { isAuthenticated } = useUser();
+  const { user, isAuthenticated } = useUser();
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -37,6 +37,9 @@ export default function ProviderDetailPage() {
   
   // Fetch Reviews Data
   const { data: reviewsData, isLoading: isLoadingReviews } = useProviderReviews(id || '');
+  
+  // Check if viewing own profile (must be after provider is fetched)
+  const isOwnProfile = user?.id === provider?.userId;
 
   if (isLoadingProvider) {
       return (
@@ -241,16 +244,19 @@ export default function ProviderDetailPage() {
                   </div>
               )}
 
-              {/* Book Service Button */}
-              <Button
-                onClick={handleBookService}
-                className="w-full bg-[#ff6b35] hover:bg-[#ff5722] mb-2 shadow-lg"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Book Service
-              </Button>
+              {/* Book Service Button - Hide for own profile */}
+              {!isOwnProfile && (
+                <Button
+                  onClick={handleBookService}
+                  className="w-full bg-[#ff6b35] hover:bg-[#ff5722] mb-2 shadow-lg"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Book Service
+                </Button>
+              )}
 
-              {isAuthenticated && (
+              {/* Send Message - Hide for own profile */}
+              {isAuthenticated && !isOwnProfile && (
                 <Link to={`/messages?userId=${provider.userId}`} className="block w-full">
                   <Button variant="outline" className="w-full">
                     Send Message

@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Booking, useCancelBooking, useAcceptBooking, useRejectBooking } from '../api/bookings';
+import { Booking, useCancelBooking, useAcceptBooking, useRejectBooking, useStartService } from '../api/bookings';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Button } from './ui/button';
 import { MapPin, Phone, Mail, Calendar, Clock, DollarSign, CheckCircle, CheckCircle2, User, X, XCircle, FileText } from 'lucide-react';
@@ -26,11 +26,13 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
   const cancelBookingMutation = useCancelBooking();
   const acceptBookingMutation = useAcceptBooking();
   const rejectBookingMutation = useRejectBooking();
+  const startServiceMutation = useStartService();
 
   if (!booking) return null;
 
-  // Provider/Admin can accept or reject PENDING bookings
-  const canManageBooking = isProvider || isAdmin;
+  // Only the provider for this booking can accept/reject (not admin)
+  const isBookingProvider = isProvider && booking.providerId === user?.provider?.id;
+  const canManageBooking = isBookingProvider;
 
   const handleAcceptBooking = async () => {
     try {
@@ -99,6 +101,7 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
 
               <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-white/20 mt-1 ${
                 booking.status === 'COMPLETED' ? 'bg-green-500 text-white' :
+                booking.status === 'IN_PROGRESS' ? 'bg-purple-500 text-white' :
                 booking.status === 'CONFIRMED' ? 'bg-blue-500 text-white' :
                 booking.status === 'PENDING' ? 'bg-yellow-400 text-yellow-900' :
                 'bg-red-500 text-white'
@@ -116,15 +119,15 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
                  <p className="text-sm text-gray-500 mt-1">Service Request</p>
             </div>
 
-            {/* OTP Section (Prominent - Customer Only) */}
-            {isCustomer && booking.status === 'CONFIRMED' && completionOtp && (
+            {/* OTP Section - Shown to booking creator (customer who made the booking or admin) when OTP exists */}
+            {(isCustomer || isAdmin) && (booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS') && completionOtp && (
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-xl p-5 text-center shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-2 opacity-10">
                     <CheckCircle className="w-24 h-24 text-green-600" />
                 </div>
                 <p className="text-xs font-bold text-green-700 uppercase tracking-widest mb-1">Completion Code</p>
                 <p className="text-3xl font-black tracking-[0.2em] text-green-800 font-mono my-2 drop-shadow-sm">{completionOtp}</p>
-                <p className="text-xs text-green-600 bg-white/60 inline-block px-3 py-1 rounded-full">Share with provider after job is done</p>
+                <p className="text-xs text-green-600 bg-white/60 inline-block px-3 py-1 rounded-full">Share with provider after service is done</p>
               </div>
             )}
 
@@ -196,8 +199,20 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
                 </div>
               )}
 
-              {/* Mark Complete Button for Providers and Admins on CONFIRMED bookings */}
+              {/* Start Service for Providers: CONFIRMED -> IN_PROGRESS */}
               {canManageBooking && booking.status === 'CONFIRMED' && (
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 shadow-md text-md py-6 rounded-xl transition-all hover:scale-[1.02]"
+                  onClick={() => startServiceMutation.mutate(booking.id)}
+                  disabled={startServiceMutation.isPending}
+                >
+                  <Clock className="h-5 w-5 mr-2" />
+                  {startServiceMutation.isPending ? 'Starting...' : 'Start Service'}
+                </Button>
+              )}
+
+              {/* Mark Complete Button for Providers on IN_PROGRESS bookings */}
+              {canManageBooking && booking.status === 'IN_PROGRESS' && (
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700 shadow-md text-md py-6 rounded-xl transition-all hover:scale-[1.02]"
                   onClick={() => setShowCompletionModal(true)}

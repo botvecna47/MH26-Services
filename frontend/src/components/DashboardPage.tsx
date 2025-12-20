@@ -1,5 +1,5 @@
 import { useUser } from '../context/UserContext';
-import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Star } from 'lucide-react';
 import { Button } from './ui/button';
 import { Link, useSearchParams } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -11,8 +11,11 @@ import CustomerProfilePage from './CustomerProfilePage';
 import ProviderSchedulePage from './ProviderSchedulePage';
 import MyServicesSection from './MyServicesSection';
 import BookingDetailModal from './BookingDetailModal';
+import ReviewModal from './ReviewModal';
 import { useState, useEffect } from 'react';
 import { useProviderStats } from '../api/providers';
+import { useServices } from '../api/services';
+import AddServiceModal from './AddServiceModal';
 
 
 import { useSocket } from '../context/SocketContext';
@@ -26,6 +29,7 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'overview';
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
 
 
   // Queries
@@ -40,6 +44,13 @@ export default function DashboardPage() {
 
   // Analytics for Provider
   const { data: providerStats, isLoading: providerStatsLoading } = useProviderStats({ enabled: isProvider });
+
+  // Force Add Service Check (only for providers)
+  const { data: providerServicesData, isLoading: providerServicesLoading } = useServices(
+     isProvider && user?.provider?.id ? { providerId: user.provider.id } : undefined
+  );
+  
+  const showForceAddService = isProvider && !providerServicesLoading && (providerServicesData?.data?.length || 0) === 0;
 
   // Socket for real-time updates
   const { socket } = useSocket();
@@ -110,6 +121,8 @@ export default function DashboardPage() {
         return 'text-green-600 bg-green-100';
       case 'CONFIRMED':
         return 'text-blue-600 bg-blue-100';
+      case 'IN_PROGRESS':
+        return 'text-purple-600 bg-purple-100';
       case 'PENDING':
         return 'text-yellow-600 bg-yellow-100';
       case 'CANCELLED':
@@ -282,7 +295,7 @@ export default function DashboardPage() {
                         <DollarSign className="h-5 w-5 text-green-600" />
                       </div>
                       <div className="text-gray-900">
-                        ₹{userBookings.reduce((sum: number, b: Booking) => sum + (b.totalAmount || 0), 0).toLocaleString('en-IN')}
+                        ₹{userBookings.reduce((sum: number, b: Booking) => sum + Number(b.totalAmount || 0), 0).toLocaleString('en-IN')}
                       </div>
                       <p className="text-xs text-gray-600 mt-1">Total spent</p>
                     </div>
@@ -336,12 +349,18 @@ export default function DashboardPage() {
                             <span className="font-medium text-gray-900">₹{booking.totalAmount}</span>
                           </div>
                           <div className="flex gap-2">
-
-                            
-
-
-
-
+                            {/* Leave Review button for completed bookings without review (customers only) */}
+                            {isCustomer && booking.status === 'COMPLETED' && !booking.review && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setReviewBooking(booking)}
+                                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                              >
+                                <Star className="h-4 w-4 mr-1" />
+                                Leave Review
+                              </Button>
+                            )}
 
                             <Button variant="outline" size="sm" onClick={() => setSelectedBooking(booking)}>View Details</Button>
                           </div>
@@ -384,7 +403,7 @@ export default function DashboardPage() {
                     </>
                   ) : isProvider ? (
                     <>
-                      <Link to={`/provider/${user.id}`}>
+                      <Link to={`/provider/${user.provider?.id}`}>
                         <Button variant="outline" className="w-full justify-start">
                           View My Profile
                         </Button>
@@ -443,6 +462,25 @@ export default function DashboardPage() {
           isOpen={!!selectedBooking}
           onClose={() => setSelectedBooking(null)}
           booking={selectedBooking}
+        />
+      )}
+
+      {/* Forced Add Service Modal for new providers */}
+      {showForceAddService && (
+        <AddServiceModal 
+            onClose={() => {}} // No-op, closed by data refresh 
+            canClose={false} 
+        />
+      )}
+
+      {/* Review Modal */}
+      {reviewBooking && (
+        <ReviewModal
+          isOpen={!!reviewBooking}
+          onClose={() => setReviewBooking(null)}
+          bookingId={reviewBooking.id}
+          providerId={reviewBooking.providerId}
+          providerName={reviewBooking.provider?.businessName || 'Provider'}
         />
       )}
     </div>

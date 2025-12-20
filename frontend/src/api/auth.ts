@@ -87,5 +87,15 @@ export const authApi = {
     });
     return response.data;
   },
+
+  checkAvailability: async (params: { email?: string; phone?: string }): Promise<{
+    emailAvailable?: boolean;
+    phoneAvailable?: boolean;
+    emailValid?: boolean;
+    phoneValid?: boolean;
+  }> => {
+    const response = await axiosClient.get('/auth/check-availability', { params });
+    return response.data;
+  },
 };
 

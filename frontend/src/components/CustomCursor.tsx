@@ -102,6 +102,33 @@ export default function CustomCursor() {
     document.documentElement.addEventListener('mouseleave', onMouseLeaveDoc);
     document.documentElement.addEventListener('mouseenter', onMouseEnterDoc);
 
+    // Inject global styles to hide default cursor and force custom cursor
+    if (!isTouchDevice) {
+      const style = document.createElement('style');
+      style.id = 'custom-cursor-style';
+      style.innerHTML = `
+        * { cursor: none !important; }
+        a, button, input, textarea, select, [role="button"], .cursor-pointer { cursor: none !important; }
+      `;
+      document.head.appendChild(style);
+
+      return () => {
+        if (document.head.contains(style)) {
+          document.head.removeChild(style);
+        }
+        window.removeEventListener('resize', checkTouch);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mousedown', onMouseDown);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('mouseover', onMouseEnter);
+        document.removeEventListener('mouseout', onMouseLeave);
+        window.removeEventListener('blur', onWindowBlur);
+        window.removeEventListener('focus', onWindowFocus);
+        document.documentElement.removeEventListener('mouseleave', onMouseLeaveDoc);
+        document.documentElement.removeEventListener('mouseenter', onMouseEnterDoc);
+      };
+    }
+
     return () => {
       window.removeEventListener('resize', checkTouch);
       document.removeEventListener('mousemove', onMouseMove);

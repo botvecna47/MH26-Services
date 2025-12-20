@@ -3,6 +3,11 @@ import { AppError } from '../middleware/errorHandler';
 import { emitBookingUpdate, emitRevenueUpdate, emitWalletUpdate } from '../socket';
 import { config } from '../config/env';
 import logger from '../config/logger';
+import { 
+  sendBookingConfirmationToCustomer, 
+  sendBookingConfirmationToProvider,
+  sendBookingCancellationToProvider 
+} from '../utils/email';
 
 export const bookingService = {
   /**
@@ -24,6 +29,31 @@ export const bookingService = {
     const service = provider.services.find((s) => s.id === serviceId);
     if (!service) {
       throw new AppError('Service not found', 404);
+    }
+
+    // Check for duplicate active booking
+    const existingBooking = await prisma.booking.findFirst({
+      where: {
+        userId,
+        serviceId,
+        status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] }
+      }
+    });
+    
+    if (existingBooking) {
+      throw new AppError('You already have an active booking for this service. Please wait until it is completed.', 400);
+    }
+
+    // Check if provider is currently busy (has IN_PROGRESS booking)
+    const providerBusy = await prisma.booking.findFirst({
+      where: {
+        providerId,
+        status: 'IN_PROGRESS'
+      }
+    });
+    
+    if (providerBusy) {
+      throw new AppError('This provider is currently busy serving another customer. Please try again later.', 400);
     }
 
     // 2. Fee Calculation using Config
@@ -164,7 +194,7 @@ export const bookingService = {
     bookingId: string, 
     userId: string, 
     userRole: string, 
-    status: 'CONFIRMED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED',
+    status: 'CONFIRMED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED' | 'IN_PROGRESS',
     reason?: string
   ) {
     const booking = await prisma.booking.findUnique({
@@ -187,7 +217,7 @@ export const bookingService = {
     }
 
     // State Machine Validation
-    if (status === 'CONFIRMED' || status === 'REJECTED') {
+    if (status === 'IN_PROGRESS' || status === 'CONFIRMED' || status === 'REJECTED') {
       if (booking.status !== 'PENDING') throw new AppError(`Can only ${status} pending bookings`, 400);
     }
 
@@ -196,11 +226,47 @@ export const bookingService = {
       where: { id: bookingId },
       data: { status },
       include: {
-        user: { select: { id: true, name: true } },
-        provider: { include: { user: { select: { id: true } } } },
+        user: { select: { id: true, name: true, email: true, phone: true } },
+        provider: { include: { user: { select: { id: true, email: true, name: true } } } },
         service: true,
       },
     });
+
+    // Send emails based on status change (fire-and-forget, non-blocking)
+    if (status === 'CONFIRMED') {
+      // Email to customer (async, non-blocking)
+      sendBookingConfirmationToCustomer(
+        updated.user.email!,
+        updated.user.name,
+        updated.provider.businessName,
+        updated.service.name,
+        booking.scheduledAt,
+        booking.address || '',
+        Number(booking.totalAmount)
+      ).catch(err => logger.error('Failed to send customer confirmation email:', err));
+      
+      // Email to provider (async, non-blocking)
+      sendBookingConfirmationToProvider(
+        updated.provider.user.email!,
+        updated.provider.businessName,
+        updated.user.name,
+        updated.user.phone || '',
+        updated.service.name,
+        booking.scheduledAt,
+        booking.address || '',
+        Number(booking.providerEarnings)
+      ).catch(err => logger.error('Failed to send provider confirmation email:', err));
+    } else if (status === 'CANCELLED' && isCustomer) {
+      // Customer cancelled - notify provider (async, non-blocking)
+      sendBookingCancellationToProvider(
+        updated.provider.user.email!,
+        updated.provider.businessName,
+        updated.user.name,
+        updated.service.name,
+        booking.scheduledAt,
+        reason
+      ).catch(err => logger.error('Failed to send cancellation email:', err));
+    }
 
     // Handle Cancellation Reason separately if needed
     if (status === 'CANCELLED' && reason) {
@@ -212,6 +278,7 @@ export const bookingService = {
     // Notifications
     const notificationMap = {
         CONFIRMED: { title: 'Booking Confirmed', msg: 'Provider accepted your booking' },
+        IN_PROGRESS: { title: 'Service Started', msg: 'Provider has started working on your service' },
         REJECTED: { title: 'Booking Rejected', msg: 'Provider rejected your booking' },
         COMPLETED: { title: 'Service Completed', msg: 'Service marked as completed' },
         CANCELLED: { title: 'Booking Cancelled', msg: 'Booking was cancelled' }

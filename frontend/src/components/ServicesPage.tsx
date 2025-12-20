@@ -54,6 +54,7 @@ export default function ServicesPage() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'rating' | 'newest' | 'name'>('newest');
+  const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
@@ -196,6 +197,19 @@ export default function ServicesPage() {
                 <SelectItem value="rating">Top Rated Provider</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Available Only Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowAvailableOnly(!showAvailableOnly)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                showAvailableOnly
+                  ? 'bg-green-500 text-white shadow-md'
+                  : 'bg-white/70 hover:bg-white text-gray-700 border border-gray-200'
+              }`}
+            >
+              🟢 Available Only
+            </button>
           </form>
         </div>
       </div>
@@ -249,7 +263,9 @@ export default function ServicesPage() {
         ) : (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {servicesData.data.map((service) => (
+              {servicesData.data
+                .filter(service => !showAvailableOnly || (service.provider as any).isAvailable)
+                .map((service) => (
                 <div
                   key={service.id}
                   className="glass glass-hover rounded-xl overflow-hidden flex flex-col h-full border border-white/40 shadow-sm hover:shadow-md transition-all duration-300"
@@ -298,7 +314,17 @@ export default function ServicesPage() {
                                   </div>
                               </div>
                           </div>
-                          <div className="flex flex-col items-end">
+                          <div className="flex flex-col items-end gap-1">
+                              {/* Availability Badge */}
+                              {(service.provider as any).isAvailable !== undefined && (
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  (service.provider as any).isAvailable 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : 'bg-red-100 text-red-600'
+                                }`}>
+                                  {(service.provider as any).isAvailable ? '🟢 Available' : '🔴 Busy'}
+                                </span>
+                              )}
                               <div className="flex items-center gap-1 bg-orange-50 px-1.5 py-0.5 rounded text-xs font-medium text-orange-600">
                                   <Star className="h-3 w-3 fill-orange-500 text-orange-500" />
                                   {service.provider.averageRating.toFixed(1)}

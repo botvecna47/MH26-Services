@@ -39,7 +39,7 @@ const DEFAULT_SCHEDULE: Schedule = {
 
 export default function ProviderSchedulePage() {
     const { user } = useUser();
-    const { data: provider, isLoading } = useProvider(user?.id || '');
+    const { data: provider, isLoading } = useProvider(user?.provider?.id || '');
     const [schedule, setSchedule] = useState<Schedule>(DEFAULT_SCHEDULE);
     const updateProviderMutation = useUpdateProvider();
 

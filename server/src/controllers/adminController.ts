@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
 import { emitNotification, emitProviderApproval } from '../socket';
-import { sendProviderApprovalEmail, sendProviderCredentialsEmail } from '../services/emailService';
+import { sendProviderApprovalEmail, sendProviderCredentialsEmail } from '../utils/email';
 import { hashPassword } from '../utils/security';
 import logger from '../config/logger';
 
@@ -236,21 +236,49 @@ export const adminController = {
 
       // 3. Create User & Provider in Transaction
       const result = await prisma.$transaction(async (tx) => {
-        // Create User
-        const user = await tx.user.create({
-          data: {
-            name,
-            email,
-            phone,
-            passwordHash,
-            role: 'PROVIDER', // Explicitly setting role
-            emailVerified: true, // Auto-verify since Admin created
-            address,
-            city: city || 'Nanded',
-          }
+        // 1. Ensure Category exists (Auto-create if custom)
+        const slug = primaryCategory.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        
+        // Try to find existing category (case-insensitive) or create new
+        const existingCategory = await tx.category.findFirst({
+            where: { 
+                OR: [
+                    { name: { equals: primaryCategory, mode: 'insensitive' } },
+                    { slug: { equals: slug, mode: 'insensitive' } }
+                ]
+            }
         });
 
-        // Create Provider Profile
+        if (!existingCategory) {
+            await tx.category.create({
+                data: {
+                    name: primaryCategory, // Preserve original casing
+                    slug: slug,
+                    description: `Services for ${primaryCategory}`,
+                    icon: '📦', // Default icon
+                    isActive: true
+                }
+            });
+        }
+
+        // 2. Create User
+        // Fix: Use hashPassword utility instead of direct bcrypt
+        const hashedPassword = await hashPassword(generatedPassword);
+        
+        const user = await tx.user.create({
+            data: {
+                name,
+                email,
+                phone,
+                passwordHash: hashedPassword,
+                role: 'PROVIDER', // Fix: Use string literal if UserRole enum not imported
+                emailVerified: true, // Admin created users are verified
+                address,
+                city: city || 'Nanded', // Default
+            },
+        });
+
+        // 3. Create Provider Profile
         const provider = await tx.provider.create({
           data: {
             userId: user.id,
