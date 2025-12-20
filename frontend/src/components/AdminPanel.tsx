@@ -95,7 +95,7 @@ export default function AdminPanel() {
   const { data: analytics } = useAnalytics();
   const { data: pendingProvidersData } = usePendingProviders();
   const { data: allProvidersData } = useAllProviders({ limit: 50 });
-  const { data: usersData } = useAdminUsers({ limit: 50 });
+  const { data: usersData } = useAdminUsers({ limit: 100 });
   const { data: bookingsData } = useAdminBookings({ status: bookingFilter === 'all' ? undefined : bookingFilter.toUpperCase() });
   const { data: pendingServicesData } = usePendingServices();
   const { data: categoriesData } = useCategories();
@@ -720,9 +720,12 @@ export default function AdminPanel() {
                                 Unban
                               </Button>
                             ) : (
-                              <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleBanUser(u.id)} disabled={u.userType === 'admin'}>
-                                Ban
-                              </Button>
+                              // Admin users cannot be banned - hide button entirely for admins
+                              (u as any).role !== 'ADMIN' && (
+                                <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleBanUser(u.id)}>
+                                  Ban
+                                </Button>
+                              )
                             )}
                           </div>
                         </td>
