@@ -44,7 +44,7 @@ export default function AuthPage() {
   // Real-time validation states
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken'>('idle');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken' | 'incomplete'>('idle');
   const [phoneStatus, setPhoneStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken' | 'incomplete'>('idle');
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const phoneTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -77,8 +77,14 @@ export default function AuthPage() {
 
   // Debounced email check
   const checkEmailAvailability = useCallback(async (email: string) => {
-    if (!email || email.length < 5) {
+    if (!email) {
       setEmailStatus('idle');
+      return;
+    }
+    
+    // Check if email looks incomplete (no @ or no domain)
+    if (!email.includes('@') || !email.includes('.')) {
+      setEmailStatus('incomplete');
       return;
     }
 
@@ -585,6 +591,7 @@ export default function AuthPage() {
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             className={`pl-10 pr-10 h-11 ${errors.email || emailStatus === 'invalid' || emailStatus === 'taken'
                                 ? 'border-red-500'
+                                : emailStatus === 'incomplete' ? 'border-yellow-500'
                                 : emailStatus === 'valid' ? 'border-green-500' : ''
                               }`}
                             autoComplete="email"
@@ -596,12 +603,14 @@ export default function AuthPage() {
                               {isCheckingEmail && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
                               {!isCheckingEmail && emailStatus === 'valid' && <CheckCircle className="w-4 h-4 text-green-500" />}
                               {!isCheckingEmail && (emailStatus === 'invalid' || emailStatus === 'taken') && <AlertCircle className="w-4 h-4 text-red-500" />}
+                              {!isCheckingEmail && emailStatus === 'incomplete' && <AlertCircle className="w-4 h-4 text-yellow-500" />}
                             </div>
                           )}
                         </div>
                         {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                         {!errors.email && emailStatus === 'invalid' && <p className="text-sm text-red-500">Invalid email format</p>}
                         {!errors.email && emailStatus === 'taken' && <p className="text-sm text-red-500">This email is already registered</p>}
+                        {!errors.email && emailStatus === 'incomplete' && <p className="text-sm text-yellow-600">Enter a valid email address</p>}
                       </div>
 
                       {/* Name (for signup and join) */}
