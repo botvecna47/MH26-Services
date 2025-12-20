@@ -45,15 +45,11 @@ export const bookingController = {
    * Get booking by ID
    */
   async getById(req: Request, res: Response): Promise<void> {
-    const userId = (req as AuthRequest).user!.id;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user!.id;
+    const userRole = authReq.user!.role;
     const { id } = req.params;
 
-    // We can keep simple read logic here or move to service
-    // For consistency, let's keep it direct if it's just a query, 
-    // OR allow the service to handle auth logic. 
-    // Let's use Prisma directly for simple reads to allow 'includes' flexibility,
-    // BUT strictly enforcing auth.
-    
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
@@ -69,7 +65,8 @@ export const bookingController = {
       return;
     }
 
-    if (booking.userId !== userId && booking.provider.userId !== userId) {
+    // Admin can view any booking, otherwise check ownership
+    if (userRole !== 'ADMIN' && booking.userId !== userId && booking.provider.userId !== userId) {
       res.status(403).json({ error: 'Unauthorized' });
       return;
     }
