@@ -12,7 +12,7 @@ export interface Booking {
   scheduledAt?: string; // Legacy/Optional
   scheduledDate: string;
   scheduledTime: string;
-  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
+  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'EXPIRED';
   totalAmount?: number; // Legacy
   estimatedPrice: number;
   actualPrice?: number;
@@ -73,7 +73,7 @@ export interface CreateBookingData {
 }
 
 export interface UpdateBookingData {
-  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
+  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'EXPIRED';
 }
 
 export const bookingsApi = {
