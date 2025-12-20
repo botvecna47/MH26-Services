@@ -191,7 +191,8 @@ export function useAnalytics(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['admin-analytics'],
     queryFn: adminApi.getAnalytics,
-    staleTime: 60000, // 1 minute
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: true,
     enabled: options?.enabled,
   });
 }
@@ -214,6 +215,8 @@ export function useAdminUsers(params?: UserListParams) {
   return useQuery({
     queryKey: ['admin-users', params],
     queryFn: () => adminApi.getUsers(params),
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: true,
   });
 }
 
