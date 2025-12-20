@@ -41,5 +41,11 @@ router.get('/:id/invoice', asyncHandler(bookingController.getInvoice));
 router.post('/:id/completion-initiate', requireRole('PROVIDER', 'ADMIN'), asyncHandler(bookingController.initiateCompletion));
 router.post('/:id/completion-verify', requireRole('PROVIDER', 'ADMIN'), asyncHandler(bookingController.verifyCompletion));
 
+// Start service (CONFIRMED -> IN_PROGRESS)
+router.post('/:id/start', requireRole('PROVIDER', 'ADMIN'), asyncHandler(bookingController.startService));
+
+// Admin: Force expire stale bookings
+router.post('/admin/expire-stale', requireRole('ADMIN'), asyncHandler(bookingController.expireStale));
+
 export default router;
 

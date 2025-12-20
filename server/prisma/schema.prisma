@@ -412,6 +412,7 @@ enum BookingStatus {
   COMPLETED
   CANCELLED
   REJECTED
+  EXPIRED
 }
 
 enum TransactionStatus {

@@ -83,7 +83,7 @@ export default function AdminPanel() {
   const { user, isAdmin } = useUser();
   // const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState('overview');
-  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'>('all');
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'expired'>('all');
   const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState<Booking | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null); // New state for full details
   const [selectedVerificationProvider, setSelectedVerificationProvider] = useState<VerificationProvider | null>(null);
@@ -742,7 +742,7 @@ export default function AdminPanel() {
                 <h3 className="font-semibold text-gray-900">All Transactions</h3>
                 <div className="flex gap-2">
                   {/* Filter Buttons */}
-                  {(['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled'] as const).map(f => (
+                  {(['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'expired'] as const).map(f => (
                     <Button
                       key={f}
                       variant={bookingFilter === f ? 'default' : 'outline'}
@@ -802,7 +802,8 @@ export default function AdminPanel() {
                                 booking.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-800' :
                                 booking.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
                                   booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                    booking.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    booking.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                    booking.status === 'EXPIRED' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'}`}>
                               {booking.status.toLowerCase()}
                             </span>
                             {/* OTP Display for Admin's Own Bookings */}

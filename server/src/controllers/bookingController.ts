@@ -181,4 +181,29 @@ export const bookingController = {
       );
       res.json(result);
   },
+
+  /**
+   * Start service (CONFIRMED -> IN_PROGRESS)
+   */
+  async startService(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const result = await bookingService.updateBookingStatus(
+        id, 
+        (req as AuthRequest).user!.id, 
+        (req as AuthRequest).user!.role, 
+        'IN_PROGRESS'
+    );
+    res.json(result);
+  },
+
+  /**
+   * Manually trigger expiry of stale bookings (Admin only)
+   */
+  async expireStale(req: Request, res: Response): Promise<void> {
+    const result = await bookingService.expireStaleBookings();
+    res.json({ 
+      message: `Expired ${result.expiredCount} stale bookings`,
+      ...result 
+    });
+  },
 };

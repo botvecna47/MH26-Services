@@ -77,7 +77,9 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
   };
 
   const completionOtp = (booking as any).completionOtp;
-  const canCancel = (booking.status === 'PENDING' || booking.status === 'CONFIRMED');
+  // Customer can cancel PENDING or CONFIRMED; Provider can only cancel CONFIRMED
+  const customerCanCancel = isCustomer && (booking.status === 'PENDING' || booking.status === 'CONFIRMED');
+  const providerCanCancel = isBookingProvider && booking.status === 'CONFIRMED';
 
   return (
     <>
@@ -104,6 +106,7 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
                 booking.status === 'IN_PROGRESS' ? 'bg-purple-500 text-white' :
                 booking.status === 'CONFIRMED' ? 'bg-blue-500 text-white' :
                 booking.status === 'PENDING' ? 'bg-yellow-400 text-yellow-900' :
+                booking.status === 'EXPIRED' ? 'bg-orange-500 text-white' :
                 'bg-red-500 text-white'
               }`}>
                 {booking.status}
@@ -231,7 +234,20 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
               )}
 
               {/* Cancel Button for Customers */}
-              {isCustomer && canCancel && (
+              {customerCanCancel && (
+                <Button
+                  variant="outline"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-5 rounded-xl"
+                  onClick={handleCancelBooking}
+                  disabled={cancelBookingMutation.isPending}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {cancelBookingMutation.isPending ? 'Cancelling...' : 'Cancel Booking'}
+                </Button>
+              )}
+
+              {/* Cancel Button for Providers (only for CONFIRMED bookings) */}
+              {providerCanCancel && (
                 <Button
                   variant="outline"
                   className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-5 rounded-xl"

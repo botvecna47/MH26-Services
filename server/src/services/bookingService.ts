@@ -121,6 +121,9 @@ export const bookingService = {
    * Get filtered list of bookings
    */
   async listBookings(userId: string, role: string, query: any) {
+    // Check and expire any stale pending bookings (runs in background)
+    this.checkStaleBookings().catch(e => logger.error('Stale check failed:', e));
+    
     const { status, page = 1, limit = 10 } = query;
     const skip = (Number(page) - 1) * Number(limit);
     const where: any = {};
@@ -204,21 +207,46 @@ export const bookingService = {
 
     if (!booking) throw new AppError('Booking not found', 404);
 
+    // Check if booking is already in a terminal state
+    const terminalStatuses = ['COMPLETED', 'CANCELLED', 'REJECTED', 'EXPIRED'];
+    if (terminalStatuses.includes(booking.status)) {
+      throw new AppError(`Cannot modify a ${booking.status.toLowerCase()} booking`, 400);
+    }
+
     // Authorization
     const isProvider = booking.provider.userId === userId;
     const isCustomer = booking.userId === userId;
     const isAdmin = userRole === 'ADMIN';
 
+    // State Machine Validation with detailed rules
+    // CANCELLED: Customer can cancel PENDING/CONFIRMED; Provider can cancel CONFIRMED only
     if (status === 'CANCELLED') {
-        if (!isCustomer && !isProvider && !isAdmin) throw new AppError('Unauthorized', 403);
-    } else {
-        // Only provider/admin can change to other statuses
-        if (!isProvider && !isAdmin) throw new AppError('Unauthorized', 403);
-    }
-
-    // State Machine Validation
-    if (status === 'IN_PROGRESS' || status === 'CONFIRMED' || status === 'REJECTED') {
-      if (booking.status !== 'PENDING') throw new AppError(`Can only ${status} pending bookings`, 400);
+      if (isCustomer) {
+        if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+          throw new AppError('You can only cancel pending or confirmed bookings', 400);
+        }
+      } else if (isProvider) {
+        if (booking.status !== 'CONFIRMED') {
+          throw new AppError('Providers can only cancel confirmed bookings', 400);
+        }
+      } else if (!isAdmin) {
+        throw new AppError('Unauthorized', 403);
+      }
+    } 
+    // CONFIRMED/REJECTED: Only from PENDING, only by provider/admin
+    else if (status === 'CONFIRMED' || status === 'REJECTED') {
+      if (!isProvider && !isAdmin) throw new AppError('Only providers can accept or reject bookings', 403);
+      if (booking.status !== 'PENDING') throw new AppError(`Can only ${status.toLowerCase()} pending bookings`, 400);
+    } 
+    // IN_PROGRESS: Only from CONFIRMED, only by provider
+    else if (status === 'IN_PROGRESS') {
+      if (!isProvider && !isAdmin) throw new AppError('Only providers can start service', 403);
+      if (booking.status !== 'CONFIRMED') throw new AppError('Can only start service on confirmed bookings', 400);
+    } 
+    // COMPLETED: Handled separately in verifyCompletion
+    else if (status === 'COMPLETED') {
+      if (!isProvider && !isAdmin) throw new AppError('Only providers can complete bookings', 403);
+      if (booking.status !== 'IN_PROGRESS') throw new AppError('Can only complete in-progress bookings', 400);
     }
 
     // Update
@@ -510,5 +538,95 @@ export const bookingService = {
     emitBookingUpdate(booking.provider.userId, updatedBooking);
 
     return updatedBooking;
+  },
+
+  /**
+   * Auto-expire stale PENDING bookings (older than 2 hours)
+   * Called on demand or via scheduled job
+   */
+  async expireStaleBookings() {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    
+    // Find all stale bookings to notify users
+    const staleBookings = await prisma.booking.findMany({
+      where: {
+        status: 'PENDING',
+        createdAt: { lt: twoHoursAgo }
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        provider: { include: { user: { select: { id: true } } } },
+        service: { select: { name: true } }
+      }
+    });
+
+    if (staleBookings.length === 0) {
+      return { expiredCount: 0 };
+    }
+
+    // Update all stale bookings to EXPIRED
+    const result = await prisma.booking.updateMany({
+      where: {
+        status: 'PENDING',
+        createdAt: { lt: twoHoursAgo }
+      },
+      data: { status: 'EXPIRED' }
+    });
+
+    // Create notifications for affected users
+    for (const booking of staleBookings) {
+      try {
+        // Notify customer
+        await prisma.notification.create({
+          data: {
+            userId: booking.userId,
+            type: 'BOOKING_UPDATE',
+            title: 'Booking Expired',
+            body: `Your booking for ${booking.service.name} has expired as the provider did not respond within 2 hours.`,
+            payload: { bookingId: booking.id, status: 'EXPIRED' }
+          }
+        });
+        
+        // Notify provider
+        await prisma.notification.create({
+          data: {
+            userId: booking.provider.userId,
+            type: 'BOOKING_UPDATE',
+            title: 'Booking Expired',
+            body: `A booking request from ${booking.user.name} for ${booking.service.name} has expired due to no response.`,
+            payload: { bookingId: booking.id, status: 'EXPIRED' }
+          }
+        });
+
+        // Emit socket updates
+        emitBookingUpdate(booking.userId, { ...booking, status: 'EXPIRED' });
+        emitBookingUpdate(booking.provider.userId, { ...booking, status: 'EXPIRED' });
+      } catch (e) {
+        logger.error('Failed to create expiry notification:', e);
+      }
+    }
+
+    logger.info(`Auto-expired ${result.count} stale bookings`);
+    return { expiredCount: result.count, expiredBookings: staleBookings.map(b => b.id) };
+  },
+
+  /**
+   * Check and expire stale bookings (lightweight, called on list fetch)
+   */
+  async checkStaleBookings() {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const staleCount = await prisma.booking.count({
+      where: {
+        status: 'PENDING',
+        createdAt: { lt: twoHoursAgo }
+      }
+    });
+    
+    if (staleCount > 0) {
+      // Run expiry in background (don't await)
+      this.expireStaleBookings().catch(e => logger.error('Background expiry failed:', e));
+    }
+    
+    return staleCount;
   }
 };
