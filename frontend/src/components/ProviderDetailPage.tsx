@@ -22,6 +22,7 @@ import ReviewsList from './ReviewsList';
 import { useProvider, providersApi } from '../api/providers';
 import { useProviderReviews } from '../api/reviews';
 import BookingModal from './BookingModal';
+import { useBookings } from '../api/bookings';
 
 export default function ProviderDetailPage() {
   const { id } = useParams();
@@ -37,6 +38,9 @@ export default function ProviderDetailPage() {
   
   // Fetch Reviews Data
   const { data: reviewsData, isLoading: isLoadingReviews } = useProviderReviews(id || '');
+  
+  // Fetch user's bookings to check for duplicates
+  const { data: userBookings } = useBookings({ limit: 100 });
   
   // Check if viewing own profile (must be after provider is fetched)
   const isOwnProfile = user?.id === provider?.userId;
@@ -84,6 +88,20 @@ export default function ProviderDetailPage() {
       toast.error('Please sign in to book a service');
       return;
     }
+    
+    // Check if user already has an active booking for this service
+    const activeBookingStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS'];
+    const existingActiveBooking = userBookings?.data?.find(
+      (booking: any) => 
+        booking.serviceId === primaryService.id && 
+        activeBookingStatuses.includes(booking.status)
+    );
+    
+    if (existingActiveBooking) {
+      toast.error(`You already have an active booking for this service (Status: ${existingActiveBooking.status})`);
+      return;
+    }
+    
     setShowBookingModal(true);
   };
 
