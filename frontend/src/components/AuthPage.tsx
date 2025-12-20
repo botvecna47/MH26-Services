@@ -43,11 +43,9 @@ export default function AuthPage() {
 
   // Real-time validation states
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
   const [emailStatus, setEmailStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken'>('idle');
-  const [phoneStatus, setPhoneStatus] = useState<'idle' | 'valid' | 'invalid' | 'taken'>('idle');
+  const [phoneStatus, setPhoneStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const emailTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const phoneTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -100,28 +98,17 @@ export default function AuthPage() {
     }
   }, []);
 
-  // Debounced phone check
-  const checkPhoneAvailability = useCallback(async (phone: string) => {
-    if (!phone || phone.length < 10) {
+  // Instant phone format validation (no API call - duplicates allowed)
+  const validatePhoneFormat = useCallback((phone: string) => {
+    if (!phone || phone.length === 0) {
       setPhoneStatus('idle');
       return;
     }
-    
-    setIsCheckingPhone(true);
-    try {
-      const result = await authApi.checkAvailability({ phone });
-      if (!result.phoneValid) {
-        setPhoneStatus('invalid');
-      } else if (!result.phoneAvailable) {
-        setPhoneStatus('taken');
-      } else {
-        setPhoneStatus('valid');
-      }
-    } catch (error) {
-      console.error('Phone check failed:', error);
-      setPhoneStatus('idle');
-    } finally {
-      setIsCheckingPhone(false);
+    // Indian phone: 10 digits, starts with 6-9
+    if (phone.length === 10 && /^[6-9]\d{9}$/.test(phone)) {
+      setPhoneStatus('valid');
+    } else {
+      setPhoneStatus('invalid');
     }
   }, []);
 
@@ -360,13 +347,9 @@ export default function AuthPage() {
       }, 500);
     }
 
-    // Debounced phone check (only for signup/join modes)
+    // Instant phone format validation (while typing)
     if (field === 'phone' && mode !== 'signin') {
-      if (phoneTimeoutRef.current) clearTimeout(phoneTimeoutRef.current);
-      setPhoneStatus('idle');
-      phoneTimeoutRef.current = setTimeout(() => {
-        checkPhoneAvailability(value);
-      }, 500);
+      validatePhoneFormat(value);
     }
   };
 
@@ -635,7 +618,7 @@ export default function AuthPage() {
                             handleInputChange('phone', numericValue);
                           }}
                           className={`pl-16 pr-10 h-11 ${
-                            errors.phone || phoneStatus === 'invalid' || phoneStatus === 'taken' 
+                            errors.phone || phoneStatus === 'invalid' 
                               ? 'border-red-500' 
                               : phoneStatus === 'valid' ? 'border-green-500' : ''
                           }`}
@@ -645,17 +628,14 @@ export default function AuthPage() {
                           inputMode="numeric"
                           pattern="[6-9][0-9]{9}"
                         />
-                        {/* Validation indicator */}
+                        {/* Validation indicator - instant feedback */}
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          {isCheckingPhone && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                          {!isCheckingPhone && phoneStatus === 'valid' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                          {!isCheckingPhone && phoneStatus === 'invalid' && <AlertCircle className="w-4 h-4 text-red-500" />}
-                          {!isCheckingPhone && phoneStatus === 'taken' && <AlertCircle className="w-4 h-4 text-orange-500" />}
+                          {phoneStatus === 'valid' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          {phoneStatus === 'invalid' && <AlertCircle className="w-4 h-4 text-red-500" />}
                         </div>
                       </div>
                       {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
                       {!errors.phone && phoneStatus === 'invalid' && <p className="text-sm text-red-500">Must be 10 digits starting with 6, 7, 8, or 9</p>}
-                      {!errors.phone && phoneStatus === 'taken' && <p className="text-sm text-orange-500">This phone number is already registered</p>}
                     </div>
                   )}
 
