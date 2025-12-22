@@ -484,9 +484,20 @@ export async function sendBanNotificationEmail(
             </ol>
           </div>
           
+          <div style="background-color: #450a0a; color: #fef2f2; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center;">
+            <h3 style="margin-top: 0; color: #fca5a5;">⚠️ CRITICAL: 30-DAY DEADLINE ⚠️</h3>
+            <p style="font-size: 16px; margin-bottom: 10px;">
+              Your account and <strong>ALL associated data</strong> will be <strong>PERMANENTLY DELETED</strong> 
+              after <strong>30 days</strong> from the date of suspension.
+            </p>
+            <p style="margin-bottom: 0; font-size: 14px; color: #fca5a5;">
+              To prevent data loss, submit your appeal as soon as possible. This action is irreversible.
+            </p>
+          </div>
+          
           <p style="text-align: center; margin: 30px 0;">
-            <a href="${loginUrl}" style="display: inline-block; background-color: #0284c7; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-              Login to Submit Appeal
+            <a href="${loginUrl}" style="display: inline-block; background-color: #dc2626; color: white; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+              🚨 Submit Appeal Now
             </a>
           </p>
           
@@ -524,12 +535,18 @@ While suspended, you cannot:
 - Use messaging features
 - Access any platform services
 
+⚠️ CRITICAL: 30-DAY DEADLINE ⚠️
+Your account and ALL associated data will be PERMANENTLY DELETED after 30 days from the date of suspension.
+To prevent data loss, submit your appeal as soon as possible. This action is irreversible.
+
 HOW TO APPEAL:
 1. Log in to your account at ${loginUrl}
 2. You will see the banned page with an appeal form
 3. Submit a detailed appeal explaining why your account should be reinstated
 4. Wait 3-5 business days for admin review
 5. You will receive an email with the outcome
+
+ACT NOW: Submit your appeal before time runs out!
 
 If you have questions, contact support@mh26services.com
 

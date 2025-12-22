@@ -18,6 +18,7 @@ model User {
   emailVerified          Boolean                 @default(false)
   isBanned               Boolean                 @default(false)
   banReason              String?                 // Reason for ban (set by admin)
+  bannedAt               DateTime?               // When user was banned (for 30-day countdown)
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   address                String?

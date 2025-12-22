@@ -794,12 +794,13 @@ export const adminController = {
         });
       }
 
-      // Actually ban the user with reason
+      // Actually ban the user with reason and timestamp
       await prisma.user.update({
         where: { id },
         data: { 
           isBanned: true,
           banReason: reason.trim(),
+          bannedAt: new Date(),
         },
       });
 
@@ -907,12 +908,13 @@ export const adminController = {
         return;
       }
 
-      // Update user - clear ban and reason
+      // Update user - clear ban, reason, and timestamp
       await prisma.user.update({
         where: { id },
         data: { 
           isBanned: false,
           banReason: null,
+          bannedAt: null,
         },
       });
 

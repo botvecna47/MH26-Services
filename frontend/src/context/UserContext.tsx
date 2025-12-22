@@ -17,6 +17,7 @@ export interface User {
   totalSpending?: number;
   isBanned?: boolean;                  // User banned status
   banReason?: string;                  // Reason for ban (set by admin)
+  bannedAt?: string;                   // When user was banned (ISO string)
   providerStatus?: string | null;     // Provider status: PENDING, APPROVED, REJECTED, SUSPENDED
   requiresOnboarding?: boolean;       // True if provider needs to complete/resubmit step 3
   provider?: {

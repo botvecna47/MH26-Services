@@ -30,6 +30,7 @@ export const userController = {
           totalSpending: true,
           isBanned: true, // Include banned status
           banReason: true, // Include ban reason
+          bannedAt: true, // Include ban timestamp for countdown
           createdAt: true,
           provider: {
             select: {
