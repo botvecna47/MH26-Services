@@ -174,6 +174,12 @@ export default function AuthPage() {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
+    } else if (mode !== 'signin') {
+      // Strong password only for signup, not signin
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        newErrors.password = 'Password must be 8+ chars with uppercase, lowercase, number & special character (@$!%*?&)';
+      }
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
@@ -344,7 +350,15 @@ export default function AuthPage() {
         const errorMsg = error.response?.data?.error || 'Invalid or expired OTP';
         toast.error(errorMsg);
       } else if (error.response?.data?.error) {
-        toast.error(error.response.data.error);
+        // If there are validation details, show them
+        if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+          const detailsMsg = error.response.data.details
+            .map((d: any) => d.message)
+            .join(', ');
+          toast.error(`Validation failed: ${detailsMsg}`);
+        } else {
+          toast.error(error.response.data.error);
+        }
       } else if (error.message) {
         toast.error(error.message);
       } else {

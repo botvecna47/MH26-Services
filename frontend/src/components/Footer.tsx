@@ -9,9 +9,11 @@ import {
   MapPin,
   Youtube 
 } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { isAuthenticated } = useUser();
 
   return (
     <footer className="mt-8">
@@ -88,11 +90,13 @@ export default function Footer() {
                     All Services
                   </Link>
                 </li>
-                <li>
-                  <Link to="/provider-onboarding" className="hover:text-[#ff6b35] transition-colors">
-                    Become a Provider
-                  </Link>
-                </li>
+                {!isAuthenticated && (
+                  <li>
+                    <Link to="/provider-onboarding" className="hover:text-[#ff6b35] transition-colors">
+                      Become a Provider
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link to="/dashboard" className="hover:text-[#ff6b35] transition-colors">
                     Dashboard

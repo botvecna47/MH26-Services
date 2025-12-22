@@ -4,9 +4,11 @@ import {
   Search, 
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { useUser } from '../context/UserContext';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useUser();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -135,30 +137,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="glass-strong rounded-2xl p-8 md:p-12 text-center space-y-6 shadow-xl">
-            <h2 className="text-gray-900 text-3xl font-bold">Are you a service provider?</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-              Join MH26 Services and connect with thousands of customers in Nanded.
-              Grow your business with our platform.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link to="/provider-onboarding">
-                <Button className="bg-[#ff6b35] hover:bg-[#e85a2d] text-white shadow-lg shadow-orange-200/50 active:scale-95 transition-all h-12 px-8">
-                  Become a Provider
-                </Button>
-              </Link>
-              <Link to="/services">
-                <Button variant="outline" className="border-white/30 hover:bg-white/20 h-12 px-8">
-                  Browse Services
-                </Button>
-              </Link>
+      {/* CTA Section - Only show for non-authenticated users */}
+      {!isAuthenticated && (
+        <section className="py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="glass-strong rounded-2xl p-8 md:p-12 text-center space-y-6 shadow-xl">
+              <h2 className="text-gray-900 text-3xl font-bold">Are you a service provider?</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+                Join MH26 Services and connect with thousands of customers in Nanded.
+                Grow your business with our platform.
+              </p>
+              <div className="flex justify-center gap-4">
+                <Link to="/provider-onboarding">
+                  <Button className="bg-[#ff6b35] hover:bg-[#e85a2d] text-white shadow-lg shadow-orange-200/50 active:scale-95 transition-all h-12 px-8">
+                    Become a Provider
+                  </Button>
+                </Link>
+                <Link to="/services">
+                  <Button variant="outline" className="border-white/30 hover:bg-white/20 h-12 px-8">
+                    Browse Services
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
