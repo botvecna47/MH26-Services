@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { 
   Search, 
@@ -69,13 +69,20 @@ export default function ServicesPage() {
     setPage(1);
   }, [searchQuery, selectedCategory, sortBy]);
 
-  // Scroll Detection
+  // Scroll Detection (throttled for performance)
   const [isScrolled, setIsScrolled] = useState(false);
+  const ticking = useRef(false);
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
+      if (!ticking.current) {
+        requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 100);
+          ticking.current = false;
+        });
+        ticking.current = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -91,6 +98,14 @@ export default function ServicesPage() {
     limit: ITEMS_PER_PAGE,
     page: page
   });
+
+  // Memoize filtered services to avoid recomputing on every render
+  const filteredServices = useMemo(() => {
+    if (!servicesData?.data) return [];
+    return showAvailableOnly 
+      ? servicesData.data.filter(service => (service.provider as any).isAvailable)
+      : servicesData.data;
+  }, [servicesData?.data, showAvailableOnly]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,9 +278,7 @@ export default function ServicesPage() {
         ) : (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              {servicesData.data
-                .filter(service => !showAvailableOnly || (service.provider as any).isAvailable)
-                .map((service) => (
+              {filteredServices.map((service) => (
                 <div
                   key={service.id}
                   className="glass glass-hover rounded-xl overflow-hidden flex flex-col h-full border border-white/40 shadow-sm hover:shadow-md transition-all duration-300"
@@ -275,7 +288,7 @@ export default function ServicesPage() {
                       <ImageWithFallback
                         src={service.imageUrl || (service.provider.user.avatarUrl) || undefined}
                         alt={service.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:scale-105"
                       />
                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-md text-xs font-bold text-gray-900 shadow-sm flex items-center gap-1">
                           <IndianRupee className="h-3 w-3" />
