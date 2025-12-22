@@ -1,0 +1,2262 @@
+{
+  "User": [
+    {
+      "id": "0c422a33-f505-44f6-90ea-d57c333d8b08",
+      "name": "Aditya Chandravanshi",
+      "email": "chandravanshiaditya25@gmail.com",
+      "phone": "9373583757",
+      "passwordHash": "$2b$12$pPhiE0jIgNOv0LYiYGngFuC9d0.sG/mcxtDIzvpLunCRuF8pjMCRi",
+      "avatarUrl": null,
+      "role": "CUSTOMER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T09:41:03.903Z",
+      "updatedAt": "2025-12-20T09:43:29.833Z",
+      "address": "Namaskar Chowk",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "b8ca49af-15de-4395-9b3d-b8c4c9b72a07",
+      "name": "Dutta Darshdeep",
+      "email": "sdsdmyself@gmail.com",
+      "phone": "8432822104",
+      "passwordHash": "$2b$12$oGqdFEFFhrSCCOuwHHL3ceLRIW45P3xB89vI9Nf5juXgOrF3LXCq2",
+      "avatarUrl": null,
+      "role": "CUSTOMER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T11:50:50.433Z",
+      "updatedAt": "2025-12-20T11:50:50.433Z",
+      "address": "sdsdmyself@gmail.com",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "name": "Admin User",
+      "email": "admin@mh26services.com",
+      "phone": "+91-9000000000",
+      "passwordHash": "$2b$12$o4rEbZf76WWYUe9VSd7uVO6oBomahdoPTeIz3FR48T.DApdkh6QP.",
+      "avatarUrl": null,
+      "role": "ADMIN",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:08:57.375Z",
+      "updatedAt": "2025-12-20T08:08:57.375Z",
+      "address": null,
+      "city": null,
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "29e44551-ca50-4c09-a68e-04b92048924c",
+      "name": "Sameer Khan",
+      "email": "sameer.plumbers@gmail.com",
+      "phone": "+91-9876543210",
+      "passwordHash": "$2b$12$3V3Ox.lclksEUFleE9702.XYs9dYhcG62Ou0.RyY3YMDOsoR3H2JW",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:08:58.677Z",
+      "updatedAt": "2025-12-20T08:08:58.677Z",
+      "address": "Shop No. 5, Sarafa Line, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "e91ca842-fb14-4254-985a-75c2d9571bce",
+      "name": "Shri Owner",
+      "email": "shri.plumbing@gmail.com",
+      "phone": "+91-9823456789",
+      "passwordHash": "$2b$12$.XmnwQZzA0w98aTjQdAKFONUMKHhSnSPPLa835qvFDQyH/tOICDf6",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:08:59.556Z",
+      "updatedAt": "2025-12-20T08:08:59.556Z",
+      "address": "Sanmitra Colony, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "0ac9ca8f-fb5f-4506-bce8-66a769470fcc",
+      "name": "Farhan Raza",
+      "email": "fr.electricals@gmail.com",
+      "phone": "+91-9923799555",
+      "passwordHash": "$2b$12$OlGMbYQt3sd41vCudfLkCegySWPg7lu5nA.HUMiWI0Xk3kctzEcAC",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:00.245Z",
+      "updatedAt": "2025-12-20T08:09:00.245Z",
+      "address": "Itwara, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "91eb7619-5e4a-4f24-87af-0318134de668",
+      "name": "Rajesh Sharma",
+      "email": "tirupati.electronics@gmail.com",
+      "phone": "+91-9890123456",
+      "passwordHash": "$2b$12$hOhXjWddDeI4.C4WqJ0B4uKDGqJzMoxsV8ZUZF9CoPrUJpnsHip2e",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:01.073Z",
+      "updatedAt": "2025-12-20T08:09:01.073Z",
+      "address": "Main Road, Vazirabad, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "8d57535b-05cf-4d45-a8cc-cab54a8c3b69",
+      "name": "Siddharth Patil",
+      "email": "sidh.homecleaning@gmail.com",
+      "phone": "+91-9876501234",
+      "passwordHash": "$2b$12$vF8rQqG0mSbra08eSoofE.Bi.pqOKi/yx4Dnx57u8RyH8rMo8M4x2",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:02.206Z",
+      "updatedAt": "2025-12-20T08:09:02.206Z",
+      "address": "Shivaji Nagar, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "b9c83d07-b1ee-48d1-88a3-23a9c2ffadf6",
+      "name": "Nitin Jadhav",
+      "email": "jai.malhar.caters@gmail.com",
+      "phone": "+91-9823567890",
+      "passwordHash": "$2b$12$STo7wMRi.Ott1VgaKK6LmOUFs/p5BCJrchZpK/F3xAkO8BbEHYJIW",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:02.838Z",
+      "updatedAt": "2025-12-20T08:09:02.838Z",
+      "address": "Hingoli Naka, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "5e7a4d4e-d41d-4193-b766-9a112c903aed",
+      "name": "Siddhi Manager",
+      "email": "siddhi.mangal@gmail.com",
+      "phone": "+91-9890567891",
+      "passwordHash": "$2b$12$43zhySndyCHLjrQSAYrlQu/oymJvQfJ/YcgDT/yqdkCRZWQFP9MSy",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:03.464Z",
+      "updatedAt": "2025-12-20T08:09:03.464Z",
+      "address": "CIDCO, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "3c196d54-be52-4987-8f09-67320f4ce552",
+      "name": "Simran Kaur",
+      "email": "signate.beauty@gmail.com",
+      "phone": "+91-9876509877",
+      "passwordHash": "$2b$12$DZOJUulzFlZ94t2CzSY6uuST90Ihf6mJX6ym5oH4F/U7fKRIcJkMW",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:04.071Z",
+      "updatedAt": "2025-12-20T08:09:04.071Z",
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "289839d3-50e1-4590-9c5f-2671e723cdce",
+      "name": "Shweta Deshmukh",
+      "email": "shweta.beautyhub@gmail.com",
+      "phone": "+91-9823509877",
+      "passwordHash": "$2b$12$.qvbZLWpLQjoAwyO3jO9ruv4r89DUPTUm3pDZLdmesfn8RNVWC12O",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:04.767Z",
+      "updatedAt": "2025-12-20T08:09:04.767Z",
+      "address": "Bhagya Nagar Colony, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "54eb4c17-c197-4938-a178-644f8b7de2b9",
+      "name": "Imran Khan",
+      "email": "jai.hind.furniture@gmail.com",
+      "phone": "+91-9922334455",
+      "passwordHash": "$2b$12$CQzs9Bbhb26amdBkaRnY1OAohAAsW7QSmMpaj7ZdA6yWSLuNsnyQ.",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:05.580Z",
+      "updatedAt": "2025-12-20T08:09:05.580Z",
+      "address": "Labor Colony, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "1643c416-98cb-4830-8977-5f44024d5e0e",
+      "name": "Ganesh Shinde",
+      "email": "ekdant.enterprises@gmail.com",
+      "phone": "+91-8877665544",
+      "passwordHash": "$2b$12$Uno6B3pgbheIQu..5jI2p.LYYIGaP3nXEzKREkRX3Vs2JX4zhJCo2",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:06.545Z",
+      "updatedAt": "2025-12-20T08:09:06.545Z",
+      "address": "Shivaji Road, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "fa40d598-c732-4465-894b-9e57fa93196e",
+      "name": "Rahul Udgire",
+      "email": "samarth.plumbing@gmail.com",
+      "phone": "+91-9823456001",
+      "passwordHash": "$2b$12$ksrYtghypkkOMq0EhY54oOtQLf9NJxX/B98IMIByFjNxx9BeFJTE.",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:07.387Z",
+      "updatedAt": "2025-12-20T08:09:07.387Z",
+      "address": "Shivaji Nagar, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "b8d287cf-4f6d-4b7b-b465-e0059bee953a",
+      "name": "Vijay Patil",
+      "email": "omkar.plumbing@gmail.com",
+      "phone": "+91-9823456002",
+      "passwordHash": "$2b$12$RzgOtmkHPvD6Y6DL0bqUPOueh.utFYhnZ3I8r.8VTmBrTjQPJCQc6",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:08.502Z",
+      "updatedAt": "2025-12-20T08:09:08.502Z",
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "263bf73c-4316-48ff-b438-91fc0ac71e10",
+      "name": "Santosh Jadhav",
+      "email": "super.sanitary@gmail.com",
+      "phone": "+91-9823456003",
+      "passwordHash": "$2b$12$oYiY47bnoXJGNHfVzpMuJun4OdclrwRIkzj2exujGXsrXX4AiHbey",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:09.615Z",
+      "updatedAt": "2025-12-20T08:09:09.615Z",
+      "address": "Opposite Kshetriya Karyalay, Ashoknagar, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "9b9b34e2-6ed7-49e7-a788-4ebe3df40b38",
+      "name": "Anil Sharma",
+      "email": "anil.electricals@gmail.com",
+      "phone": "+91-9823456004",
+      "passwordHash": "$2b$12$JJva1O3GKSnVWCM9T5L1hOgLRN2YfYf5ymVc6tzfcvY/mND/Xv9Fe",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:10.746Z",
+      "updatedAt": "2025-12-20T08:09:10.746Z",
+      "address": "Anand Nagar Chowk, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "87f09b47-1429-46dd-aa89-8d9ebacc9f60",
+      "name": "Varad Kulkarni",
+      "email": "varad.electrical@gmail.com",
+      "phone": "+91-9823456005",
+      "passwordHash": "$2b$12$F4j0r2fcBWWK1pi.Rrf9lOhVnssiyC2aw4jiV6DOTkBVQ6AKcFASC",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:11.839Z",
+      "updatedAt": "2025-12-20T08:09:11.839Z",
+      "address": "CIDCO, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "2321355c-9bf6-4d4d-82b8-3f0bfc887ffe",
+      "name": "Rajesh Joshi",
+      "email": "joshi.caterers@gmail.com",
+      "phone": "+91-9823456011",
+      "passwordHash": "$2b$12$n.ye68QH7aMproCFBV9wie.SgDzSk8v2gJeBjY9AhKC648fADVvAi",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:12.754Z",
+      "updatedAt": "2025-12-20T08:09:12.754Z",
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "d9a6f6a0-8dfd-4a25-bf22-9c4e73d2da68",
+      "name": "Shri Sahayog",
+      "email": "sahayog.seva@gmail.com",
+      "phone": "+91-9823456012",
+      "passwordHash": "$2b$12$ieVwcQpvz.JT8PjgK9MxgOdGzpOzWSCq3RLcMC8YewKoxX8AtqiMG",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:13.880Z",
+      "updatedAt": "2025-12-20T08:09:13.880Z",
+      "address": "Deglour Naka, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "38262ed4-4616-4e32-8620-ce6e640a2fc7",
+      "name": "Oasis Owner",
+      "email": "oasis.beauty@gmail.com",
+      "phone": "+91-9823456014",
+      "passwordHash": "$2b$12$XMJDKrsKPryDDmqRmfobKOM8UdH.1KOjea90R2AzLs9Tt/8y8RcdK",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:14.803Z",
+      "updatedAt": "2025-12-20T08:09:14.803Z",
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "30f74026-83ca-4e71-ac7c-5355fb771fa0",
+      "name": "Vishwakarma Rao",
+      "email": "vishwakarma.furniture@gmail.com",
+      "phone": "+91-9823456017",
+      "passwordHash": "$2b$12$Bq/15n.k2uj.WiWR6oxrx.IoSGwaVgIzDE8Dcl0FP/US0EurWmqV2",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:15.623Z",
+      "updatedAt": "2025-12-20T08:09:15.623Z",
+      "address": "Shivaji Road, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "b4fba8a4-1458-4ced-87e7-c645dec6c168",
+      "name": "Krishna Sharma",
+      "email": "krishna.furniture@gmail.com",
+      "phone": "+91-9823456018",
+      "passwordHash": "$2b$12$C/JsONhSa0gu76JhsflBE.OT56g/C5spcwYkm2Cg2v.Zv/MpK6FUW",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:16.455Z",
+      "updatedAt": "2025-12-20T08:09:16.455Z",
+      "address": "Wadi Budruk, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    },
+    {
+      "id": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "name": "Rama Owner",
+      "email": "rama.sales@gmail.com",
+      "phone": "+91-9823456019",
+      "passwordHash": "$2b$12$0p/D5e22VgQRr4nn/a9a/etalFFQEmLj2FxG4LeMXALLQ/Ko/a9om",
+      "avatarUrl": null,
+      "role": "PROVIDER",
+      "emailVerified": true,
+      "isBanned": false,
+      "createdAt": "2025-12-20T08:09:17.294Z",
+      "updatedAt": "2025-12-20T08:09:17.294Z",
+      "address": "Nanded HO, Nanded",
+      "city": "Nanded",
+      "totalSpending": "0",
+      "walletBalance": "0"
+    }
+  ],
+  "Provider": [
+    {
+      "id": "fae09cd2-c942-4a00-aa65-0ffd7a54f9fc",
+      "userId": "29e44551-ca50-4c09-a68e-04b92048924c",
+      "businessName": "Sameer Plumbers",
+      "description": "Expert plumbing services in Nanded since 2010. Specializing in residential and commercial plumbing, pipe repairs, leak detection, and 24/7 emergency services.",
+      "primaryCategory": "Plumbing",
+      "secondaryCategory": null,
+      "address": "Shop No. 5, Sarafa Line, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.12057393851444,
+      "lng": 77.37022804995712,
+      "averageRating": 4.562584548518268,
+      "totalRatings": 14,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/e8/9999p2462.2462.200109184813.f8e8/catalogue/sameer-plumbers-shivaji-nagar-nanded-nanded-plumbers-kzux3u2z6w.jpg"
+      ],
+      "createdAt": "2025-12-20T08:08:58.837Z",
+      "updatedAt": "2025-12-20T08:08:58.837Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "99112c0c-37e7-481c-a64c-d4635a6fdb2c",
+      "userId": "e91ca842-fb14-4254-985a-75c2d9571bce",
+      "businessName": "Shri Plumbing Services",
+      "description": "Established in 2000, we offer general plumbing and construction contracting services. Operations available 24 hours a day.",
+      "primaryCategory": "Plumbing",
+      "secondaryCategory": null,
+      "address": "Sanmitra Colony, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.18109222748114,
+      "lng": 77.34602050808667,
+      "averageRating": 4.020526104191322,
+      "totalRatings": 15,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/j3/9999p2462.2462.220912074522.j3j3/catalogue/shri-plumbing-services-sanmitra-colony-nanded-nanded-g5di1ln642.jpg"
+      ],
+      "createdAt": "2025-12-20T08:08:59.655Z",
+      "updatedAt": "2025-12-20T08:08:59.655Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "af0ec7df-2ee2-40bf-8d00-43f6510cc79b",
+      "userId": "0ac9ca8f-fb5f-4506-bce8-66a769470fcc",
+      "businessName": "Fr Electricals",
+      "description": "Professional electrical services for residential and commercial properties. We handle all kinds of wiring and appliance installations.",
+      "primaryCategory": "Electrical",
+      "secondaryCategory": null,
+      "address": "Itwara, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.10574522648078,
+      "lng": 77.3023669204512,
+      "averageRating": 4.761960611077676,
+      "totalRatings": 17,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/a6/9999p2462.2462.211227114707.w9a6/catalogue/fr-electricals-shivaji-nagar-nanded-nanded-electricians-vs44lk4ikr.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:00.399Z",
+      "updatedAt": "2025-12-20T08:09:00.399Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "63e0bfb1-5765-443d-b969-98fb7d6021c0",
+      "userId": "91eb7619-5e4a-4f24-87af-0318134de668",
+      "businessName": "Tirupati Electronics",
+      "description": "Trusted electrical services provider in Nanded. Specializing in residential electrical work, appliance repair, and electrical safety inspections.",
+      "primaryCategory": "Electrical",
+      "secondaryCategory": null,
+      "address": "Main Road, Vazirabad, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.16103741958104,
+      "lng": 77.3171841859851,
+      "averageRating": 4.477618201565458,
+      "totalRatings": 5,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/c4/9999p2462.2462.190424155147.s9c4/catalogue/tirupati-electronics-anand-nagar-chowk-nanded-electricians-0sy9o2s1u3.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:01.233Z",
+      "updatedAt": "2025-12-20T08:09:01.233Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "50c23a35-bb5c-4e60-b2a0-6a33b437e68f",
+      "userId": "8d57535b-05cf-4d45-a8cc-cab54a8c3b69",
+      "businessName": "Sidh Home Cleaning",
+      "description": "Professional home and office cleaning services in Nanded. Deep cleaning, regular maintenance, and specialized cleaning solutions.",
+      "primaryCategory": "Cleaning",
+      "secondaryCategory": null,
+      "address": "Shivaji Nagar, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.12829926932901,
+      "lng": 77.31368586648198,
+      "averageRating": 4.189167537836182,
+      "totalRatings": 18,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/b1/9999p2462.2462.250714174051.i2b1/catalogue/shidha-home-cleaning-anand-nagar-chowk-nanded-cleaning-services-k7tub4z5dx.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:02.304Z",
+      "updatedAt": "2025-12-20T08:09:02.304Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "49361148-bf83-40fc-9806-fbc33af70529",
+      "userId": "b9c83d07-b1ee-48d1-88a3-23a9c2ffadf6",
+      "businessName": "Shri Jai Malhar Caters And Mandap Decoration",
+      "description": "Vegetarian catering specialists serving Nanded. Known for authentic taste and quality service for all events.",
+      "primaryCategory": "Catering",
+      "secondaryCategory": null,
+      "address": "Hingoli Naka, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.09173108876025,
+      "lng": 77.29935616969,
+      "averageRating": 4.620493858362015,
+      "totalRatings": 12,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/f5/9999p2462.2462.230923130704.q8f5/catalogue/shri-jai-malhar-caters-and-mandap-decoration-hingoli-naka-nanded-caterers-kalfrj16vh.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:02.934Z",
+      "updatedAt": "2025-12-20T08:09:02.934Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "5f5f83ae-76ab-40a5-87d3-db990e7a4b5d",
+      "userId": "5e7a4d4e-d41d-4193-b766-9a112c903aed",
+      "businessName": "Siddhi Mangal Karyalay",
+      "description": "Premium catering and event hall services. We handle everything from food to decoration for your special day.",
+      "primaryCategory": "Catering",
+      "secondaryCategory": null,
+      "address": "CIDCO, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.11468305051457,
+      "lng": 77.33702698223962,
+      "averageRating": 4.151991317394483,
+      "totalRatings": 17,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/v4/9999p2462.2462.141231131928.b2v4/catalogue/siddhi-mangal-karyalay-nanded-ho-nanded-decorators-nln6j78h5i.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:03.539Z",
+      "updatedAt": "2025-12-20T08:09:03.539Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "4a0b4cc6-3d44-4a0c-8be8-705a7f9d5512",
+      "userId": "3c196d54-be52-4987-8f09-67320f4ce552",
+      "businessName": "Signate Beauty Salon",
+      "description": "Premium unisex salon offering advanced hair and skin treatments. Experience luxury and care.",
+      "primaryCategory": "Salon",
+      "secondaryCategory": null,
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.10915567407538,
+      "lng": 77.34539933024563,
+      "averageRating": 4.763696609608079,
+      "totalRatings": 13,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/l8/9999p2462.2462.140129155207.t9l8/catalogue/signate-beauty-salon-unisex-salon--vazirabad-nanded-nanded-beauty-parlours-0pb4nwfd4c.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:04.229Z",
+      "updatedAt": "2025-12-20T08:09:04.229Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "a6c4c2f9-acb7-4205-9fe1-884cc2690abb",
+      "userId": "289839d3-50e1-4590-9c5f-2671e723cdce",
+      "businessName": "Shweta's Beauty Hub",
+      "description": "Exclusive ladies beauty parlour in Bhagya Nagar. We specialize in bridal makeup and regular beauty care.",
+      "primaryCategory": "Salon",
+      "secondaryCategory": null,
+      "address": "Bhagya Nagar Colony, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.1308273165075,
+      "lng": 77.28358127870408,
+      "averageRating": 4.216450667256106,
+      "totalRatings": 21,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/p6/9999p2462.2462.240717104534.p9p6/catalogue/pefnss42b82gbsr-3e4bac2sy1.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:04.883Z",
+      "updatedAt": "2025-12-20T08:09:04.883Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "c8b95fec-c02e-4b85-9324-1615005f36a4",
+      "userId": "54eb4c17-c197-4938-a178-644f8b7de2b9",
+      "businessName": "Jai Hind Furniture and Interior Decoretars",
+      "description": "Specialists in custom furniture and interior woodwork. We bring your furniture ideas to life.",
+      "primaryCategory": "Carpentry",
+      "secondaryCategory": null,
+      "address": "Labor Colony, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.18274553950941,
+      "lng": 77.34288405472228,
+      "averageRating": 4.155901939535029,
+      "totalRatings": 17,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/j8/9999p2462.2462.161218190302.g1j8/catalogue/jai-hind-furniture-and-interior-decoretars-shivaji-nagar-nanded-nanded-interior-designers-v5qjs.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:05.702Z",
+      "updatedAt": "2025-12-20T08:09:05.702Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "b700d5d3-bc9d-4e56-a11e-5303ae4c3512",
+      "userId": "1643c416-98cb-4830-8977-5f44024d5e0e",
+      "businessName": "Ekdant Enterprises",
+      "description": "All types of carpentry work including door installation, window frames, and general repairs.",
+      "primaryCategory": "Carpentry",
+      "secondaryCategory": null,
+      "address": "Shivaji Road, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.17480044721985,
+      "lng": 77.34013297119841,
+      "averageRating": 4.796414649817459,
+      "totalRatings": 20,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/d7/9999p2462.2462.250308124507.p3d7/catalogue/ekdant-enterprises-and-multiservices-chatrapati-nagar-nanded-electricians-qaqgzcmk16.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:06.725Z",
+      "updatedAt": "2025-12-20T08:09:06.725Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "a63aa0d8-5f98-4926-ab2f-5ce7c7e8add7",
+      "userId": "fa40d598-c732-4465-894b-9e57fa93196e",
+      "businessName": "Samarth Udgire Plumbing Service",
+      "description": "Reliable plumbing services with 15+ years of experience. Specializing in water heater installation, bathroom fittings, and drainage solutions.",
+      "primaryCategory": "Plumbing",
+      "secondaryCategory": null,
+      "address": "Shivaji Nagar, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.11100408980813,
+      "lng": 77.32991149548549,
+      "averageRating": 4.669237764514057,
+      "totalRatings": 12,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/p2/9999p2462.2462.240412125542.a7p2/catalogue/k6db5zd9hgl7yg1-6pvdcwjq32.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:07.505Z",
+      "updatedAt": "2025-12-20T08:09:07.505Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "dff2caf4-83f7-410a-ab56-c8145cdf04f9",
+      "userId": "b8d287cf-4f6d-4b7b-b465-e0059bee953a",
+      "businessName": "Omkar Plumbing Service",
+      "description": "Complete plumbing solutions for residential and commercial properties in Vazirabad area. 24/7 emergency services available.",
+      "primaryCategory": "Plumbing",
+      "secondaryCategory": null,
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.1554018059024,
+      "lng": 77.30352903932554,
+      "averageRating": 4.662265115041217,
+      "totalRatings": 13,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/t4/9999p2462.2462.220802122055.f7t4/catalogue/omkar-plumbing-services-nanded-midc-nanded-plumbers-aspz0mgo05.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:08.761Z",
+      "updatedAt": "2025-12-20T08:09:08.761Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "21809b93-0315-47d9-a2b1-3998baabf832",
+      "userId": "263bf73c-4316-48ff-b438-91fc0ac71e10",
+      "businessName": "New Super Sanatary",
+      "description": "One stop shop for all sanitary and plumbing needs. Wide range of fittings available with installation services.",
+      "primaryCategory": "Plumbing",
+      "secondaryCategory": null,
+      "address": "Opposite Kshetriya Karyalay, Ashoknagar, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.10064329723708,
+      "lng": 77.37051621980441,
+      "averageRating": 4.107588553326472,
+      "totalRatings": 9,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/d7/9999p2462.2462.170428171109.z1d7/catalogue/new-super-sanitary-nanded-ho-nanded-tile-dealers-8s0cec.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:09.880Z",
+      "updatedAt": "2025-12-20T08:09:09.880Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "7c1c5a43-20f5-4b8f-be30-e68c9abbf75e",
+      "userId": "9b9b34e2-6ed7-49e7-a788-4ebe3df40b38",
+      "businessName": "Anil Electricals & Rewinding Works",
+      "description": "Expert in motor rewinding and electrical repairs. Over 20 years of experience serving Nanded.",
+      "primaryCategory": "Electrical",
+      "secondaryCategory": null,
+      "address": "Anand Nagar Chowk, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.11265592523103,
+      "lng": 77.27411019489523,
+      "averageRating": 4.749085716282059,
+      "totalRatings": 23,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/y3/9999p2462.2462.180322183653.a2y3/catalogue/anil-electricals-and-rewinding-works-anand-nagar-chowk-nanded-electricians-whgpl.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:11.004Z",
+      "updatedAt": "2025-12-20T08:09:11.004Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "31060268-0cf3-4a7c-8bf6-acbb0ed928d5",
+      "userId": "87f09b47-1429-46dd-aa89-8d9ebacc9f60",
+      "businessName": "Varad Electrical",
+      "description": "Professional electrical services with safety first approach. Sales and service of electronic goods.",
+      "primaryCategory": "Electrical",
+      "secondaryCategory": null,
+      "address": "CIDCO, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.17525114731626,
+      "lng": 77.35110447017713,
+      "averageRating": 4.680673067397778,
+      "totalRatings": 15,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/q1/9999p2462.2462.230323101552.j8q1/catalogue/varad-electricals-nanded-electronic-goods-showrooms-xx8a9ic1ob.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:11.998Z",
+      "updatedAt": "2025-12-20T08:09:11.998Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "aad295f8-88f0-4e03-abb4-f9800d81ef8c",
+      "userId": "2321355c-9bf6-4d4d-82b8-3f0bfc887ffe",
+      "businessName": "Joshi Caterers",
+      "description": "Traditional Maharashtrian and North Indian cuisine for all occasions. Known for authentic taste and hygiene.",
+      "primaryCategory": "Catering",
+      "secondaryCategory": null,
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.09822335781739,
+      "lng": 77.29500120458087,
+      "averageRating": 4.30008505562925,
+      "totalRatings": 19,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/b7/9999p2462.2462.140331105130.s1b7/catalogue/joshi-caterers-nanded-caterers-for-wedding-kkrvw.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:12.972Z",
+      "updatedAt": "2025-12-20T08:09:12.972Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "219ccf8c-2363-493d-9da4-974cde87d638",
+      "userId": "d9a6f6a0-8dfd-4a25-bf22-9c4e73d2da68",
+      "businessName": "Shri Sahayog Seva",
+      "description": "Complete event catering and mandap decoration services. Making your special occasions memorable.",
+      "primaryCategory": "Catering",
+      "secondaryCategory": null,
+      "address": "Deglour Naka, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.15248993835491,
+      "lng": 77.34087603504372,
+      "averageRating": 4.768334092860269,
+      "totalRatings": 6,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/e8/9999p2462.2462.130730180108.b9e8/catalogue/shri-sahayog-seva-deglour-naka-nanded-mandap-decorators-p0kw9wk2lf.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:13.996Z",
+      "updatedAt": "2025-12-20T08:09:13.996Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "cbce7da3-84a6-4f4a-86ee-c362e28b1acb",
+      "userId": "38262ed4-4616-4e32-8620-ce6e640a2fc7",
+      "businessName": "Oasis Beauty & Hair Training Centre",
+      "description": "Complete beauty parlour and hair cutting centre in Vazirabad. Professional makeup artists available.",
+      "primaryCategory": "Salon",
+      "secondaryCategory": null,
+      "address": "Vazirabad, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.1492155577568,
+      "lng": 77.27381358381434,
+      "averageRating": 4.516894406728944,
+      "totalRatings": 6,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/v2/comp/nanded/r6/9999p2462.2462.150513112711.n9r6/catalogue/oasis-spa-beauty-parlour-and-hair-cutting-centre-vazirabad-nanded-nanded-makeup-artists-37dx9wf.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:15.019Z",
+      "updatedAt": "2025-12-20T08:09:15.019Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "dcf7c981-4ffe-4cc2-855e-c5141b5957be",
+      "userId": "30f74026-83ca-4e71-ac7c-5355fb771fa0",
+      "businessName": "Vishwakarma Furniture",
+      "description": "Traditional carpentry work with modern designs. Custom furniture for every room in your home.",
+      "primaryCategory": "Carpentry",
+      "secondaryCategory": null,
+      "address": "Shivaji Road, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.1782749326726,
+      "lng": 77.28362470284272,
+      "averageRating": 4.390283691197213,
+      "totalRatings": 7,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/def_content/wooden-furniture-manufacturers/shutterstock-418494745-wooden-furniture-manufacturers-10-3mjjn.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:15.735Z",
+      "updatedAt": "2025-12-20T08:09:15.735Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "05fe567c-0608-44e3-9cbc-5fade8442a8c",
+      "userId": "b4fba8a4-1458-4ced-87e7-c645dec6c168",
+      "businessName": "Shri Krishna Furniture and Appliances",
+      "description": "Quality furniture and home appliances store. Wide range of ready-made and custom furniture.",
+      "primaryCategory": "Carpentry",
+      "secondaryCategory": null,
+      "address": "Wadi Budruk, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.10360130420779,
+      "lng": 77.35199165920248,
+      "averageRating": 4.476557671253798,
+      "totalRatings": 15,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/x3/9999p2462.2462.200829225512.n3x3/catalogue/shri-krishna-furniture-and-appliances-wadi-budruk-nanded-furniture-dealers-3ajkxswmbc.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:16.704Z",
+      "updatedAt": "2025-12-20T08:09:16.704Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    },
+    {
+      "id": "fc1a3bbe-8144-44dd-a25d-d61c427da3de",
+      "userId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "businessName": "Rama Sales",
+      "description": "Trusted furniture dealer in Nanded HO. Quality furniture at competitive prices since establishment.",
+      "primaryCategory": "Carpentry",
+      "secondaryCategory": null,
+      "address": "Nanded HO, Nanded",
+      "city": "Nanded",
+      "state": "Maharashtra",
+      "pincode": "431601",
+      "lat": 19.17013241867575,
+      "lng": 77.29030838111787,
+      "averageRating": 4.753535961010114,
+      "totalRatings": 10,
+      "status": "APPROVED",
+      "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mockupi@upi&pn=Provider",
+      "gallery": [
+        "https://images.jdmagicbox.com/comp/nanded/i5/9999p2462.2462.120622174222.j2i5/catalogue/rama-sales-nanded-ho-nanded-furniture-dealers-1hbt7.jpg"
+      ],
+      "createdAt": "2025-12-20T08:09:17.449Z",
+      "updatedAt": "2025-12-20T08:09:17.449Z",
+      "availability": {
+        "fri": [
+          "09:00-18:00"
+        ],
+        "mon": [
+          "09:00-18:00"
+        ],
+        "sat": [
+          "09:00-18:00"
+        ],
+        "thu": [
+          "09:00-18:00"
+        ],
+        "tue": [
+          "09:00-18:00"
+        ],
+        "wed": [
+          "09:00-18:00"
+        ]
+      },
+      "serviceRadius": 6,
+      "totalRevenue": "0",
+      "aadharPanUrl": null,
+      "adminNotes": null,
+      "insuranceInfo": null,
+      "portfolioUrls": [],
+      "rejectionReason": null,
+      "socialMediaLinks": null,
+      "termsAccepted": false,
+      "termsAcceptedAt": null,
+      "verifiedById": null,
+      "verifiedAt": null
+    }
+  ],
+  "ProviderDocument": [],
+  "Service": [
+    {
+      "id": "98ff8edd-026b-464d-9bcd-ccb810eab65b",
+      "providerId": "fae09cd2-c942-4a00-aa65-0ffd7a54f9fc",
+      "description": "Professional pipe repair & replacement service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/e8/9999p2462.2462.200109184813.f8e8/catalogue/sameer-plumbers-shivaji-nagar-nanded-nanded-plumbers-kzux3u2z6w.jpg",
+      "createdAt": "2025-12-20T08:08:59.016Z",
+      "updatedAt": "2025-12-20T08:08:59.016Z",
+      "basePrice": 500,
+      "category": "Plumbing",
+      "estimatedDuration": 60,
+      "isActive": true,
+      "name": "Pipe Repair & Replacement",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "0a2fc0b3-0ce4-405b-b2fc-50399c53e414",
+      "providerId": "99112c0c-37e7-481c-a64c-d4635a6fdb2c",
+      "description": "Professional general plumbing service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/j3/9999p2462.2462.220912074522.j3j3/catalogue/shri-plumbing-services-sanmitra-colony-nanded-nanded-g5di1ln642.jpg",
+      "createdAt": "2025-12-20T08:08:59.745Z",
+      "updatedAt": "2025-12-20T08:08:59.745Z",
+      "basePrice": 600,
+      "category": "Plumbing",
+      "estimatedDuration": 60,
+      "isActive": true,
+      "name": "General Plumbing",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "97186e58-ef7e-4aba-a9ed-b154187eac89",
+      "providerId": "af0ec7df-2ee2-40bf-8d00-43f6510cc79b",
+      "description": "Professional house wiring service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/a6/9999p2462.2462.211227114707.w9a6/catalogue/fr-electricals-shivaji-nagar-nanded-nanded-electricians-vs44lk4ikr.jpg",
+      "createdAt": "2025-12-20T08:09:00.590Z",
+      "updatedAt": "2025-12-20T08:09:00.590Z",
+      "basePrice": 2500,
+      "category": "Electrical",
+      "estimatedDuration": 180,
+      "isActive": true,
+      "name": "House Wiring",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "4aab053f-f0b2-46e9-8d7a-4c36cad1d9cc",
+      "providerId": "63e0bfb1-5765-443d-b969-98fb7d6021c0",
+      "description": "Professional appliance repair service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/c4/9999p2462.2462.190424155147.s9c4/catalogue/tirupati-electronics-anand-nagar-chowk-nanded-electricians-0sy9o2s1u3.jpg",
+      "createdAt": "2025-12-20T08:09:01.649Z",
+      "updatedAt": "2025-12-20T08:09:01.649Z",
+      "basePrice": 500,
+      "category": "Electrical",
+      "estimatedDuration": 60,
+      "isActive": true,
+      "name": "Appliance Repair",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "d8db260e-6b35-4a0c-a1bc-fd63a26c409c",
+      "providerId": "50c23a35-bb5c-4e60-b2a0-6a33b437e68f",
+      "description": "Professional full home deep cleaning service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/b1/9999p2462.2462.250714174051.i2b1/catalogue/shidha-home-cleaning-anand-nagar-chowk-nanded-cleaning-services-k7tub4z5dx.jpg",
+      "createdAt": "2025-12-20T08:09:02.378Z",
+      "updatedAt": "2025-12-20T08:09:02.378Z",
+      "basePrice": 2000,
+      "category": "Cleaning",
+      "estimatedDuration": 180,
+      "isActive": true,
+      "name": "Full Home Deep Cleaning",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "4d321372-8bd0-4c84-985e-d2160549dbbc",
+      "providerId": "49361148-bf83-40fc-9806-fbc33af70529",
+      "description": "Professional wedding catering (veg) service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/f5/9999p2462.2462.230923130704.q8f5/catalogue/shri-jai-malhar-caters-and-mandap-decoration-hingoli-naka-nanded-caterers-kalfrj16vh.jpg",
+      "createdAt": "2025-12-20T08:09:03.019Z",
+      "updatedAt": "2025-12-20T08:09:03.019Z",
+      "basePrice": 450,
+      "category": "Catering",
+      "estimatedDuration": 240,
+      "isActive": true,
+      "name": "Wedding Catering (Veg)",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "b9f04c33-182f-4846-8748-db6317aa00f0",
+      "providerId": "5f5f83ae-76ab-40a5-87d3-db990e7a4b5d",
+      "description": "Professional full event catering service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/v4/9999p2462.2462.141231131928.b2v4/catalogue/siddhi-mangal-karyalay-nanded-ho-nanded-decorators-nln6j78h5i.jpg",
+      "createdAt": "2025-12-20T08:09:03.627Z",
+      "updatedAt": "2025-12-20T08:09:03.627Z",
+      "basePrice": 600,
+      "category": "Catering",
+      "estimatedDuration": 300,
+      "isActive": true,
+      "name": "Full Event Catering",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "2591ec8f-8ba2-48ff-8a59-fc167773080e",
+      "providerId": "4a0b4cc6-3d44-4a0c-8be8-705a7f9d5512",
+      "description": "Professional haircut & styling service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/l8/9999p2462.2462.140129155207.t9l8/catalogue/signate-beauty-salon-unisex-salon--vazirabad-nanded-nanded-beauty-parlours-0pb4nwfd4c.jpg",
+      "createdAt": "2025-12-20T08:09:04.303Z",
+      "updatedAt": "2025-12-20T08:09:04.303Z",
+      "basePrice": 400,
+      "category": "Salon",
+      "estimatedDuration": 45,
+      "isActive": true,
+      "name": "Haircut & Styling",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "a52152a4-efa6-42c2-a614-e11f27221208",
+      "providerId": "a6c4c2f9-acb7-4205-9fe1-884cc2690abb",
+      "description": "Professional bridal makeup service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/p6/9999p2462.2462.240717104534.p9p6/catalogue/pefnss42b82gbsr-3e4bac2sy1.jpg",
+      "createdAt": "2025-12-20T08:09:05.045Z",
+      "updatedAt": "2025-12-20T08:09:05.045Z",
+      "basePrice": 5000,
+      "category": "Salon",
+      "estimatedDuration": 180,
+      "isActive": true,
+      "name": "Bridal Makeup",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "faf1e0ba-fdfb-4efc-99df-2acdf1956bb5",
+      "providerId": "c8b95fec-c02e-4b85-9324-1615005f36a4",
+      "description": "Professional custom furniture making service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/j8/9999p2462.2462.161218190302.g1j8/catalogue/jai-hind-furniture-and-interior-decoretars-shivaji-nagar-nanded-nanded-interior-designers-v5qjs.jpg",
+      "createdAt": "2025-12-20T08:09:06.009Z",
+      "updatedAt": "2025-12-20T08:09:06.009Z",
+      "basePrice": 5000,
+      "category": "Carpentry",
+      "estimatedDuration": 240,
+      "isActive": true,
+      "name": "Custom Furniture Making",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "8b830ac3-dd07-4679-b5f5-369a57752928",
+      "providerId": "b700d5d3-bc9d-4e56-a11e-5303ae4c3512",
+      "description": "Professional door & window installation service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/d7/9999p2462.2462.250308124507.p3d7/catalogue/ekdant-enterprises-and-multiservices-chatrapati-nagar-nanded-electricians-qaqgzcmk16.jpg",
+      "createdAt": "2025-12-20T08:09:06.802Z",
+      "updatedAt": "2025-12-20T08:09:06.802Z",
+      "basePrice": 1500,
+      "category": "Carpentry",
+      "estimatedDuration": 120,
+      "isActive": true,
+      "name": "Door & Window Installation",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "7107c759-d833-4473-bf6d-2c9be4588406",
+      "providerId": "a63aa0d8-5f98-4926-ab2f-5ce7c7e8add7",
+      "description": "Professional water heater installation service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/p2/9999p2462.2462.240412125542.a7p2/catalogue/k6db5zd9hgl7yg1-6pvdcwjq32.jpg",
+      "createdAt": "2025-12-20T08:09:07.784Z",
+      "updatedAt": "2025-12-20T08:09:07.784Z",
+      "basePrice": 800,
+      "category": "Plumbing",
+      "estimatedDuration": 90,
+      "isActive": true,
+      "name": "Water Heater Installation",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "2f3770b9-4804-42f8-93da-61a8029e5176",
+      "providerId": "dff2caf4-83f7-410a-ab56-c8145cdf04f9",
+      "description": "Professional drainage cleaning service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/t4/9999p2462.2462.220802122055.f7t4/catalogue/omkar-plumbing-services-nanded-midc-nanded-plumbers-aspz0mgo05.jpg",
+      "createdAt": "2025-12-20T08:09:09.003Z",
+      "updatedAt": "2025-12-20T08:09:09.003Z",
+      "basePrice": 400,
+      "category": "Plumbing",
+      "estimatedDuration": 45,
+      "isActive": true,
+      "name": "Drainage Cleaning",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "c631e026-396f-482e-8600-ae7056f95069",
+      "providerId": "21809b93-0315-47d9-a2b1-3998baabf832",
+      "description": "Professional sanitary installation service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/d7/9999p2462.2462.170428171109.z1d7/catalogue/new-super-sanitary-nanded-ho-nanded-tile-dealers-8s0cec.jpg",
+      "createdAt": "2025-12-20T08:09:10.131Z",
+      "updatedAt": "2025-12-20T08:09:10.131Z",
+      "basePrice": 700,
+      "category": "Plumbing",
+      "estimatedDuration": 60,
+      "isActive": true,
+      "name": "Sanitary Installation",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "a52b49f8-5e44-4a53-8f85-863042fadf05",
+      "providerId": "7c1c5a43-20f5-4b8f-be30-e68c9abbf75e",
+      "description": "Professional motor rewinding service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/y3/9999p2462.2462.180322183653.a2y3/catalogue/anil-electricals-and-rewinding-works-anand-nagar-chowk-nanded-electricians-whgpl.jpg",
+      "createdAt": "2025-12-20T08:09:11.211Z",
+      "updatedAt": "2025-12-20T08:09:11.211Z",
+      "basePrice": 1500,
+      "category": "Electrical",
+      "estimatedDuration": 180,
+      "isActive": true,
+      "name": "Motor Rewinding",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "19261d09-603d-485f-a867-dd2df4e60b95",
+      "providerId": "31060268-0cf3-4a7c-8bf6-acbb0ed928d5",
+      "description": "Professional switch & socket installation service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/q1/9999p2462.2462.230323101552.j8q1/catalogue/varad-electricals-nanded-electronic-goods-showrooms-xx8a9ic1ob.jpg",
+      "createdAt": "2025-12-20T08:09:12.204Z",
+      "updatedAt": "2025-12-20T08:09:12.204Z",
+      "basePrice": 400,
+      "category": "Electrical",
+      "estimatedDuration": 30,
+      "isActive": true,
+      "name": "Switch & Socket Installation",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "3ceb0e83-e11f-488c-a53c-8eec7986a81b",
+      "providerId": "aad295f8-88f0-4e03-abb4-f9800d81ef8c",
+      "description": "Professional birthday party catering service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/b7/9999p2462.2462.140331105130.s1b7/catalogue/joshi-caterers-nanded-caterers-for-wedding-kkrvw.jpg",
+      "createdAt": "2025-12-20T08:09:13.176Z",
+      "updatedAt": "2025-12-20T08:09:13.176Z",
+      "basePrice": 350,
+      "category": "Catering",
+      "estimatedDuration": 180,
+      "isActive": true,
+      "name": "Birthday Party Catering",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "8fc5031a-efbd-4b37-beb8-4a211f693130",
+      "providerId": "219ccf8c-2363-493d-9da4-974cde87d638",
+      "description": "Professional mandap decoration service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/e8/9999p2462.2462.130730180108.b9e8/catalogue/shri-sahayog-seva-deglour-naka-nanded-mandap-decorators-p0kw9wk2lf.jpg",
+      "createdAt": "2025-12-20T08:09:14.200Z",
+      "updatedAt": "2025-12-20T08:09:14.200Z",
+      "basePrice": 15000,
+      "category": "Catering",
+      "estimatedDuration": 480,
+      "isActive": true,
+      "name": "Mandap Decoration",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "7f240769-0a4f-4a3f-8c9e-edc402850b1b",
+      "providerId": "cbce7da3-84a6-4f4a-86ee-c362e28b1acb",
+      "description": "Professional professional makeup service",
+      "imageUrl": "https://images.jdmagicbox.com/v2/comp/nanded/r6/9999p2462.2462.150513112711.n9r6/catalogue/oasis-spa-beauty-parlour-and-hair-cutting-centre-vazirabad-nanded-nanded-makeup-artists-37dx9wf.jpg",
+      "createdAt": "2025-12-20T08:09:15.102Z",
+      "updatedAt": "2025-12-20T08:09:15.102Z",
+      "basePrice": 1500,
+      "category": "Salon",
+      "estimatedDuration": 90,
+      "isActive": true,
+      "name": "Professional Makeup",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "9f6a5712-a092-4df3-b5b3-0f73e736621b",
+      "providerId": "dcf7c981-4ffe-4cc2-855e-c5141b5957be",
+      "description": "Professional wardrobe making service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/def_content/wooden-furniture-manufacturers/shutterstock-418494745-wooden-furniture-manufacturers-10-3mjjn.jpg",
+      "createdAt": "2025-12-20T08:09:15.838Z",
+      "updatedAt": "2025-12-20T08:09:15.838Z",
+      "basePrice": 15000,
+      "category": "Carpentry",
+      "estimatedDuration": 480,
+      "isActive": true,
+      "name": "Wardrobe Making",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "c080a116-262c-4e5d-84e6-9d6af0e680ae",
+      "providerId": "05fe567c-0608-44e3-9cbc-5fade8442a8c",
+      "description": "Professional ready-made furniture service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/x3/9999p2462.2462.200829225512.n3x3/catalogue/shri-krishna-furniture-and-appliances-wadi-budruk-nanded-furniture-dealers-3ajkxswmbc.jpg",
+      "createdAt": "2025-12-20T08:09:16.819Z",
+      "updatedAt": "2025-12-20T08:09:16.819Z",
+      "basePrice": 5000,
+      "category": "Carpentry",
+      "estimatedDuration": 60,
+      "isActive": true,
+      "name": "Ready-made Furniture",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    },
+    {
+      "id": "e16a2ccf-1881-49bd-a8a8-aa78e813fbf4",
+      "providerId": "fc1a3bbe-8144-44dd-a25d-d61c427da3de",
+      "description": "Professional furniture assembly service",
+      "imageUrl": "https://images.jdmagicbox.com/comp/nanded/i5/9999p2462.2462.120622174222.j2i5/catalogue/rama-sales-nanded-ho-nanded-furniture-dealers-1hbt7.jpg",
+      "createdAt": "2025-12-20T08:09:17.687Z",
+      "updatedAt": "2025-12-20T08:09:17.687Z",
+      "basePrice": 500,
+      "category": "Carpentry",
+      "estimatedDuration": 90,
+      "isActive": true,
+      "name": "Furniture Assembly",
+      "priceUnit": "per service",
+      "status": "APPROVED"
+    }
+  ],
+  "Booking": [
+    {
+      "id": "e40a4294-f13d-4aee-959a-934288b2f84b",
+      "userId": "0c422a33-f505-44f6-90ea-d57c333d8b08",
+      "providerId": "05fe567c-0608-44e3-9cbc-5fade8442a8c",
+      "serviceId": "c080a116-262c-4e5d-84e6-9d6af0e680ae",
+      "scheduledAt": "2025-12-21T04:30:00.000Z",
+      "status": "EXPIRED",
+      "paymentStatus": "PENDING",
+      "totalAmount": "5000",
+      "platformFee": "350.0000000000001",
+      "providerEarnings": "4650",
+      "address": "Namaskar Chouwk Nanded",
+      "city": "Nanded",
+      "pincode": "431604",
+      "requirements": "cdcdcdcdc",
+      "createdAt": "2025-12-20T09:42:13.598Z",
+      "updatedAt": "2025-12-20T11:50:59.713Z",
+      "completionOtp": null
+    }
+  ],
+  "Transaction": [],
+  "Message": [
+    {
+      "id": "f4d7433b-bd00-4b3b-8448-37f6d57fd19a",
+      "conversationId": "0c422a33-f505-44f6-90ea-d57c333d8b08::184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "senderId": "0c422a33-f505-44f6-90ea-d57c333d8b08",
+      "receiverId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "text": "Hello!~",
+      "attachments": null,
+      "read": false,
+      "createdAt": "2025-12-20T09:50:42.713Z"
+    },
+    {
+      "id": "e09305f9-0371-46d0-bac8-f68043664771",
+      "conversationId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46::56abdfc3-6d55-4150-8453-56d1509d7053",
+      "senderId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "receiverId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "text": "We have noticed you have not accepted the request of many customers, if this persists, you will be banned.",
+      "attachments": null,
+      "read": false,
+      "createdAt": "2025-12-22T07:55:14.736Z"
+    }
+  ],
+  "Notification": [
+    {
+      "id": "d49b7aa0-0845-4df5-a275-bc216917dcb0",
+      "userId": "b4fba8a4-1458-4ced-87e7-c645dec6c168",
+      "type": "BOOKING_REQUEST",
+      "title": "New Booking Request",
+      "body": "Aditya Chandravanshi has requested Ready-made Furniture on 21/12/2025",
+      "payload": {
+        "bookingId": "e40a4294-f13d-4aee-959a-934288b2f84b",
+        "serviceId": "c080a116-262c-4e5d-84e6-9d6af0e680ae"
+      },
+      "read": false,
+      "createdAt": "2025-12-20T09:42:16.204Z"
+    },
+    {
+      "id": "825517a0-1bac-4342-b8d0-43e458cf514b",
+      "userId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "type": "message",
+      "title": "New Message",
+      "body": "Aditya Chandravanshi: Hello!~",
+      "payload": {
+        "senderId": "0c422a33-f505-44f6-90ea-d57c333d8b08",
+        "messageId": "f4d7433b-bd00-4b3b-8448-37f6d57fd19a",
+        "conversationId": "0c422a33-f505-44f6-90ea-d57c333d8b08::184aa718-b4f8-48c0-8691-f84bcbdf5f46"
+      },
+      "read": false,
+      "createdAt": "2025-12-20T09:50:44.454Z"
+    },
+    {
+      "id": "c0441abf-0e95-452c-a56d-cf51cff568cf",
+      "userId": "0c422a33-f505-44f6-90ea-d57c333d8b08",
+      "type": "BOOKING_UPDATE",
+      "title": "Booking Expired",
+      "body": "Your booking for Ready-made Furniture has expired as the provider did not respond within 2 hours.",
+      "payload": {
+        "status": "EXPIRED",
+        "bookingId": "e40a4294-f13d-4aee-959a-934288b2f84b"
+      },
+      "read": false,
+      "createdAt": "2025-12-20T11:51:00.530Z"
+    },
+    {
+      "id": "6d1681b0-174b-47e2-8434-1a9f8d21aca7",
+      "userId": "b4fba8a4-1458-4ced-87e7-c645dec6c168",
+      "type": "BOOKING_UPDATE",
+      "title": "Booking Expired",
+      "body": "A booking request from Aditya Chandravanshi for Ready-made Furniture has expired due to no response.",
+      "payload": {
+        "status": "EXPIRED",
+        "bookingId": "e40a4294-f13d-4aee-959a-934288b2f84b"
+      },
+      "read": false,
+      "createdAt": "2025-12-20T11:51:01.351Z"
+    },
+    {
+      "id": "df09c7b6-2e16-44de-9eed-9d8c1f508241",
+      "userId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "type": "message",
+      "title": "New Message",
+      "body": "Admin User: We have noticed you have not accepted the request of many customers, if this persists, you will be b...",
+      "payload": {
+        "senderId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+        "messageId": "e09305f9-0371-46d0-bac8-f68043664771",
+        "conversationId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46::56abdfc3-6d55-4150-8453-56d1509d7053"
+      },
+      "read": false,
+      "createdAt": "2025-12-22T07:55:18.115Z"
+    }
+  ],
+  "Review": [],
+  "Report": [],
+  "RefreshToken": [
+    {
+      "id": "b08ca163-dd91-4310-939f-32b8ae0b2287",
+      "userId": "184aa718-b4f8-48c0-8691-f84bcbdf5f46",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxODRhYTcxOC1iNGY4LTQ4YzAtODY5MS1mODRiY2JkZjVmNDYiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYyMTgyMTQsImV4cCI6MTc2NjgyMzAxNH0.w0YuJEpgUr4rez9vKkUmfAafN7Mz4l6cg1_qERrbKWo",
+      "expiresAt": "2025-12-27T08:10:14.713Z",
+      "createdAt": "2025-12-20T08:10:14.717Z",
+      "revokedAt": null
+    },
+    {
+      "id": "250a0fcd-980f-4b87-8203-e551f688192a",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYyMTgzNzMsImV4cCI6MTc2NjgyMzE3M30.pjyDaS3RtwtgGEHOqOBEEix8ZsRLBKEW2hGRghnGnd8",
+      "expiresAt": "2025-12-27T08:12:53.826Z",
+      "createdAt": "2025-12-20T08:12:53.828Z",
+      "revokedAt": null
+    },
+    {
+      "id": "97a7fea3-1546-4433-b37c-8abffdbac1d0",
+      "userId": "0c422a33-f505-44f6-90ea-d57c333d8b08",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwYzQyMmEzMy1mNTA1LTQ0ZjYtOTBlYS1kNTdjMzMzZDhiMDgiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYyMjM2NjQsImV4cCI6MTc2NjgyODQ2NH0.nh9Bhi2BzMlMnGQcR_8vdEQ8Zx9Zq4Xa80a8t7Rdv5k",
+      "expiresAt": "2025-12-27T09:41:04.406Z",
+      "createdAt": "2025-12-20T09:41:04.409Z",
+      "revokedAt": null
+    },
+    {
+      "id": "95140ec5-3841-479f-9602-653292175506",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYyMjUwNjQsImV4cCI6MTc2NjgyOTg2NH0.-x-CNYMa9fCmVCoO5JLD8Fzfr0fnlVVQUYls_Z1-yPY",
+      "expiresAt": "2025-12-27T10:04:24.620Z",
+      "createdAt": "2025-12-20T10:04:24.622Z",
+      "revokedAt": null
+    },
+    {
+      "id": "37f092b7-b107-4531-bd52-a106d5fc30b0",
+      "userId": "b8ca49af-15de-4395-9b3d-b8c4c9b72a07",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiOGNhNDlhZi0xNWRlLTQzOTUtOWIzZC1iOGM0YzliNzJhMDciLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYyMzE0NTEsImV4cCI6MTc2NjgzNjI1MX0.2m1bwIRLKwSfrDwqlM_QEKNEDUGIOfSK8TR4m_WqWwc",
+      "expiresAt": "2025-12-27T11:50:51.167Z",
+      "createdAt": "2025-12-20T11:50:51.171Z",
+      "revokedAt": null
+    },
+    {
+      "id": "85361ae0-a3b5-4ae8-ba5b-0eef22af2b7e",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYzODk3MDAsImV4cCI6MTc2Njk5NDUwMH0.RWlODguzwxSR5N-9vkEJusMLofFAVFxi1BO8RPOtnhc",
+      "expiresAt": "2025-12-29T07:48:20.889Z",
+      "createdAt": "2025-12-22T07:48:20.890Z",
+      "revokedAt": null
+    },
+    {
+      "id": "e6fca72e-cbd9-4811-8c44-5694be9c32a1",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYzOTE2NjksImV4cCI6MTc2Njk5NjQ2OX0.r-KhAeN0FbdjeRku-CCrq2x1EM06xclg3TCwvKv8fuo",
+      "expiresAt": "2025-12-29T08:21:09.507Z",
+      "createdAt": "2025-12-22T08:21:09.509Z",
+      "revokedAt": null
+    },
+    {
+      "id": "e1b12d29-c241-4583-ae8b-e12ae0835a0a",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYzOTMzOTEsImV4cCI6MTc2Njk5ODE5MX0.ByYGdsWZP4JyaonHNb4GeiBBuqQyy10fucebwzAOnHw",
+      "expiresAt": "2025-12-29T08:49:51.295Z",
+      "createdAt": "2025-12-22T08:49:51.297Z",
+      "revokedAt": null
+    },
+    {
+      "id": "8ab91ff5-372d-4c8e-ac3f-d3cc3068315d",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjYzOTk4MjIsImV4cCI6MTc2NzAwNDYyMn0.rjm8W_oquMEyQX6IlmtigCj3fvy_iK9bIXv4PofzGaQ",
+      "expiresAt": "2025-12-29T10:37:02.216Z",
+      "createdAt": "2025-12-22T10:37:02.217Z",
+      "revokedAt": null
+    },
+    {
+      "id": "6526f82c-7a45-4d87-896e-b09efd6d0bee",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjY0MDIzOTgsImV4cCI6MTc2NzAwNzE5OH0.-xEJg8OkZybCPDGoaaruPajilO5TTr0hTPbOu5exRco",
+      "expiresAt": "2025-12-29T11:19:58.568Z",
+      "createdAt": "2025-12-22T11:19:58.571Z",
+      "revokedAt": null
+    },
+    {
+      "id": "57b1bf29-e01b-4436-8a67-2ff62cee63c9",
+      "userId": "56abdfc3-6d55-4150-8453-56d1509d7053",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NmFiZGZjMy02ZDU1LTQxNTAtODQ1My01NmQxNTA5ZDcwNTMiLCJlbWFpbCI6IiIsInJvbGUiOiIiLCJpYXQiOjE3NjY0MDU3NzcsImV4cCI6MTc2NzAxMDU3N30.YNCrkmUrkxtYQdCjGdt2eZik68J8oMFMCfMXi_HMj5s",
+      "expiresAt": "2025-12-29T12:16:17.344Z",
+      "createdAt": "2025-12-22T12:16:17.346Z",
+      "revokedAt": null
+    }
+  ],
+  "Payout": [],
+  "SavedProvider": [],
+  "Appeal": [],
+  "Category": [
+    {
+      "id": "b6d83899-7ad8-4d75-8985-0b6686619a0a",
+      "name": "Plumbing",
+      "slug": "plumbing",
+      "description": "Professional plumbing services for homes and businesses",
+      "icon": "🔧",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.527Z",
+      "updatedAt": "2025-12-20T08:08:57.527Z"
+    },
+    {
+      "id": "eb43d1d6-0e79-41f8-bb0e-2c8b76f55126",
+      "name": "Salon",
+      "slug": "salon",
+      "description": "Beauty and grooming services for everyone",
+      "icon": "💇",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.528Z",
+      "updatedAt": "2025-12-20T08:08:57.528Z"
+    },
+    {
+      "id": "7c9e8b55-9a55-4041-a174-5adde46fa146",
+      "name": "Electrical",
+      "slug": "electrical",
+      "description": "Licensed electricians for all your electrical needs",
+      "icon": "⚡",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.527Z",
+      "updatedAt": "2025-12-20T08:08:57.527Z"
+    },
+    {
+      "id": "7c22ce0b-fb22-48d1-9c99-53392811eed7",
+      "name": "Carpentry",
+      "slug": "carpentry",
+      "description": "Expert carpentry services for furniture and renovations",
+      "icon": "🪚",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.528Z",
+      "updatedAt": "2025-12-20T08:08:57.528Z"
+    },
+    {
+      "id": "8a97bb1d-c41c-47ba-8e1f-e108ede9a094",
+      "name": "Other",
+      "slug": "other",
+      "description": "Miscellaneous services that do not fit other categories",
+      "icon": "📦",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.528Z",
+      "updatedAt": "2025-12-20T08:08:57.528Z"
+    },
+    {
+      "id": "b530ff56-5b1a-4f50-bfb1-7d09447d35ba",
+      "name": "Catering",
+      "slug": "catering",
+      "description": "Delicious catering services for all occasions",
+      "icon": "🍽️",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.527Z",
+      "updatedAt": "2025-12-20T08:08:57.527Z"
+    },
+    {
+      "id": "e57de798-cc36-4caa-9086-00be80604420",
+      "name": "Cleaning",
+      "slug": "cleaning",
+      "description": "Professional cleaning services for homes and offices",
+      "icon": "🧹",
+      "imageUrl": "",
+      "isActive": true,
+      "createdAt": "2025-12-20T08:08:57.527Z",
+      "updatedAt": "2025-12-20T08:08:57.527Z"
+    }
+  ],
+  "AuditLog": []
+}

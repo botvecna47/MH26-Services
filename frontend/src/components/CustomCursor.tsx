@@ -1,55 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Check for touch device immediately (before component mounts)
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return true; // SSR safety
+  return window.matchMedia('(pointer: coarse)').matches ||
+         'ontouchstart' in window ||
+         navigator.maxTouchPoints > 0 ||
+         window.innerWidth < 768;
+};
+
 /**
  * Custom Arrow Cursor Component
  * - Arrow pointer (default) → Hand pointer (on clickable)
  * - Hide when window loses focus
- * - Soft ASMR click sounds
- * - PC only (hidden on mobile/touch)
+ * - PC only (completely disabled on mobile/touch)
  */
 export default function CustomCursor() {
+  // Early exit for mobile - no hooks run after this on mobile
+  const [isTouchDevice] = useState(() => isMobileDevice());
+  
   const cursorRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  // Crisp click sound
-  const playClickSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Crisp click - higher frequency, quick decay
-      oscillator.frequency.value = 600;
-      oscillator.type = 'square';
-      
-      gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.05);
-    } catch (e) {
-      // Audio not supported
-    }
-  };
 
   useEffect(() => {
-    // Check for touch device
-    const checkTouch = () => {
-      const isMobile = window.matchMedia('(pointer: coarse)').matches ||
-                       'ontouchstart' in window ||
-                       navigator.maxTouchPoints > 0;
-      setIsTouchDevice(isMobile);
-    };
-    
-    checkTouch();
-    window.addEventListener('resize', checkTouch);
-    
+    // Skip all logic on touch devices
     if (isTouchDevice) return;
 
     const cursor = cursorRef.current;
@@ -102,35 +78,19 @@ export default function CustomCursor() {
     document.documentElement.addEventListener('mouseleave', onMouseLeaveDoc);
     document.documentElement.addEventListener('mouseenter', onMouseEnterDoc);
 
-    // Inject global styles to hide default cursor and force custom cursor
-    if (!isTouchDevice) {
-      const style = document.createElement('style');
-      style.id = 'custom-cursor-style';
-      style.innerHTML = `
-        * { cursor: none !important; }
-        a, button, input, textarea, select, [role="button"], .cursor-pointer { cursor: none !important; }
-      `;
-      document.head.appendChild(style);
-
-      return () => {
-        if (document.head.contains(style)) {
-          document.head.removeChild(style);
-        }
-        window.removeEventListener('resize', checkTouch);
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mousedown', onMouseDown);
-        document.removeEventListener('mouseup', onMouseUp);
-        document.removeEventListener('mouseover', onMouseEnter);
-        document.removeEventListener('mouseout', onMouseLeave);
-        window.removeEventListener('blur', onWindowBlur);
-        window.removeEventListener('focus', onWindowFocus);
-        document.documentElement.removeEventListener('mouseleave', onMouseLeaveDoc);
-        document.documentElement.removeEventListener('mouseenter', onMouseEnterDoc);
-      };
-    }
+    // Inject global styles to hide default cursor
+    const style = document.createElement('style');
+    style.id = 'custom-cursor-style';
+    style.innerHTML = `
+      * { cursor: none !important; }
+      a, button, input, textarea, select, [role="button"], .cursor-pointer { cursor: none !important; }
+    `;
+    document.head.appendChild(style);
 
     return () => {
-      window.removeEventListener('resize', checkTouch);
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('mouseup', onMouseUp);
