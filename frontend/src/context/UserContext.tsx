@@ -15,6 +15,7 @@ export interface User {
   city?: string;
   walletBalance?: number;
   totalSpending?: number;
+  isBanned?: boolean;                  // User banned status
   providerStatus?: string | null;     // Provider status: PENDING, APPROVED, REJECTED, SUSPENDED
   requiresOnboarding?: boolean;       // True if provider needs to complete/resubmit step 3
   provider?: {
@@ -31,6 +32,7 @@ interface UserContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isProvider: boolean;
+  isBanned: boolean;
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -133,6 +135,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = user !== null;
   const isAdmin = user?.role === 'ADMIN';
   const isProvider = user?.role === 'PROVIDER';
+  const isBanned = user?.isBanned === true;
 
   // setUser function - updates localStorage which will trigger sync
   const setUser = (newUser: User | null) => {
@@ -157,7 +160,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, isAuthenticated, isAdmin, isProvider, isLoading, refreshProfile }}>
+    <UserContext.Provider value={{ user, setUser, isAuthenticated, isAdmin, isProvider, isBanned, isLoading, refreshProfile }}>
       {children}
     </UserContext.Provider>
   );

@@ -54,6 +54,7 @@ export default function App() {
               <div className="min-h-screen glass-gradient-bg">
                 <CustomCursor />
                 <ScrollToTop />
+                <BannedUserRedirect />
                 <UnifiedNavigation />
                 <main className="pb-20 md:pb-0">
                   <Suspense fallback={<PageLoader />}>
@@ -104,10 +105,26 @@ export default function App() {
 
 // Protected Route Component
 import { useUser } from './context/UserContext';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
+// Global component to redirect banned users from any page
+function BannedUserRedirect() {
+  const { isBanned, isAuthenticated } = useUser();
+  const location = useLocation();
+
+  useEffect(() => {
+    // If user is banned and not already on banned page, redirect
+    if (isAuthenticated && isBanned && location.pathname !== '/banned') {
+      window.location.href = '/banned';
+    }
+  }, [isBanned, isAuthenticated, location.pathname]);
+
+  return null;
+}
 
 function ProtectedRoute({ children, requireAdmin }: { children: JSX.Element, requireAdmin?: boolean }) {
-  const { user, isAdmin, isLoading } = useUser();
+  const { user, isAdmin, isLoading, isBanned } = useUser();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -118,10 +135,8 @@ function ProtectedRoute({ children, requireAdmin }: { children: JSX.Element, req
   }
 
   // If user is banned, force them to Banned Page
-  // We check this via a custom property or role if needed, but backend sends isBanned.
-  // We need to ensure User type has isBanned. If not in type, specific check:
-  if ((user as any).isBanned) {
-      return <Navigate to="/banned" replace />;
+  if (isBanned) {
+    return <Navigate to="/banned" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
@@ -130,3 +145,6 @@ function ProtectedRoute({ children, requireAdmin }: { children: JSX.Element, req
 
   return children;
 }
+
+// Export BannedUserRedirect for use in App
+export { BannedUserRedirect };
