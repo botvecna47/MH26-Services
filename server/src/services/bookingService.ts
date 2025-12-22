@@ -8,6 +8,7 @@ import {
   sendBookingConfirmationToProvider,
   sendBookingCancellationToProvider 
 } from '../utils/email';
+import { sendBookingExpiredEmail } from './emailService';
 
 export const bookingService = {
   /**
@@ -541,22 +542,21 @@ export const bookingService = {
   },
 
   /**
-   * Auto-expire stale PENDING bookings (older than 2 hours)
+   * Auto-expire stale PENDING bookings (older than 1 hour)
    * Called on demand or via scheduled job
    */
   async expireStaleBookings() {
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
     
-    // Find all stale bookings to notify users
     const staleBookings = await prisma.booking.findMany({
       where: {
         status: 'PENDING',
-        createdAt: { lt: twoHoursAgo }
+        createdAt: { lt: oneHourAgo }
       },
       include: {
         user: { select: { id: true, name: true, email: true } },
-        provider: { include: { user: { select: { id: true } } } },
-        service: { select: { name: true } }
+        provider: { include: { user: { select: { id: true, email: true } } } },
+        service: { select: { id: true, name: true } }
       }
     });
 
@@ -568,7 +568,7 @@ export const bookingService = {
     const result = await prisma.booking.updateMany({
       where: {
         status: 'PENDING',
-        createdAt: { lt: twoHoursAgo }
+        createdAt: { lt: oneHourAgo }
       },
       data: { status: 'EXPIRED' }
     });
@@ -582,10 +582,19 @@ export const bookingService = {
             userId: booking.userId,
             type: 'BOOKING_UPDATE',
             title: 'Booking Expired',
-            body: `Your booking for ${booking.service.name} has expired as the provider did not respond within 2 hours.`,
+            body: `Your booking for ${booking.service.name} has expired as the provider did not respond within 1 hour.`,
             payload: { bookingId: booking.id, status: 'EXPIRED' }
           }
         });
+        
+        // Send email to customer
+        sendBookingExpiredEmail(
+          booking.user.email!,
+          booking.user.name,
+          booking.service.name,
+          (booking.provider as any).businessName || 'Provider',
+          booking.service.id
+        ).catch(err => logger.error('Failed to send booking expired email:', err));
         
         // Notify provider
         await prisma.notification.create({
@@ -614,11 +623,11 @@ export const bookingService = {
    * Check and expire stale bookings (lightweight, called on list fetch)
    */
   async checkStaleBookings() {
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
     const staleCount = await prisma.booking.count({
       where: {
         status: 'PENDING',
-        createdAt: { lt: twoHoursAgo }
+        createdAt: { lt: oneHourAgo }
       }
     });
     

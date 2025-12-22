@@ -56,8 +56,9 @@ export const appealController = {
       const skip = (Number(page) - 1) * Number(limit);
 
       const where: any = {};
-      if (status) where.status = status;
-      if (type) where.type = type;
+      // Only add status filter if it's not 'all'
+      if (status && status !== 'all') where.status = status;
+      if (type && type !== 'all') where.type = type;
 
       const [appeals, total] = await Promise.all([
         prisma.appeal.findMany({

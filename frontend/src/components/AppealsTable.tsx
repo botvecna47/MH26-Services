@@ -1,94 +1,212 @@
 
-import { useAppeals, useUnbanUser, useBanUser } from '../api/admin';
+import { useAppeals, useReviewAppeal } from '../api/appeals';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check, X, User, Building2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AppealsTable() {
-  const { data: appealsData, isLoading } = useAppeals({ status: 'all' });
-  const unbanUserMutation = useUnbanUser();
+  const { data: appealsData, isLoading, refetch } = useAppeals({ status: 'all' });
+  const resolveAppealMutation = useReviewAppeal();
+  const queryClient = useQueryClient();
 
-  const handleApproveAppeal = async (userId: string, appealId: string) => {
-    if (confirm('Approve this appeal and unban the user?')) {
-        try {
-            await unbanUserMutation.mutateAsync({ id: userId, reason: 'Appeal Approved' });
-            toast.success('Appeal approved and user unbanned');
-        } catch (e) {
-            toast.error('Failed to process appeal');
-        }
+  const handleResolveAppeal = async (appealId: string, status: 'APPROVED' | 'REJECTED', appealType: string) => {
+    const action = status === 'APPROVED' ? 'approve' : 'reject';
+    const typeLabel = appealType === 'UNBAN_REQUEST' ? 'unban the user' : 
+                      appealType === 'SUSPENSION_APPEAL' ? 'unsuspend the provider' : 
+                      'process this appeal';
+    
+    if (!confirm(`Are you sure you want to ${action} this appeal? ${status === 'APPROVED' ? `This will ${typeLabel}.` : ''}`)) {
+      return;
+    }
+
+    try {
+      await resolveAppealMutation.mutateAsync({ 
+        id: appealId, 
+        status,
+        adminNotes: status === 'APPROVED' ? 'Appeal approved by admin' : 'Appeal rejected by admin'
+      });
+      
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      
+      toast.success(`Appeal ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`);
+      refetch();
+    } catch (e) {
+      console.error('Appeal resolution error:', e);
+      toast.error('Failed to process appeal');
     }
   };
 
   if (isLoading) {
-      return <div className="p-8 text-center"><Loader2 className="animate-spin h-6 w-6 mx-auto text-gray-400"/></div>;
+    return <div className="p-8 text-center"><Loader2 className="animate-spin h-6 w-6 mx-auto text-gray-400"/></div>;
   }
 
   const appeals = appealsData?.data || [];
 
   if (appeals.length === 0) {
-      return <div className="p-8 text-center text-gray-500">No appeals found.</div>;
+    return <div className="p-8 text-center text-gray-500">No appeals found.</div>;
   }
 
+  const getAppealTypeIcon = (type: string) => {
+    return type === 'SUSPENSION_APPEAL' ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />;
+  };
+
+  const getAppealTypeLabel = (type: string) => {
+    switch (type) {
+      case 'UNBAN_REQUEST': return 'User Unban';
+      case 'SUSPENSION_APPEAL': return 'Provider Unsuspend';
+      case 'REJECTION_APPEAL': return 'Rejection Appeal';
+      default: return type;
+    }
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {appeals.map((appeal: any) => (
-            <tr key={appeal.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-6 py-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-                        {(appeal.user?.name || '?').charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-900">{appeal.user?.name || 'Unknown'}</p>
-                        <p className="text-xs text-gray-500">{appeal.user?.email}</p>
-                    </div>
+    <>
+      {/* Mobile Card View */}
+      <div className="md:hidden divide-y divide-gray-200">
+        {appeals.map((appeal: any) => (
+          <div key={appeal.id} className="p-4 hover:bg-gray-50">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                  {(appeal.user?.name || '?').charAt(0).toUpperCase()}
                 </div>
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-600">{appeal.type}</td>
-              <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title={appeal.details}>
-                <span className="font-semibold block">{appeal.reason}</span>
-                <span className="text-xs text-gray-500">{appeal.details}</span>
-              </td>
-              <td className="px-6 py-4">
-                <Badge variant={
-                  appeal.status === 'APPROVED' ? 'default' : 
-                  appeal.status === 'PENDING' ? 'secondary' : 
-                  appeal.status === 'REJECTED' ? 'destructive' : 'outline'
-                }>
-                  {appeal.status}
-                </Badge>
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{appeal.user?.name || 'Unknown'}</p>
+                  <p className="text-xs text-gray-500">{appeal.user?.email}</p>
+                </div>
+              </div>
+              <Badge variant={
+                appeal.status === 'APPROVED' ? 'default' : 
+                appeal.status === 'PENDING' ? 'secondary' : 
+                appeal.status === 'REJECTED' ? 'destructive' : 'outline'
+              }>
+                {appeal.status}
+              </Badge>
+            </div>
+            
+            <div className="mb-3">
+              <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                {getAppealTypeIcon(appeal.type)}
+                <span>{getAppealTypeLabel(appeal.type)}</span>
+              </div>
+              <p className="text-sm font-medium text-gray-700">{appeal.reason}</p>
+              {appeal.details && (
+                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{appeal.details}</p>
+              )}
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">
                 {new Date(appeal.createdAt).toLocaleDateString()}
-              </td>
-              <td className="px-6 py-4">
-                {appeal.status === 'PENDING' && (
+              </span>
+              {appeal.status === 'PENDING' && (
+                <div className="flex gap-2">
                   <Button 
                     size="sm" 
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleApproveAppeal(appeal.user?.id, appeal.id)}
+                    variant="ghost"
+                    className="text-red-600 hover:bg-red-50 h-8 px-2"
+                    onClick={() => handleResolveAppeal(appeal.id, 'REJECTED', appeal.type)}
+                    disabled={resolveAppealMutation.isPending}
                   >
-                    Approve (Unban)
+                    <X className="h-4 w-4" />
                   </Button>
-                )}
-              </td>
+                  <Button 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700 text-white h-8 px-3"
+                    onClick={() => handleResolveAppeal(appeal.id, 'APPROVED', appeal.type)}
+                    disabled={resolveAppealMutation.isPending}
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {appeals.map((appeal: any) => (
+              <tr key={appeal.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                          {(appeal.user?.name || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                          <p className="text-sm font-medium text-gray-900">{appeal.user?.name || 'Unknown'}</p>
+                          <p className="text-xs text-gray-500">{appeal.user?.email}</p>
+                      </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    {getAppealTypeIcon(appeal.type)}
+                    <span>{getAppealTypeLabel(appeal.type)}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600 max-w-xs" title={appeal.details}>
+                  <span className="font-semibold block">{appeal.reason}</span>
+                  <span className="text-xs text-gray-500 line-clamp-1">{appeal.details}</span>
+                </td>
+                <td className="px-6 py-4">
+                  <Badge variant={
+                    appeal.status === 'APPROVED' ? 'default' : 
+                    appeal.status === 'PENDING' ? 'secondary' : 
+                    appeal.status === 'REJECTED' ? 'destructive' : 'outline'
+                  }>
+                    {appeal.status}
+                  </Badge>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  {new Date(appeal.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4">
+                  {appeal.status === 'PENDING' && (
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={() => handleResolveAppeal(appeal.id, 'REJECTED', appeal.type)}
+                        disabled={resolveAppealMutation.isPending}
+                      >
+                        Reject
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleResolveAppeal(appeal.id, 'APPROVED', appeal.type)}
+                        disabled={resolveAppealMutation.isPending}
+                      >
+                        Approve
+                      </Button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

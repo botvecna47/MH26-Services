@@ -65,7 +65,7 @@ export const appealsApi = {
   },
 
   reviewAppeal: async (id: string, data: ReviewAppealData) => {
-    const response = await axiosClient.patch(`/appeals/${id}/review`, data);
+    const response = await axiosClient.post(`/appeals/${id}/resolve`, data);
     return response.data;
   },
 };

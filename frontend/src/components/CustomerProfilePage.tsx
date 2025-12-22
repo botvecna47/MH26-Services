@@ -63,9 +63,9 @@ export default function CustomerProfilePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Profile Header */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-4">
           <div className="flex items-center gap-4">
               <div className="h-20 w-20 rounded-full bg-orange-100 flex items-center justify-center text-3xl font-bold text-[#ff6b35]">
                   {user?.name?.[0]?.toUpperCase() || 'U'}
@@ -78,7 +78,7 @@ export default function CustomerProfilePage() {
           </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Personal Details Form */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">

@@ -138,10 +138,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-end">
+        <div className="mb-4">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
             <div>
               <h1 className="text-gray-900 mb-2">
                 Welcome back, {user.name}
@@ -155,19 +155,19 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* Simple Tab Navigation */}
+            {/* Simple Tab Navigation - Mobile-friendly */}
             {!isAdmin && (
-              <div className="flex bg-gray-100 p-1 rounded-lg">
+              <div className="flex flex-wrap bg-gray-100 p-1 rounded-lg gap-1">
                 <button
                   onClick={() => setSearchParams({ tab: 'overview' })}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${currentTab === 'overview' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'overview' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                 >
                   Overview
                 </button>
                 {isProvider && (
                   <button
                     onClick={() => setSearchParams({ tab: 'schedule' })}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${currentTab === 'schedule' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'schedule' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                   >
                     Schedule
                   </button>
@@ -175,14 +175,14 @@ export default function DashboardPage() {
                 {isProvider && (
                   <button
                     onClick={() => setSearchParams({ tab: 'services' })}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${currentTab === 'services' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'services' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                   >
                     My Services
                   </button>
                 )}
                 <button
                   onClick={() => setSearchParams({ tab: 'profile' })}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${currentTab === 'profile' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'profile' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                 >
                   Profile
                 </button>
@@ -204,9 +204,9 @@ export default function DashboardPage() {
                <MyServicesSection />
             </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4">
             {/* Main Content - 2 columns */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4">
               {/* KPI Cards */}
               <div className="grid md:grid-cols-3 gap-4">
                 {isAdmin && stats ? (

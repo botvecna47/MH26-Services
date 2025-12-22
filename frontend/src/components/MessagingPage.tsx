@@ -131,8 +131,8 @@ export default function MessagingPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col pt-20"> 
-      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col md:flex-row overflow-hidden p-4 gap-4 pb-24 md:pb-4">
+    <div className="min-h-screen flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col md:flex-row overflow-hidden p-4 gap-4 pb-20 md:pb-4">
         {/* Conversations List - Glass Sidebar */}
         <div className={`w-full md:w-80 glass rounded-xl flex flex-col overflow-hidden ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
           {/* Search */}

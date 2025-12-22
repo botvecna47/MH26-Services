@@ -108,7 +108,7 @@ export default function ProviderDetailPage() {
   const primaryService = provider.services?.[0] || { id: 'default', title: 'Standard Service', price: 999 };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* Back Button */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -119,10 +119,10 @@ export default function ProviderDetailPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="grid lg:grid-cols-3 gap-4">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Gallery */}
             <div className="bg-white rounded-lg overflow-hidden shadow-sm">
               <div className="aspect-video bg-gray-200 relative">
@@ -213,9 +213,9 @@ export default function ProviderDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="lg:sticky lg:top-24 space-y-4">
             {/* Contact Card */}
-            <div className="bg-white rounded-lg p-6 shadow-sm sticky top-24">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
               <h3 className="text-gray-900 mb-4 font-semibold">Contact & Book</h3>
 
               {/* Phone Number */}

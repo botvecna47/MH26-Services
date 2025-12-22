@@ -1,19 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Input } from './ui/input';
 import { 
   Clock, Mail, CheckCircle2, Phone, ArrowLeft,
-  FileCheck, Shield, XCircle, RefreshCw, AlertTriangle, Loader2
+  FileCheck, Shield, XCircle, RefreshCw, AlertTriangle, Loader2, Send, LogOut
 } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import { toast } from 'sonner';
+import { useMyAppeals } from '../api/appeals';
 
 interface ApplicationStatus {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   rejectionReason?: string;
   businessName?: string;
+  providerId?: string;
 }
 
 export default function ProviderPendingPage() {
@@ -22,6 +24,27 @@ export default function ProviderPendingPage() {
   const [loading, setLoading] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus | null>(null);
   const [checked, setChecked] = useState(false);
+  
+  // Appeal form state
+  const [appealReason, setAppealReason] = useState('');
+  const [appealDetails, setAppealDetails] = useState('');
+  const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
+  const [existingAppeal, setExistingAppeal] = useState<any>(null);
+  
+  // Fetch user's appeals
+  const { data: myAppeals, isLoading: isLoadingAppeals } = useMyAppeals();
+  
+  useEffect(() => {
+    if (myAppeals && myAppeals.length > 0) {
+      const pending = myAppeals.find((a: any) => 
+        (a.type === 'SUSPENSION_APPEAL' || a.type === 'REJECTION_APPEAL') && 
+        (a.status === 'PENDING' || a.status === 'UNDER_REVIEW')
+      );
+      if (pending) {
+        setExistingAppeal(pending);
+      }
+    }
+  }, [myAppeals]);
 
   const handleCheckStatus = async () => {
     if (!email || !email.includes('@')) {
@@ -48,6 +71,42 @@ export default function ProviderPendingPage() {
   const handleReapply = () => {
     // Navigate back to onboarding to re-apply
     navigate('/provider/onboarding');
+  };
+  
+  const handleAppealSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!appealReason) {
+      toast.error('Please select a reason for your appeal');
+      return;
+    }
+    
+    setIsSubmittingAppeal(true);
+    try {
+      await axiosClient.post('/appeals', {
+        type: 'SUSPENSION_APPEAL',
+        reason: appealReason,
+        details: appealDetails,
+        providerId: applicationStatus?.providerId
+      });
+      setExistingAppeal({ status: 'PENDING' });
+      toast.success('Appeal submitted successfully');
+    } catch (error: any) {
+      if (error?.response?.data?.error === 'You already have a pending appeal') {
+        setExistingAppeal({ status: 'PENDING' });
+        toast.info('You already have a pending appeal under review.');
+      } else {
+        toast.error('Failed to submit appeal');
+      }
+    } finally {
+      setIsSubmittingAppeal(false);
+    }
+  };
+  
+  const logout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    window.location.href = '/auth';
   };
 
   const getStatusDisplay = () => {
@@ -108,15 +167,93 @@ export default function ProviderPendingPage() {
         );
 
       case 'SUSPENDED':
+        // If there's an existing appeal, show "under review" message
+        if (existingAppeal) {
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <Clock className="h-8 w-8 text-blue-600" />
+                <h3 className="text-xl font-bold text-blue-800">Appeal Under Review</h3>
+              </div>
+              <p className="text-blue-700 mb-4">
+                We have received your appeal. Our team is reviewing your case and you will be notified via email once a decision has been made.
+              </p>
+              <Button variant="outline" onClick={logout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          );
+        }
+        
+        // Show suspension message with appeal form
         return (
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
             <div className="flex items-center gap-3 mb-3">
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
               <h3 className="text-xl font-bold text-yellow-800">Account Suspended</h3>
             </div>
-            <p className="text-yellow-700">
-              Your provider account has been suspended. Please contact support for more information.
+            <p className="text-yellow-700 mb-4">
+              Your provider account for <strong>{applicationStatus.businessName}</strong> has been suspended due to a policy violation.
             </p>
+            
+            {/* Appeal Form */}
+            <div className="bg-white border border-yellow-300 rounded-xl p-6 mt-4">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Send className="h-5 w-5 text-yellow-600" />
+                Submit an Appeal
+              </h4>
+              <form onSubmit={handleAppealSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Appeal</label>
+                  <select 
+                    value={appealReason}
+                    onChange={(e) => setAppealReason(e.target.value)}
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none bg-white"
+                    required
+                  >
+                    <option value="">Select a reason...</option>
+                    <option value="Mistake">I believe this is a mistake</option>
+                    <option value="Misunderstanding">There was a misunderstanding</option>
+                    <option value="Apology">I apologize and will follow platform rules</option>
+                    <option value="Compromised">My account was compromised</option>
+                    <option value="Other">Other reason</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Details</label>
+                  <textarea 
+                    value={appealDetails}
+                    onChange={(e) => setAppealDetails(e.target.value)}
+                    rows={4}
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none resize-none"
+                    placeholder="Please explain why your account should be reinstated..."
+                    required
+                  ></textarea>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={isSubmittingAppeal} 
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-6"
+                >
+                  {isSubmittingAppeal ? 'Submitting...' : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit Appeal
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+            
+            <div className="text-center mt-4">
+              <Button variant="ghost" onClick={logout} className="text-gray-500 hover:text-gray-700">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         );
 

@@ -208,55 +208,45 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-10">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-[#ff6b35] rounded-xl flex items-center justify-center shadow-md">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
-              <div>
-                <h1 className="font-bold text-gray-900 text-lg leading-tight">MH26 Services</h1>
-                <p className="text-xs text-gray-500">Admin Dashboard</p>
-              </div>
-            </div>
-
-            {/* System Status */}
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-green-700">System Healthy</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center space-x-4">
-              {/* User Profile */}
-              <div className="flex items-center space-x-3">
-                <div className="text-right hidden sm:block">
-                  <p className="font-medium text-sm text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
-                </div>
-                <div className="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center border border-orange-200">
-                  <Shield className="w-4 h-4 text-[#ff6b35]" />
-                </div>
-              </div>
-
-              {/* Logout - strictly strictly strictly keep logout logic */}
-              {/* <Button variant="ghost" size="sm" onClick={logout}>
-                <LogOut className="w-4 h-4" />
-              </Button> */}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-muted/30 pb-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="inline-flex w-auto bg-white/80 backdrop-blur-md rounded-2xl p-1.5 shadow-sm border border-gray-200/50 mb-8 gap-1">
+          {/* Mobile Tile Grid Navigation - Hidden on md+ */}
+          <div className="grid grid-cols-3 gap-2 mb-4 md:hidden">
+            {[
+              { value: 'overview', icon: BarChart3, label: 'Overview' },
+              { value: 'users', icon: Users, label: 'Users' },
+              { value: 'providers', icon: UserCheck, label: 'Providers', badge: pendingProviders.length },
+              { value: 'services', icon: Package, label: 'Services', badge: pendingServices.length },
+              { value: 'transactions', icon: CreditCard, label: 'Bookings' },
+              { value: 'analytics', icon: PieChart, label: 'Analytics' },
+              { value: 'appeals', icon: Flag, label: 'Appeals' },
+              { value: 'settings', icon: Settings, label: 'Settings' },
+              { value: 'categories', icon: Tag, label: 'Categories' },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`relative flex flex-col items-center justify-center p-3 rounded-xl transition-all ${
+                  activeTab === tab.value
+                    ? 'bg-[#ff6b35] text-white shadow-md'
+                    : 'bg-white/80 text-gray-600 border border-gray-200/50 hover:bg-gray-50'
+                }`}
+              >
+                <tab.icon className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{tab.label}</span>
+                {tab.badge && tab.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm">
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop Horizontal Tabs - Hidden on mobile */}
+          <div className="hidden md:flex justify-center">
+          <TabsList className="inline-flex w-auto bg-white/80 backdrop-blur-md rounded-2xl p-1.5 shadow-sm border border-gray-200/50 mb-4 gap-1">
             <TabsTrigger
               value="overview"
               className="flex-1 py-3 text-sm font-medium text-gray-600 rounded-xl transition-all data-[state=active]:bg-white data-[state=active]:text-[#ff6b35] data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-gray-100 hover:bg-gray-50/80"
@@ -327,11 +317,12 @@ export default function AdminPanel() {
               Categories
             </TabsTrigger>
           </TabsList>
+          </div>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4">
             {/* Platform Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -578,7 +569,50 @@ export default function AdminPanel() {
                     Add Provider
                   </Button>
                 </div>
-                <div className="overflow-x-auto">
+                {/* Mobile Card View - Hidden on md+ */}
+                <div className="md:hidden divide-y divide-gray-200">
+                  {allProviders.map((p: any) => (
+                    <div key={p.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{p.businessName}</p>
+                          <p className="text-xs text-gray-500">{p.user?.email}</p>
+                        </div>
+                        <Badge variant={
+                          p.status === 'APPROVED' ? 'default' :
+                          p.status === 'PENDING' ? 'secondary' :
+                          p.status === 'SUSPENDED' ? 'destructive' : 'outline'
+                        }>
+                          {p.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded">{p.primaryCategory}</span>
+                          <span>{p.city}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => setSelectedDetailProviderId(p.id)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {p.status === 'APPROVED' && (
+                            <Button size="sm" variant="outline" className="text-red-600 text-xs" onClick={() => handleSuspendProvider(p.id)}>
+                              Suspend
+                            </Button>
+                          )}
+                          {p.status === 'SUSPENDED' && (
+                            <Button size="sm" variant="outline" className="text-green-600 text-xs" onClick={() => handleUnsuspendProvider(p.id)}>
+                              Unsuspend
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table View - Hidden on mobile */}
+                <div className="overflow-x-auto hidden md:block">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
@@ -647,7 +681,56 @@ export default function AdminPanel() {
                 </Button>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* Mobile Card View - Hidden on md+ */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {usersData?.data.map((u: UserType) => (
+                  <div key={u.id} className="p-4 hover:bg-gray-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600">
+                          {(u.firstName || u.email || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {u.firstName ? `${u.firstName} ${u.lastName || ''}` : (u.email || 'Unknown User')}
+                          </p>
+                          <p className="text-xs text-gray-500">{u.email}</p>
+                        </div>
+                      </div>
+                      {u.isBanned ? (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">Banned</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">Active</span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={(u as any).role === 'ADMIN' ? 'default' : (u as any).role === 'PROVIDER' ? 'secondary' : 'outline'}>
+                          {(u as any).role || 'CUSTOMER'}
+                        </Badge>
+                        <span className="text-xs text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => setSelectedUserId(u.id)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {u.isBanned ? (
+                          <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleUnbanUser(u.id)}>
+                            Unban
+                          </Button>
+                        ) : (u as any).role !== 'ADMIN' && (
+                          <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleBanUser(u.id)}>
+                            Ban
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View - Hidden on mobile */}
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -741,9 +824,11 @@ export default function AdminPanel() {
           {/* Bookings / Transactions Tab */}
           <TabsContent value="transactions">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+              <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-gray-50/50">
                 <h3 className="font-semibold text-gray-900">All Transactions</h3>
-                <div className="flex gap-2">
+                {/* Mobile-friendly scrollable filter buttons */}
+                <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+                <div className="flex gap-2 min-w-max">
                   {/* Filter Buttons */}
                   {(['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'expired'] as const).map(f => (
                     <Button
@@ -751,16 +836,69 @@ export default function AdminPanel() {
                       variant={bookingFilter === f ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingFilter(f as any)}
-                      className="capitalize"
+                      className="capitalize whitespace-nowrap"
                     >
-                      {f}
+                      {f.replace('_', ' ')}
                     </Button>
                   ))}
                 </div>
+                </div>
               </div>
 
-              {/* Bookings Table */}
-              <div className="overflow-x-auto">
+              {/* Mobile Card View - Hidden on md+ */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {(bookingsData?.data || []).length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">No bookings found for this filter.</div>
+                ) : (
+                  (bookingsData?.data || []).map((booking: Booking) => (
+                    <div key={booking.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{booking.user?.name || 'Unknown'}</p>
+                          <p className="text-xs text-gray-500">{booking.provider?.businessName}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize
+                          ${booking.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                          booking.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-800' :
+                          booking.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                          booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                          booking.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                          booking.status === 'EXPIRED' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {booking.status.toLowerCase()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-gray-600">{booking.service?.title || 'Service'}</span>
+                        <span className="font-bold text-gray-900">₹{booking.totalAmount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : 'N/A'} {booking.scheduledTime?.slice(0, 5)}</span>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedBooking(booking)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {booking.status === 'COMPLETED' && (
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedInvoiceBooking(booking)}>
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      {booking.userId === user?.id && (booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS') && booking.completionOtp && (
+                        <div className="mt-2">
+                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 font-mono text-xs">
+                            OTP: {booking.completionOtp}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table View - Hidden on mobile */}
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -971,7 +1109,7 @@ export default function AdminPanel() {
                </Card>
 
                {/* Categories List */}
-               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <CategoryList />
                </div>
             </div>

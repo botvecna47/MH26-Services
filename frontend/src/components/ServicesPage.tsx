@@ -215,7 +215,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Results */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="mb-4 flex justify-between items-center">
           <div>
             <h1 className="text-gray-900 mb-1 font-bold text-2xl">
@@ -262,7 +262,7 @@ export default function ServicesPage() {
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {servicesData.data
                 .filter(service => !showAvailableOnly || (service.provider as any).isAvailable)
                 .map((service) => (

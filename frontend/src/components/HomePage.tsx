@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className="relative py-8 md:py-12 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left Column */}
@@ -94,7 +94,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-12 md:py-16">
+      <section className="py-8 md:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-gray-900 mb-2 text-3xl font-bold">How It Works</h2>
@@ -136,7 +136,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-16">
+      <section className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="glass-strong rounded-2xl p-8 md:p-12 text-center space-y-6 shadow-xl">
             <h2 className="text-gray-900 text-3xl font-bold">Are you a service provider?</h2>

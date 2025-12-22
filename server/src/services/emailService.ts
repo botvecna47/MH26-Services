@@ -232,3 +232,48 @@ export async function sendProviderCredentialsEmail(
   });
 }
 
+/**
+ * Send booking expired notification to customer
+ */
+export async function sendBookingExpiredEmail(
+  email: string,
+  customerName: string,
+  serviceName: string,
+  providerName: string,
+  serviceId: string
+): Promise<void> {
+  const rebookUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/services`;
+  
+  await sendEmail({
+    to: email,
+    subject: '⏰ Booking Expired - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #f97316;">Booking Request Expired</h2>
+        <p>Hi ${customerName},</p>
+        <p>Unfortunately, your booking request has expired because the provider did not respond within 1 hour.</p>
+        
+        <div style="background-color: #fef3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+          <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+          <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
+        </div>
+        
+        <p>Don't worry! You can easily book another provider for the same service.</p>
+
+        <p style="margin: 30px 0;">
+          <a href="${rebookUrl}" 
+             style="background-color: #ff6b35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+            Browse Services & Re-book
+          </a>
+        </p>
+        
+        <p style="color: #666; font-size: 14px;">
+          If you have any questions, please contact our support team.
+        </p>
+        
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `Hi ${customerName}, Your booking for ${serviceName} with ${providerName} has expired because the provider did not respond within 1 hour. Visit ${rebookUrl} to book another provider.`,
+  });
+}
