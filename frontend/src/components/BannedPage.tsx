@@ -99,11 +99,21 @@ export default function BannedPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Account Suspended</h1>
             <p className="text-gray-500 mt-2 text-lg">
-              Your account has been actively suspended due to a violation of our Terms of Service.
+              Your account has been suspended due to a violation of our Terms of Service.
             </p>
-            <p className="text-sm text-gray-400 mt-1">User ID: {user?.id}</p>
           </div>
         </div>
+
+        {/* Ban Reason Display */}
+        {user?.banReason && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+            <h3 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Reason for Suspension
+            </h3>
+            <p className="text-red-700">{user.banReason}</p>
+          </div>
+        )}
 
         <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
           <h2 className="font-semibold text-gray-900 mb-4">Submit an Appeal</h2>

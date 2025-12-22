@@ -435,3 +435,105 @@ export async function sendBookingCancellationToProvider(
     text: `Booking Cancelled. Customer: ${customerName}, Service: ${serviceName}, Was Scheduled: ${formattedDate}${reason ? `, Reason: ${reason}` : ''}`,
   });
 }
+
+/**
+ * Send ban notification email with formal language and appeal instructions
+ */
+export async function sendBanNotificationEmail(
+  email: string,
+  userName: string,
+  banReason: string
+): Promise<void> {
+  const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`;
+  
+  await sendEmail({
+    to: email,
+    subject: '⚠️ Account Suspension Notice - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0;">Account Suspension Notice</h1>
+        </div>
+        
+        <div style="padding: 30px; background-color: #fff;">
+          <p>Dear <strong>${userName}</strong>,</p>
+          
+          <p>We regret to inform you that your MH26 Services account has been <strong>suspended</strong> due to a violation of our platform policies.</p>
+          
+          <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #dc2626;">Reason for Suspension</h3>
+            <p style="margin-bottom: 0;">${banReason}</p>
+          </div>
+          
+          <p>While your account is suspended, you will not be able to:</p>
+          <ul>
+            <li>Access your dashboard</li>
+            <li>Make or receive bookings</li>
+            <li>Use messaging features</li>
+            <li>Access any platform services</li>
+          </ul>
+          
+          <div style="background-color: #f0f9ff; border-left: 4px solid #0284c7; padding: 15px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #0284c7;">How to Appeal This Decision</h3>
+            <p>If you believe this suspension was made in error or you wish to have your account reinstated, please follow these steps:</p>
+            <ol style="margin-bottom: 0;">
+              <li><strong>Log in to your account</strong> - You will see the banned page with an appeal form</li>
+              <li><strong>Submit an appeal</strong> - Provide a detailed explanation of why you believe your account should be reinstated</li>
+              <li><strong>Wait for review</strong> - Our admin team will review your appeal within 3-5 business days</li>
+              <li><strong>Receive decision</strong> - You will be notified via email about the outcome of your appeal</li>
+            </ol>
+          </div>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${loginUrl}" style="display: inline-block; background-color: #0284c7; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Login to Submit Appeal
+            </a>
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            <strong>Important:</strong> Please ensure your appeal is respectful and provides factual information. 
+            False or misleading appeals may result in permanent suspension.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #888; font-size: 12px;">
+            If you have any questions, please contact our support team at support@mh26services.com.<br>
+            This is an automated message. Please do not reply directly to this email.
+          </p>
+        </div>
+        
+        <div style="background-color: #f5f5f5; padding: 15px; text-align: center; color: #666; font-size: 12px;">
+          <p style="margin: 0;">© ${new Date().getFullYear()} MH26 Services. All rights reserved.</p>
+          <p style="margin: 5px 0 0 0;">Nanded, Maharashtra, India</p>
+        </div>
+      </div>
+    `,
+    text: `
+Account Suspension Notice
+
+Dear ${userName},
+
+Your MH26 Services account has been suspended.
+
+REASON: ${banReason}
+
+While suspended, you cannot:
+- Access your dashboard
+- Make or receive bookings
+- Use messaging features
+- Access any platform services
+
+HOW TO APPEAL:
+1. Log in to your account at ${loginUrl}
+2. You will see the banned page with an appeal form
+3. Submit a detailed appeal explaining why your account should be reinstated
+4. Wait 3-5 business days for admin review
+5. You will receive an email with the outcome
+
+If you have questions, contact support@mh26services.com
+
+MH26 Services Team
+    `,
+  });
+}

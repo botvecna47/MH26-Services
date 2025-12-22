@@ -17,6 +17,7 @@ model User {
   role                   UserRole                @default(CUSTOMER)
   emailVerified          Boolean                 @default(false)
   isBanned               Boolean                 @default(false)
+  banReason              String?                 // Reason for ban (set by admin)
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   address                String?

@@ -29,6 +29,7 @@ export const userController = {
           walletBalance: true,
           totalSpending: true,
           isBanned: true, // Include banned status
+          banReason: true, // Include ban reason
           createdAt: true,
           provider: {
             select: {

@@ -763,6 +763,11 @@ export const adminController = {
       const { id } = req.params;
       const { reason } = req.body;
 
+      if (!reason || reason.trim().length < 5) {
+        res.status(400).json({ error: 'Ban reason is required (minimum 5 characters)' });
+        return;
+      }
+
       const user = await prisma.user.findUnique({
         where: { id },
         include: {
@@ -789,10 +794,13 @@ export const adminController = {
         });
       }
 
-      // Actually ban the user
+      // Actually ban the user with reason
       await prisma.user.update({
         where: { id },
-        data: { isBanned: true },
+        data: { 
+          isBanned: true,
+          banReason: reason.trim(),
+        },
       });
 
       // Revoke all refresh tokens (force logout)
@@ -806,11 +814,19 @@ export const adminController = {
         },
       });
 
-      // Notify user
+      // Notify user via socket
       emitNotification(id, {
         type: 'account_suspended',
-        payload: { reason: reason || 'Your account has been suspended by an administrator' },
+        payload: { reason: reason },
       });
+
+      // Send formal ban email with appeal instructions
+      try {
+        const { sendBanNotificationEmail } = await import('../utils/email');
+        await sendBanNotificationEmail(user.email, user.name, reason);
+      } catch (emailError) {
+        logger.warn('Failed to send ban notification email:', emailError);
+      }
 
       // Log admin action
       await prisma.auditLog.create({
@@ -880,6 +896,7 @@ export const adminController = {
   async unbanUser(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const { reason } = req.body;
 
       const user = await prisma.user.findUnique({
         where: { id },
@@ -890,10 +907,13 @@ export const adminController = {
         return;
       }
 
-      // Update user
+      // Update user - clear ban and reason
       await prisma.user.update({
         where: { id },
-        data: { isBanned: false },
+        data: { 
+          isBanned: false,
+          banReason: null,
+        },
       });
 
       // Resolve any pending UNBAN_REQUEST appeals for this user
@@ -911,9 +931,6 @@ export const adminController = {
         }
       });
 
-      // Log admin action
-      const { reason } = req.body;
-      
       // Log admin action
       await prisma.auditLog.create({
         data: {
