@@ -239,6 +239,7 @@ export default function AdminPanel() {
               { value: 'transactions', icon: CreditCard, label: 'Bookings' },
               { value: 'analytics', icon: PieChart, label: 'Analytics' },
               { value: 'appeals', icon: Flag, label: 'Appeals' },
+              { value: 'reports', icon: AlertCircle, label: 'Reports' },
               { value: 'categories', icon: Tag, label: 'Categories' },
             ].map((tab) => (
               <button
@@ -308,6 +309,13 @@ export default function AdminPanel() {
             >
               <Flag className="w-4 h-4 mr-2" />
               Appeals
+            </TabsTrigger>
+            <TabsTrigger
+              value="reports"
+              className="flex-1 py-3 text-sm font-medium text-gray-600 rounded-xl transition-all data-[state=active]:bg-white data-[state=active]:text-[#ff6b35] data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-gray-100 hover:bg-gray-50/80"
+            >
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Reports
             </TabsTrigger>
             <TabsTrigger
               value="settings"
@@ -1080,6 +1088,28 @@ export default function AdminPanel() {
                 </table>
               </div>
             </div>
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" className="space-y-4">
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  Provider Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-gray-500">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="font-medium">Reports Management</p>
+                  <p className="text-sm mt-2">Provider reports from customers will appear here.</p>
+                  <p className="text-xs mt-4 text-gray-400">
+                    Reports are tied to completed bookings and require admin review.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="settings">
