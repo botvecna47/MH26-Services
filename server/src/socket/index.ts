@@ -249,5 +249,15 @@ export function emitWalletUpdate(userId: string, totalSpending: number): void {
   }
 }
 
+/**
+ * Notify user of account status change (banned/suspended)
+ * This will trigger the frontend to update the user's status and show appropriate UI
+ */
+export function emitAccountStatusChange(userId: string, status: 'banned' | 'suspended' | 'unbanned' | 'unsuspended', reason?: string): void {
+  if (io) {
+    io.to(`user:${userId}`).emit('account:status_changed', { status, reason });
+  }
+}
+
 export default io;
 

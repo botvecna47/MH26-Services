@@ -120,6 +120,15 @@ export const bookingsApi = {
       responseType: 'blob',
     });
     
+    // Check if we got a valid PDF response
+    const contentType = response.headers['content-type'];
+    if (contentType && contentType.includes('application/json')) {
+      // Server returned JSON error instead of PDF
+      const text = await response.data.text();
+      const errorData = JSON.parse(text);
+      throw new Error(errorData.error || 'Failed to generate PDF');
+    }
+    
     // Create a blob URL and trigger download
     const blob = new Blob([response.data], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);

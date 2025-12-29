@@ -36,14 +36,57 @@ export default function UserSocketSync() {
         // toast.info(`Booking status updated: ${data?.status || 'Active'}`);
     };
 
+    // Listen for real-time account status changes (ban/suspend)
+    const handleAccountStatusChange = ({ status, reason }: { status: string; reason?: string }) => {
+      if (status === 'banned') {
+        // Update user state to reflect ban
+        setUser({ ...user, isBanned: true, banReason: reason });
+        toast.error('Your account has been suspended by an administrator.', {
+          duration: 5000,
+        });
+        // Navigate to banned page (the App.tsx useEffect will handle this)
+        window.location.href = '/banned';
+      } else if (status === 'suspended') {
+        // Update provider status
+        if (user.provider) {
+          setUser({ 
+            ...user, 
+            providerStatus: 'SUSPENDED',
+            provider: { ...user.provider, status: 'SUSPENDED' } 
+          });
+        }
+        toast.error('Your provider account has been suspended.', {
+          duration: 5000,
+        });
+        // Navigate to suspended page
+        window.location.href = '/provider-suspended';
+      } else if (status === 'unbanned') {
+        // User is unbanned
+        setUser({ ...user, isBanned: false, banReason: undefined });
+        toast.success('Your account has been restored!');
+      } else if (status === 'unsuspended') {
+        // Provider is unsuspended
+        if (user.provider) {
+          setUser({ 
+            ...user, 
+            providerStatus: 'APPROVED',
+            provider: { ...user.provider, status: 'APPROVED' } 
+          });
+        }
+        toast.success('Your provider account has been restored!');
+      }
+    };
+
     socket.on('wallet:update', handleWalletUpdate);
     socket.on('revenue:update', handleRevenueUpdate);
     socket.on('booking:update', handleBookingUpdate);
+    socket.on('account:status_changed', handleAccountStatusChange);
 
     return () => {
       socket.off('wallet:update', handleWalletUpdate);
       socket.off('revenue:update', handleRevenueUpdate);
       socket.off('booking:update', handleBookingUpdate);
+      socket.off('account:status_changed', handleAccountStatusChange);
     };
   }, [socket, user, setUser, queryClient]);
 

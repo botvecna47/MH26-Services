@@ -4,7 +4,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/db';
-import { emitNotification, emitProviderApproval } from '../socket';
+import { emitNotification, emitProviderApproval, emitAccountStatusChange } from '../socket';
 import { sendProviderApprovalEmail, sendProviderCredentialsEmail } from '../utils/email';
 import { hashPassword } from '../utils/security';
 import crypto from 'crypto';
@@ -547,6 +547,9 @@ export const adminController = {
         payload: { providerId: id, status: 'SUSPENDED', reason },
       });
 
+      // Notify user immediately of their suspension status (UI will reflect this in real-time)
+      emitAccountStatusChange(provider.userId, 'suspended', reason);
+
       // Send email
       await sendProviderApprovalEmail(
         updated.user.email,
@@ -845,6 +848,9 @@ export const adminController = {
         type: 'account_suspended',
         payload: { reason: reason },
       });
+
+      // Notify user immediately of their ban status (UI will reflect this in real-time)
+      emitAccountStatusChange(id, 'banned', reason);
 
       // Send formal ban email with appeal instructions
       try {

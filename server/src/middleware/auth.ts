@@ -100,6 +100,12 @@ export function requireNotBanned(req: AuthRequest, res: Response, next: NextFunc
     return;
   }
 
+  // Admins are never blocked by ban check - they manage the ban system
+  if (req.user.role === 'ADMIN') {
+    next();
+    return;
+  }
+
   if (req.user.isBanned) {
      res.status(403).json({ 
        error: 'Your account has been banned.',

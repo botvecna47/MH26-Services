@@ -53,9 +53,10 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
       // Download actual PDF from backend
       await bookingsApi.downloadInvoicePDF(bookingId, invoiceData.invoiceNumber);
       toast.success('Invoice PDF downloaded');
-    } catch (error) {
+    } catch (error: any) {
       console.error('PDF download failed:', error);
-      toast.error('Failed to download invoice PDF');
+      const errorMessage = error?.message || error?.response?.data?.error || 'Failed to download invoice PDF';
+      toast.error(errorMessage);
     }
   };
 
