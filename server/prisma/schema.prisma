@@ -80,6 +80,7 @@ model Provider {
   termsAcceptedAt   DateTime?
   verifiedById      String?            // Admin who verified
   verifiedAt        DateTime?          // When verification happened
+  gstNumber         String?            // GST registration number
   verifiedBy        User?              @relation("ProviderVerifier", fields: [verifiedById], references: [id])
   appeals           Appeal[]
   bookings          Booking[]
@@ -118,7 +119,6 @@ model Service {
   updatedAt         DateTime      @updatedAt
   basePrice         Float
   category          String
-  estimatedDuration Int
   isActive          Boolean       @default(true)
   name              String
   priceUnit         String        @default("per service")
@@ -149,10 +149,14 @@ model Booking {
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   completionOtp    String?
+  taxAmount        Decimal              @default(0)
+  subtotal         Decimal              @default(0)
+  otpAttempts      Int                  @default(0) // Issue 1: Prevent brute force
   provider         Provider             @relation(fields: [providerId], references: [id], onDelete: Cascade)
   service          Service              @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   cancellation     BookingCancellation?
+  report           Report?
   review           Review?
   transaction      Transaction?
 
@@ -250,6 +254,7 @@ model Report {
   id          String       @id @default(uuid())
   reporterId  String
   providerId  String
+  bookingId   String?      @unique  // Reports must be tied to a completed booking
   reason      String
   details     String?
   attachments Json?
@@ -258,12 +263,14 @@ model Report {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   resolvedAt  DateTime?
+  booking     Booking?     @relation(fields: [bookingId], references: [id])
   provider    Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
   reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@index([providerId])
   @@index([status])
   @@index([reporterId])
+  @@index([bookingId])
 }
 
 model RefreshToken {
@@ -284,6 +291,7 @@ model EmailVerificationToken {
   id        String   @id @default(uuid())
   userId    String   @unique
   token     String   @unique
+  newEmail  String?  // Issue 8 Fix: Store new email in DB, not URL
   expiresAt DateTime
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

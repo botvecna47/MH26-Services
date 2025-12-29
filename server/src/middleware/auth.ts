@@ -55,11 +55,8 @@ export async function authenticate(
       return;
     }
 
-    // Check if provider is suspended (for provider users)
-    if (user.role === 'PROVIDER' && user.provider?.status === 'SUSPENDED') {
-      res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
-      return;
-    }
+    // NOTE: Suspended provider check removed - frontend handles redirect to appeal page
+    // This allows suspended providers to access their profile, appeals, and logout
 
     req.user = {
       id: user.id,

@@ -238,12 +238,10 @@ export default function InvoicesPage() {
                         <span className="text-gray-600">Subtotal:</span>
                         <span className="text-gray-900">₹{invoice.subtotal.toFixed(2)}</span>
                       </div>
-                      {invoice.tax > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Tax (GST approx):</span>
-                          <span className="text-gray-900">₹{invoice.tax.toFixed(2)}</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">GST (8%):</span>
+                        <span className="text-gray-900">₹{(invoice.tax || 0).toFixed(2)}</span>
+                      </div>
                       
                       <div className="flex justify-between pt-2 border-t-2 border-gray-300">
                         <span className="font-medium text-gray-900">Total:</span>

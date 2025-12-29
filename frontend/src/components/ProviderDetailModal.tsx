@@ -1,13 +1,41 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { useProviderDetails } from '../api/admin';
-import { format } from 'date-fns';
 import { 
-    User, Mail, Phone, Calendar, Shield, History, MapPin, 
-    Briefcase, Star, DollarSign, Image as ImageIcon, Map 
-} from 'lucide-react';
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle,
+    DialogDescription
+} from './ui/dialog';
+import { 
+    Tabs, 
+    TabsContent, 
+    TabsList, 
+    TabsTrigger 
+} from './ui/tabs';
 import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { ScrollArea } from './ui/scroll-area';
+import { Button } from './ui/button';
+import { 
+    User,
+    Phone, 
+    Mail, 
+    MapPin, 
+    Calendar, 
+    Star, 
+    History, 
+    Briefcase, 
+    Image as ImageIcon,
+    ExternalLink,
+    Shield,
+    XCircle,
+    CheckCircle,
+    AlertTriangle,
+    Ban,
+    DollarSign,
+    Map
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { useProviderDetails, useApproveProvider, useRejectProvider, useSuspendProvider, useUnsuspendProvider } from '../api/admin';
+import { toast } from 'sonner';
+import ImageWithFallback from './ImageWithFallback';
 
 interface ProviderDetailModalProps {
   providerId: string | null;
@@ -17,12 +45,58 @@ interface ProviderDetailModalProps {
 
 export default function ProviderDetailModal({ providerId, isOpen, onClose }: ProviderDetailModalProps) {
   const { data: provider, isLoading } = useProviderDetails(providerId);
+  
+  // All hooks must be called before any conditional returns
+  const approveMutation = useApproveProvider();
+  const rejectMutation = useRejectProvider();
+  const suspendMutation = useSuspendProvider();
+  const unsuspendMutation = useUnsuspendProvider();
 
   if (!providerId) return null;
 
+    const handleApprove = async () => {
+        try {
+            await approveMutation.mutateAsync({ id: providerId! });
+            toast.success('Provider approved');
+        } catch (e) {
+            toast.error('Failed to approve');
+        }
+    };
+
+    const handleReject = async () => {
+        const reason = prompt('Enter rejection reason:');
+        if (!reason) return;
+        try {
+            await rejectMutation.mutateAsync({ id: providerId!, reason });
+            toast.success('Provider rejected');
+        } catch (e) {
+            toast.error('Failed to reject');
+        }
+    };
+
+    const handleSuspend = async () => {
+        const reason = prompt('Enter suspension reason:');
+        if (!reason) return;
+        try {
+            await suspendMutation.mutateAsync({ id: providerId!, reason });
+            toast.success('Provider suspended');
+        } catch (e) {
+            toast.error('Failed to suspend');
+        }
+    };
+
+    const handleUnsuspend = async () => {
+        try {
+            await unsuspendMutation.mutateAsync({ id: providerId!, reason: 'Admin Re-activation' });
+            toast.success('Provider unsuspended');
+        } catch (e) {
+            toast.error('Failed to unsuspend');
+        }
+    };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 bg-white overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="w-[50vw] max-w-none h-[85vh] flex flex-col p-0 bg-white overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-[#ff6b35]" />
@@ -72,10 +146,39 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
                                     </div>
                                     <Badge variant={
                                         provider.status === 'APPROVED' ? 'default' :
-                                        provider.status === 'SUSPENDED' ? 'destructive' : 'secondary'
-                                    } className="text-sm px-3 py-1 capitalize">
+                                        provider.status === 'SUSPENDED' ? 'destructive' : 
+                                        provider.status === 'PENDING' ? 'secondary' : 'outline'
+                                    } className={`${
+                                        provider.status === 'APPROVED' ? 'bg-green-100 text-green-700 hover:bg-green-200 shadow-sm' :
+                                        provider.status === 'SUSPENDED' ? 'bg-red-100 text-red-700 hover:bg-red-200' :
+                                        provider.status === 'PENDING' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : ''
+                                    } text-[10px] font-black px-4 py-2 rounded-full border-none transition-all uppercase tracking-widest`}>
                                         {provider.status.toLowerCase()}
                                     </Badge>
+                                </div>
+                                
+                                {/* Moderation Actions In Header */}
+                                <div className="flex gap-2">
+                                    {provider.status === 'PENDING' && (
+                                        <>
+                                            <Button size="sm" onClick={handleApprove} className="bg-green-600 hover:bg-green-700 h-9 rounded-xl font-bold px-5 text-xs">
+                                                <CheckCircle className="w-4 h-4 mr-2" /> Approve
+                                            </Button>
+                                            <Button size="sm" variant="outline" onClick={handleReject} className="border-red-100 text-red-600 hover:bg-red-50 h-9 rounded-xl font-bold px-5 text-xs">
+                                                <XCircle className="w-4 h-4 mr-2" /> Reject
+                                            </Button>
+                                        </>
+                                    )}
+                                    {provider.status === 'APPROVED' && (
+                                        <Button size="sm" variant="outline" onClick={handleSuspend} className="border-red-100 text-red-600 hover:bg-red-50 h-9 rounded-xl font-bold px-5 text-xs">
+                                            <Ban className="w-4 h-4 mr-2" /> Suspend
+                                        </Button>
+                                    )}
+                                    {provider.status === 'SUSPENDED' && (
+                                        <Button size="sm" onClick={handleUnsuspend} className="bg-green-600 hover:bg-green-700 h-9 rounded-xl font-bold px-5 text-xs">
+                                            <CheckCircle className="w-4 h-4 mr-2" /> Unsuspend
+                                        </Button>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
@@ -139,8 +242,8 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
 
                         {/* Description */}
                         <div>
-                            <h3 className="font-semibold text-gray-900 mb-2">About Business</h3>
-                            <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <h3 className="font-bold text-gray-900 mb-3 uppercase tracking-widest text-[10px]">About Business</h3>
+                            <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-6 rounded-2xl border border-gray-100 italic shadow-inner">
                                 {provider.description || "No description provided."}
                             </p>
                         </div>
@@ -156,13 +259,11 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
                                 {provider.services.map((service: any) => (
                                     <div key={service.id} className="flex gap-4 p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:border-gray-300 transition-colors">
                                         <div className="h-16 w-16 bg-gray-100 rounded-md flex-shrink-0 overflow-hidden">
-                                            {service.imageUrl ? (
-                                                <img src={service.imageUrl} alt={service.title} className="h-full w-full object-cover" />
-                                            ) : (
-                                                <div className="h-full w-full flex items-center justify-center">
-                                                    <Briefcase className="h-6 w-6 text-gray-300" />
-                                                </div>
-                                            )}
+                                            <ImageWithFallback 
+                                                src={service.imageUrl} 
+                                                alt={service.title} 
+                                                className="h-full w-full" 
+                                            />
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex justify-between items-start">
@@ -170,10 +271,22 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
                                                 <span className="font-bold text-gray-900">₹{service.price}</span>
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1 line-clamp-2">{service.description}</p>
-                                            <div className="flex gap-2 mt-2">
-                                                <Badge variant="outline" className="text-xs text-gray-500 border-gray-200">
-                                                    {service.durationMin} mins
-                                                </Badge>
+                                            <div className="flex justify-between items-center mt-2">
+                                                <div className="flex gap-2">
+                                                    <Badge variant="outline" className="text-[10px] font-bold uppercase py-0.5 px-2 bg-gray-50 border-gray-100">
+                                                        {service.category}
+                                                    </Badge>
+                                                    <Badge className={`text-[10px] font-black uppercase py-0.5 px-2 border-none ${
+                                                        service.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                                        service.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {service.status || 'Active'}
+                                                    </Badge>
+                                                </div>
+                                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                                                    ID: {service.id.slice(-6)}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -193,7 +306,11 @@ export default function ProviderDetailModal({ providerId, isOpen, onClose }: Pro
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 {provider.gallery.map((url: string, index: number) => (
                                     <div key={index} className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm relative group">
-                                        <img src={url} alt={`Gallery ${index + 1}`} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                                        <ImageWithFallback 
+                                            src={url} 
+                                            alt={`Gallery ${index + 1}`} 
+                                            className="h-full w-full transition-transform group-hover:scale-105" 
+                                        />
                                     </div>
                                 ))}
                             </div>

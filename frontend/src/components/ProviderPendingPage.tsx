@@ -10,6 +10,7 @@ import {
 import axiosClient from '../api/axiosClient';
 import { toast } from 'sonner';
 import { useMyAppeals } from '../api/appeals';
+import { useUser } from '../context/UserContext';
 
 interface ApplicationStatus {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
@@ -33,7 +34,16 @@ export default function ProviderPendingPage() {
   
   // Fetch user's appeals
   const { data: myAppeals, isLoading: isLoadingAppeals } = useMyAppeals();
+  const { user } = useUser();
   
+  useEffect(() => {
+    // If user is already logged in as a provider, auto-check their status
+    if (user && user.role === 'PROVIDER' && user.email && !checked) {
+        setEmail(user.email);
+        handleCheckStatus(user.email);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (myAppeals && myAppeals.length > 0) {
       const pending = myAppeals.find((a: any) => 
@@ -46,22 +56,23 @@ export default function ProviderPendingPage() {
     }
   }, [myAppeals]);
 
-  const handleCheckStatus = async () => {
-    if (!email || !email.includes('@')) {
-      toast.error('Please enter a valid email address');
+  const handleCheckStatus = async (overrideEmail?: string) => {
+    const emailToUse = overrideEmail || email;
+    if (!emailToUse || !emailToUse.includes('@')) {
+      if (!overrideEmail) toast.error('Please enter a valid email address');
       return;
     }
     
     try {
       setLoading(true);
-      const response = await axiosClient.get(`/providers/status/${encodeURIComponent(email)}`);
+      const response = await axiosClient.get(`/providers/status/${encodeURIComponent(emailToUse)}`);
       setApplicationStatus(response.data);
       setChecked(true);
     } catch (error: any) {
       if (error.response?.status === 404) {
-        toast.error('No application found for this email');
+        if (!overrideEmail) toast.error('No application found for this email');
       } else {
-        toast.error(error.response?.data?.message || 'Failed to check status');
+        if (!overrideEmail) toast.error(error.response?.data?.message || 'Failed to check status');
       }
     } finally {
       setLoading(false);
@@ -70,7 +81,7 @@ export default function ProviderPendingPage() {
 
   const handleReapply = () => {
     // Navigate back to onboarding to re-apply
-    navigate('/provider/onboarding');
+    navigate('/provider-onboarding');
   };
   
   const handleAppealSubmit = async (e: React.FormEvent) => {
@@ -287,7 +298,7 @@ export default function ProviderPendingPage() {
                   className="flex-1"
                 />
                 <Button 
-                  onClick={handleCheckStatus}
+                  onClick={() => handleCheckStatus()}
                   disabled={loading}
                   className="bg-orange-500 hover:bg-orange-600"
                 >

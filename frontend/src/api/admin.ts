@@ -9,6 +9,8 @@ export interface PlatformStats {
   totalBookings: number;
   completedBookings: number;
   totalRevenue: number;
+  grossVolume: number;
+  totalTaxCollected: number;
 }
 
 export interface RecentBooking {
@@ -47,7 +49,11 @@ export interface PendingProvider {
     avatarUrl?: string;
   };
   documents: Array<{ id: string; type: string; url: string }>;
+  gallery?: string[];
   services: Array<{ title: string; price: number }>;
+  aadharPanUrl?: string;
+  portfolioUrls?: string[];
+  socialMediaLinks?: any;
 }
 
 export interface UserListParams {
@@ -267,10 +273,11 @@ export const useApproveProvider = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-pending-providers'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['all-providers'] });
       queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 };
@@ -281,6 +288,7 @@ export function useRejectProvider() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) => adminApi.rejectProvider(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 }
@@ -293,8 +301,9 @@ export const useSuspendProvider = () => {
       return data;
     },
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+        queryClient.invalidateQueries({ queryKey: ['all-providers'] });
         queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 };
@@ -307,8 +316,9 @@ export const useUnsuspendProvider = () => {
       return data;
     },
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+        queryClient.invalidateQueries({ queryKey: ['all-providers'] });
         queryClient.invalidateQueries({ queryKey: ['admin-provider-details'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 };

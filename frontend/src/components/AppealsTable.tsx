@@ -1,15 +1,24 @@
 
+import { useState } from 'react';
 import { useAppeals, useReviewAppeal } from '../api/appeals';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Check, X, User, Building2 } from 'lucide-react';
+import { Loader2, Check, X, User, Building2, Eye, FileText } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import AppealDetailModal from './AppealDetailModal';
 
 export default function AppealsTable() {
   const { data: appealsData, isLoading, refetch } = useAppeals({ status: 'all' });
   const resolveAppealMutation = useReviewAppeal();
   const queryClient = useQueryClient();
+  const [selectedAppeal, setSelectedAppeal] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewAppeal = (appeal: any) => {
+    setSelectedAppeal(appeal);
+    setIsModalOpen(true);
+  };
 
   const handleResolveAppeal = async (appealId: string, status: 'APPROVED' | 'REJECTED', appealType: string) => {
     const action = status === 'APPROVED' ? 'approve' : 'reject';
@@ -28,9 +37,10 @@ export default function AppealsTable() {
         adminNotes: status === 'APPROVED' ? 'Appeal approved by admin' : 'Appeal rejected by admin'
       });
       
-      // Invalidate related queries
+      // Invalidate related queries for UI refresh
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['all-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
       
       toast.success(`Appeal ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`);
       refetch();
@@ -47,7 +57,12 @@ export default function AppealsTable() {
   const appeals = appealsData?.data || [];
 
   if (appeals.length === 0) {
-    return <div className="p-8 text-center text-gray-500">No appeals found.</div>;
+    return (
+      <div className="p-8 text-center">
+        <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-500">No appeals found.</p>
+      </div>
+    );
   }
 
   const getAppealTypeIcon = (type: string) => {
@@ -60,6 +75,19 @@ export default function AppealsTable() {
       case 'SUSPENSION_APPEAL': return 'Provider Unsuspend';
       case 'REJECTION_APPEAL': return 'Rejection Appeal';
       default: return type;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case 'APPROVED':
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+      case 'REJECTED':
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
     }
   };
 
@@ -79,13 +107,7 @@ export default function AppealsTable() {
                   <p className="text-xs text-gray-500">{appeal.user?.email}</p>
                 </div>
               </div>
-              <Badge variant={
-                appeal.status === 'APPROVED' ? 'default' : 
-                appeal.status === 'PENDING' ? 'secondary' : 
-                appeal.status === 'REJECTED' ? 'destructive' : 'outline'
-              }>
-                {appeal.status}
-              </Badge>
+              {getStatusBadge(appeal.status)}
             </div>
             
             <div className="mb-3">
@@ -103,28 +125,38 @@ export default function AppealsTable() {
               <span className="text-xs text-gray-400">
                 {new Date(appeal.createdAt).toLocaleDateString()}
               </span>
-              {appeal.status === 'PENDING' && (
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    className="text-red-600 hover:bg-red-50 h-8 px-2"
-                    onClick={() => handleResolveAppeal(appeal.id, 'REJECTED', appeal.type)}
-                    disabled={resolveAppealMutation.isPending}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="bg-green-600 hover:bg-green-700 text-white h-8 px-3"
-                    onClick={() => handleResolveAppeal(appeal.id, 'APPROVED', appeal.type)}
-                    disabled={resolveAppealMutation.isPending}
-                  >
-                    <Check className="h-4 w-4 mr-1" />
-                    Approve
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="h-8 px-3"
+                  onClick={() => handleViewAppeal(appeal)}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  View
+                </Button>
+                {appeal.status === 'PENDING' && (
+                  <>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="text-red-600 hover:bg-red-50 h-8 px-2"
+                      onClick={() => handleResolveAppeal(appeal.id, 'REJECTED', appeal.type)}
+                      disabled={resolveAppealMutation.isPending}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700 text-white h-8 px-3"
+                      onClick={() => handleResolveAppeal(appeal.id, 'APPROVED', appeal.type)}
+                      disabled={resolveAppealMutation.isPending}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -168,45 +200,61 @@ export default function AppealsTable() {
                   <span className="text-xs text-gray-500 line-clamp-1">{appeal.details}</span>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge variant={
-                    appeal.status === 'APPROVED' ? 'default' : 
-                    appeal.status === 'PENDING' ? 'secondary' : 
-                    appeal.status === 'REJECTED' ? 'destructive' : 'outline'
-                  }>
-                    {appeal.status}
-                  </Badge>
+                  {getStatusBadge(appeal.status)}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
                   {new Date(appeal.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">
-                  {appeal.status === 'PENDING' && (
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                        onClick={() => handleResolveAppeal(appeal.id, 'REJECTED', appeal.type)}
-                        disabled={resolveAppealMutation.isPending}
-                      >
-                        Reject
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => handleResolveAppeal(appeal.id, 'APPROVED', appeal.type)}
-                        disabled={resolveAppealMutation.isPending}
-                      >
-                        Approve
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      onClick={() => handleViewAppeal(appeal)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    {appeal.status === 'PENDING' && (
+                      <>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                          onClick={() => handleResolveAppeal(appeal.id, 'REJECTED', appeal.type)}
+                          disabled={resolveAppealMutation.isPending}
+                        >
+                          Reject
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() => handleResolveAppeal(appeal.id, 'APPROVED', appeal.type)}
+                          disabled={resolveAppealMutation.isPending}
+                        >
+                          Approve
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Appeal Detail Modal */}
+      <AppealDetailModal
+        appeal={selectedAppeal}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedAppeal(null);
+        }}
+        onResolved={() => refetch()}
+      />
     </>
   );
 }

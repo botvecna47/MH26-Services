@@ -8,6 +8,17 @@ interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElemen
   height?: number | string;
 }
 
+const getDirectDriveUrl = (url?: string) => {
+  if (!url) return url;
+  // Convert Google Drive view link to direct download link
+  const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/view/;
+  const match = url.match(driveRegex);
+  if (match && match[1]) {
+    return `https://docs.google.com/uc?export=download&id=${match[1]}`;
+  }
+  return url;
+};
+
 export default function ImageWithFallback({ 
   src, 
   alt, 
@@ -16,11 +27,11 @@ export default function ImageWithFallback({
   loading = "lazy",
   ...props 
 }: ImageWithFallbackProps) {
-  const [imgSrc, setImgSrc] = useState<string | undefined>(src);
+  const [imgSrc, setImgSrc] = useState<string | undefined>(getDirectDriveUrl(src));
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setImgSrc(src);
+    setImgSrc(getDirectDriveUrl(src));
     setHasError(false);
   }, [src]);
 

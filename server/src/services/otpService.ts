@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { prisma } from '../config/db';
 import logger from '../config/logger';
 import { sendEmail } from '../utils/email';
@@ -21,9 +22,8 @@ export class OTPService {
    * Generate a 6-digit OTP
    */
   static generateOTP(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return crypto.randomInt(100000, 999999).toString();
   }
-
   /**
    * Store OTP (Redis with Memory Fallback)
    * @param identifier Email or Phone
@@ -65,6 +65,23 @@ export class OTPService {
    * @returns The stored data if valid, null otherwise
    */
   static async verifyOTP(identifier: string, otp: string): Promise<any | null> {
+    const data = await this.peekOTP(identifier, otp);
+    if (data) {
+      const key = `otp:${identifier}`;
+      try {
+        const { getRedisClient } = await import('../config/redis');
+        const redis = getRedisClient();
+        await redis.del(key);
+      } catch (e) {}
+      inMemoryOTPStore.delete(key);
+    }
+    return data;
+  }
+
+  /**
+   * Peek OTP (Verify without consuming)
+   */
+  static async peekOTP(identifier: string, otp: string): Promise<any | null> {
     const key = `otp:${identifier}`;
 
     try {
@@ -76,10 +93,8 @@ export class OTPService {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.otp === otp) {
-          await redis.del(key); // Consume OTP
           return parsed.data;
         }
-        return null;
       }
     } catch (error) {
       // Redis failed, check memory
@@ -93,7 +108,6 @@ export class OTPService {
         return null;
       }
       if (memoryStored.otp === otp) {
-        inMemoryOTPStore.delete(key); // Consume OTP
         return memoryStored.data;
       }
     }
@@ -102,8 +116,24 @@ export class OTPService {
   }
 
   /**
-   * Send OTP via SMS
+   * Get any data stored for an identifier without OTP check
    */
+  static async getStoredData(identifier: string): Promise<any | null> {
+      const key = `otp:${identifier}`;
+      try {
+          const { getRedisClient } = await import('../config/redis');
+          const redis = getRedisClient();
+          const stored = await redis.get(key);
+          if (stored) return JSON.parse(stored).data;
+      } catch (e) {}
+      
+      const memoryStored = inMemoryOTPStore.get(key);
+      if (memoryStored && memoryStored.expiresAt > Date.now()) {
+          return memoryStored.data;
+      }
+      return null;
+  }
+ 
   /**
    * Send OTP via SMS
    */

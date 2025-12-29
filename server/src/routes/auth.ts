@@ -22,7 +22,7 @@ router.post('/logout', validate(refreshTokenSchema), asyncHandler(authController
 router.post('/forgot-password', authLimiter, asyncHandler(authController.forgotPassword));
 router.post('/reset-password', authLimiter, asyncHandler(authController.resetPassword));
 router.get('/verify-email', asyncHandler(authController.verifyEmail));
-router.get('/check-availability', asyncHandler(authController.checkAvailability));
+router.get('/check-availability', authLimiter, asyncHandler(authController.checkAvailability)); // Issue 5 Fix: Rate limited
 
 // Protected routes
 router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(authController.changePassword));

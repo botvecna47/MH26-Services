@@ -27,36 +27,44 @@ export const reviewController = {
         return;
       }
 
-      // If bookingId provided, verify booking exists and belongs to user
-      if (bookingId) {
-        const booking = await prisma.booking.findFirst({
-          where: {
-            id: bookingId,
-            userId,
-            providerId,
-            status: 'COMPLETED',
-          },
-        });
-
-        if (!booking) {
-          res.status(404).json({ error: 'Booking not found or not completed' });
-          return;
-        }
+      // Issue 4: Prevent self-reviewing
+      if (provider.userId === userId) {
+        res.status(403).json({ error: 'Providers cannot review themselves' });
+        return;
       }
 
-      // Check if user already reviewed this provider
-      const existingReview = await prisma.review.findFirst({
+      // Issue 4: Mandate COMPLETED booking for every review
+      if (!bookingId) {
+        res.status(400).json({ error: 'Reviews must be tied to a specific completed booking' });
+        return;
+      }
+
+      // Verify booking exists, belongs to user, and is COMPLETED
+      const booking = await prisma.booking.findFirst({
         where: {
+          id: bookingId,
           userId,
           providerId,
-          bookingId: bookingId || null,
+          status: 'COMPLETED',
         },
       });
 
-      if (existingReview) {
-        res.status(400).json({ error: 'Review already exists' });
+      if (!booking) {
+        res.status(404).json({ error: 'A completed booking is required to leave a review' });
         return;
       }
+
+      // Check if user already reviewed this booking
+      const existingBookingReview = await prisma.review.findFirst({
+        where: { bookingId },
+      });
+
+      if (existingBookingReview) {
+        res.status(400).json({ error: 'You have already reviewed this booking' });
+        return;
+      }
+
+      // Removed general provider review check as bookingId is now mandatory
 
       // Sanitize comment if provided
       const sanitizedComment = comment ? sanitizeInput(comment) : null;
@@ -64,7 +72,7 @@ export const reviewController = {
       // Create review
       const review = await prisma.review.create({
         data: {
-          bookingId: bookingId || null,
+          bookingId,
           providerId,
           userId,
           rating,

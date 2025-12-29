@@ -16,7 +16,7 @@ export const reportController = {
       const authReq = req as AuthRequest;
       const userId = authReq.user!.id;
       const { id: providerId } = req.params;
-      const { reason, details } = req.body;
+      const { bookingId, reason, details } = req.body;
 
       // Verify provider exists
       const provider = await prisma.provider.findUnique({
@@ -31,17 +31,40 @@ export const reportController = {
         return;
       }
 
-      // Check if user already reported this provider
-      const existingReport = await prisma.report.findFirst({
+      // Prevent self-reporting
+      if (provider.userId === userId) {
+        res.status(403).json({ error: 'Providers cannot report themselves' });
+        return;
+      }
+
+      // Require bookingId - reports must be tied to a specific completed booking
+      if (!bookingId) {
+        res.status(400).json({ error: 'Reports must be tied to a specific completed booking' });
+        return;
+      }
+
+      // Verify booking exists, belongs to user, and is COMPLETED
+      const booking = await prisma.booking.findFirst({
         where: {
-          reporterId: userId,
+          id: bookingId,
+          userId,
           providerId,
-          status: 'OPEN',
+          status: 'COMPLETED',
         },
       });
 
-      if (existingReport) {
-        res.status(400).json({ error: 'You have already reported this provider' });
+      if (!booking) {
+        res.status(404).json({ error: 'A completed booking is required to report a provider' });
+        return;
+      }
+
+      // Check if user already reported this booking
+      const existingBookingReport = await prisma.report.findFirst({
+        where: { bookingId },
+      });
+
+      if (existingBookingReport) {
+        res.status(400).json({ error: 'You have already reported this booking' });
         return;
       }
 
@@ -50,6 +73,7 @@ export const reportController = {
         data: {
           reporterId: userId,
           providerId,
+          bookingId,
           reason,
           details,
           status: 'OPEN',

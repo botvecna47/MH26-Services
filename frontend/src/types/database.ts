@@ -72,7 +72,6 @@ export interface Service {
   description: string;
   basePrice: number;
   priceType: 'fixed' | 'hourly' | 'per_item';
-  duration: number; // in minutes
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

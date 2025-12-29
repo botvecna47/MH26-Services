@@ -35,6 +35,7 @@ interface UserContextType {
   isAdmin: boolean;
   isProvider: boolean;
   isBanned: boolean;
+  isProviderSuspended: boolean;
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -138,6 +139,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.role === 'ADMIN';
   const isProvider = user?.role === 'PROVIDER';
   const isBanned = user?.isBanned === true;
+  const isProviderSuspended = user?.role === 'PROVIDER' && user?.providerStatus === 'SUSPENDED';
 
   // setUser function - updates localStorage which will trigger sync
   const setUser = (newUser: User | null) => {
@@ -162,7 +164,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, isAuthenticated, isAdmin, isProvider, isBanned, isLoading, refreshProfile }}>
+    <UserContext.Provider value={{ user, setUser, isAuthenticated, isAdmin, isProvider, isBanned, isProviderSuspended, isLoading, refreshProfile }}>
       {children}
     </UserContext.Provider>
   );

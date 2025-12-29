@@ -201,10 +201,14 @@ export const appealController = {
       // Handle unban logic if approved
       if (status === 'APPROVED') {
         if (appeal.type === 'UNBAN_REQUEST' && appeal.userId) {
-          // Unban user
+          // Unban user - clear all ban fields
           await prisma.user.update({
             where: { id: appeal.userId },
-            data: { isBanned: false },
+            data: { 
+              isBanned: false,
+              banReason: null,
+              bannedAt: null,
+            },
           });
         }
         
@@ -217,8 +221,44 @@ export const appealController = {
         }
       }
 
-      // Send notification (optional, if we had a notification system for this)
-      // For now, just return the updated appeal
+      // Create notification for the user
+      try {
+        const notificationTitle = status === 'APPROVED' 
+          ? 'Appeal Approved' 
+          : 'Appeal Rejected';
+        const notificationBody = status === 'APPROVED'
+          ? `Your ${appeal.type === 'UNBAN_REQUEST' ? 'unban' : 'suspension'} appeal has been approved.`
+          : `Your appeal has been reviewed and was not approved. ${adminNotes ? `Reason: ${adminNotes}` : ''}`;
+        
+        await prisma.notification.create({
+          data: {
+            userId: appeal.userId,
+            type: 'APPEAL_RESOLVED',
+            title: notificationTitle,
+            body: notificationBody,
+            payload: { appealId: id, status, adminNotes },
+          },
+        });
+      } catch (notifError) {
+        logger.error('Failed to create appeal resolution notification:', notifError);
+      }
+
+      // Audit log
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userId: reviewerId,
+            action: `RESOLVE_APPEAL_${status}`,
+            tableName: 'Appeal',
+            recordId: id,
+            newData: { status, adminNotes, appealType: appeal.type },
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+          },
+        });
+      } catch (auditError) {
+        logger.error('Failed to create audit log for appeal resolution:', auditError);
+      }
 
       res.json(updatedAppeal);
     } catch (error) {

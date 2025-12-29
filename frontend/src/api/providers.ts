@@ -112,6 +112,20 @@ export const providersApi = {
     const response = await axiosClient.get('/providers/stats');
     return response.data;
   },
+
+  uploadGalleryImage: async (id: string, file: File): Promise<{ url: string; gallery: string[] }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosClient.post<{ url: string; gallery: string[] }>(`/providers/${id}/gallery`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  removeGalleryImage: async (id: string, imageUrl: string): Promise<{ gallery: string[] }> => {
+    const response = await axiosClient.post<{ gallery: string[] }>(`/providers/${id}/gallery/remove`, { imageUrl });
+    return response.data;
+  },
 };
 
 // React Query hooks
@@ -178,5 +192,27 @@ export function useProviderStats(options?: { enabled?: boolean }) {
       }
       return failureCount < 2;
     }
+  });
+}
+
+export function useUploadGalleryImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      providersApi.uploadGalleryImage(id, file),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['provider', id] });
+    },
+  });
+}
+
+export function useRemoveGalleryImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, imageUrl }: { id: string; imageUrl: string }) =>
+      providersApi.removeGalleryImage(id, imageUrl),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['provider', id] });
+    },
   });
 }

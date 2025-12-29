@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { prisma } from '../config/db';
 import { AppError } from '../middleware/errorHandler';
 import { emitBookingUpdate, emitRevenueUpdate, emitWalletUpdate } from '../socket';
@@ -6,7 +7,8 @@ import logger from '../config/logger';
 import { 
   sendBookingConfirmationToCustomer, 
   sendBookingConfirmationToProvider,
-  sendBookingCancellationToProvider 
+  sendBookingCancellationToProvider,
+  sendCompletionOTPToCustomer
 } from '../utils/email';
 import { sendBookingExpiredEmail } from './emailService';
 
@@ -57,25 +59,87 @@ export const bookingService = {
       throw new AppError('This provider is currently busy serving another customer. Please try again later.', 400);
     }
 
-    // 2. Fee Calculation using Config
-    const price = Number(service.basePrice);
-    const feePercent = 0.07; // 7% Platform Fee as requested
-    const platformFee = price * feePercent;
-    const providerEarnings = price - platformFee;
+    // Validate scheduled time
     const scheduledDate = new Date(scheduledAt);
+    const now = new Date();
+    
+    // 1. Cannot book in the past
+    if (scheduledDate <= now) {
+      throw new AppError('Cannot book a time in the past', 400);
+    }
+    
+    // 2. Only today or tomorrow
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayAfterTomorrow = new Date(today);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+    
+    if (scheduledDate >= dayAfterTomorrow) {
+      throw new AppError('Bookings are only available for today or tomorrow', 400);
+    }
+    
+    // 3. Only between 9 AM and 9 PM (IST)
+    const scheduledHour = scheduledDate.getHours();
+    if (scheduledHour < 9) {
+      throw new AppError('Service hours start at 9:00 AM', 400);
+    }
+    if (scheduledHour >= 21) {
+      throw new AppError('Service hours end at 9:00 PM', 400);
+    }
 
-    // 3. Database Transaction (Booking + Notification)
-    const [booking, notification] = await prisma.$transaction(async (tx) => {
-      const newBooking = await tx.booking.create({
-        data: {
-          userId,
-          providerId,
-          serviceId,
-          scheduledAt: scheduledDate,
-          totalAmount: price,
-          platformFee,
-          providerEarnings,
-          status: 'PENDING',
+    // 4. Check for time conflicts with provider's confirmed bookings (30-minute window)
+    const thirtyMinsBefore = new Date(scheduledDate.getTime() - 30 * 60 * 1000);
+    const thirtyMinsAfter = new Date(scheduledDate.getTime() + 30 * 60 * 1000);
+    
+    const conflictingBooking = await prisma.booking.findFirst({
+      where: {
+        providerId,
+        status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+        scheduledAt: {
+          gte: thirtyMinsBefore,
+          lte: thirtyMinsAfter
+        }
+      },
+      include: { service: true }
+    });
+    
+    if (conflictingBooking) {
+      const conflictTime = new Date(conflictingBooking.scheduledAt).toLocaleTimeString('en-IN', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      throw new AppError(
+        `Provider is not available at this time. They have a confirmed booking at ${conflictTime}. Please choose a different time.`, 
+        400
+      );
+    }
+
+    // 5. Fee Calculation using Config
+  const basePrice = Number(service.basePrice);
+  const gstRate = 0.08; // 8% GST
+  const platformFeeRate = 0.07; // 7% Platform Fee
+
+  const subtotal = basePrice;
+  const taxAmount = subtotal * gstRate;
+  const totalAmount = subtotal + taxAmount;
+  const platformFee = subtotal * platformFeeRate;
+  const providerEarnings = subtotal - platformFee;
+
+  // 3. Database Transaction (Booking + Notification)
+  const [booking, notification] = await prisma.$transaction(async (tx) => {
+    const newBooking = await tx.booking.create({
+      data: {
+        userId,
+        providerId,
+        serviceId,
+        scheduledAt: scheduledDate,
+        subtotal,
+        taxAmount,
+        totalAmount,
+        platformFee,
+        providerEarnings,
+        status: 'PENDING',
           paymentStatus: 'PENDING',
           address,
           city,
@@ -223,12 +287,12 @@ export const bookingService = {
     // CANCELLED: Customer can cancel PENDING/CONFIRMED; Provider can cancel CONFIRMED only
     if (status === 'CANCELLED') {
       if (isCustomer) {
-        if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
-          throw new AppError('You can only cancel pending or confirmed bookings', 400);
+        if (!['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(booking.status)) {
+          throw new AppError('You can only cancel pending, confirmed, or in-progress bookings', 400);
         }
       } else if (isProvider) {
-        if (booking.status !== 'CONFIRMED') {
-          throw new AppError('Providers can only cancel confirmed bookings', 400);
+        if (!['CONFIRMED', 'IN_PROGRESS'].includes(booking.status)) {
+          throw new AppError('Providers can only cancel confirmed or in-progress bookings', 400);
         }
       } else if (!isAdmin) {
         throw new AppError('Unauthorized', 403);
@@ -238,16 +302,26 @@ export const bookingService = {
     else if (status === 'CONFIRMED' || status === 'REJECTED') {
       if (!isProvider && !isAdmin) throw new AppError('Only providers can accept or reject bookings', 403);
       if (booking.status !== 'PENDING') throw new AppError(`Can only ${status.toLowerCase()} pending bookings`, 400);
+      
+      // Direct transition to IN_PROGRESS when accepted by provider (Skipping CONFIRMED)
+      if (status === 'CONFIRMED') {
+          status = 'IN_PROGRESS';
+      }
+
+      // SECURITY: Suspended/Pending/Rejected providers cannot accept new bookings
+      if (isProvider && status === 'IN_PROGRESS' && booking.provider.status !== 'APPROVED') {
+        throw new AppError(`Your provider account is ${booking.provider.status.toLowerCase()}. Only approved providers can accept bookings.`, 403);
+      }
     } 
-    // IN_PROGRESS: Only from CONFIRMED, only by provider
+    // IN_PROGRESS: Handled above for direct transition, but keeping for compatibility if ever needed
     else if (status === 'IN_PROGRESS') {
       if (!isProvider && !isAdmin) throw new AppError('Only providers can start service', 403);
       if (booking.status !== 'CONFIRMED') throw new AppError('Can only start service on confirmed bookings', 400);
     } 
-    // COMPLETED: Handled separately in verifyCompletion
+    // COMPLETED: MUST go through OTP verification flow (initiateCompletion + verifyCompletion)
+    // Direct COMPLETED transitions are NOT allowed to enforce OTP verification
     else if (status === 'COMPLETED') {
-      if (!isProvider && !isAdmin) throw new AppError('Only providers can complete bookings', 403);
-      if (booking.status !== 'IN_PROGRESS') throw new AppError('Can only complete in-progress bookings', 400);
+      throw new AppError('Completion requires OTP verification. Use the Complete Service flow.', 400);
     }
 
     // Update
@@ -262,7 +336,7 @@ export const bookingService = {
     });
 
     // Send emails based on status change (fire-and-forget, non-blocking)
-    if (status === 'CONFIRMED') {
+    if (status === 'IN_PROGRESS' && booking.status === 'PENDING') {
       // Email to customer (async, non-blocking)
       sendBookingConfirmationToCustomer(
         updated.user.email!,
@@ -285,6 +359,62 @@ export const bookingService = {
         booking.address || '',
         Number(booking.providerEarnings)
       ).catch(err => logger.error('Failed to send provider confirmation email:', err));
+      
+      // Auto-reject conflicting PENDING bookings (within 30-min window)
+      const thirtyMinsBefore = new Date(booking.scheduledAt.getTime() - 30 * 60 * 1000);
+      const thirtyMinsAfter = new Date(booking.scheduledAt.getTime() + 30 * 60 * 1000);
+      
+      const conflictingPendingBookings = await prisma.booking.findMany({
+        where: {
+          providerId: booking.providerId,
+          id: { not: bookingId }, // Exclude the just-confirmed booking
+          status: 'PENDING',
+          scheduledAt: {
+            gte: thirtyMinsBefore,
+            lte: thirtyMinsAfter
+          }
+        },
+        include: { 
+          user: { select: { id: true, name: true, email: true } },
+          service: { select: { name: true } }
+        }
+      });
+      
+      if (conflictingPendingBookings.length > 0) {
+        logger.info(`Auto-rejecting ${conflictingPendingBookings.length} conflicting bookings for provider ${booking.providerId}`);
+        
+        // Reject all conflicting bookings
+        await prisma.booking.updateMany({
+          where: {
+            id: { in: conflictingPendingBookings.map(b => b.id) }
+          },
+          data: { status: 'REJECTED' }
+        });
+        
+        // Notify affected customers
+        for (const conflicting of conflictingPendingBookings) {
+          try {
+            const conflictTime = new Date(booking.scheduledAt).toLocaleTimeString('en-IN', { 
+              hour: '2-digit', minute: '2-digit', hour12: true 
+            });
+            
+            await prisma.notification.create({
+              data: {
+                userId: conflicting.userId,
+                type: 'BOOKING_UPDATE',
+                title: 'Booking Could Not Be Confirmed',
+                body: `Your booking for ${conflicting.service.name} was auto-rejected as the provider already accepted another booking near the same time (${conflictTime}). Please try booking a different time.`,
+                payload: { bookingId: conflicting.id, status: 'REJECTED' }
+              }
+            });
+            
+            // Emit socket update
+            emitBookingUpdate(conflicting.userId, { ...conflicting, status: 'REJECTED' });
+          } catch (e) {
+            logger.error('Failed to notify auto-rejected booking:', e);
+          }
+        }
+      }
     } else if (status === 'CANCELLED' && isCustomer) {
       // Customer cancelled - notify provider (async, non-blocking)
       sendBookingCancellationToProvider(
@@ -353,31 +483,29 @@ export const bookingService = {
          throw new AppError('Unauthorized', 403);
      }
      
-     const baseAmount = Number(booking.totalAmount);
-     const platformFeeRate = 0.07; // 7% platform fee
-     const gstRate = 0.08; // 8% GST
-     
-     const platformFee = baseAmount * platformFeeRate;
-     const gst = baseAmount * gstRate;
-     const grandTotal = baseAmount + gst; // Customer pays base + GST
-     const providerEarnings = baseAmount - platformFee; // Provider gets base minus platform fee
-     
-     return {
-        invoiceNumber: `INV-${booking.id.slice(0, 8).toUpperCase()}`,
-        date: booking.createdAt,
-        booking,
-        subtotal: baseAmount,
-        platformFee: platformFee,
-        gst: gst,
-        total: grandTotal,
-        providerEarnings: providerEarnings,
-     };
+     const subtotal = Number(booking.subtotal);
+   const taxAmount = Number(booking.taxAmount);
+   const total = Number(booking.totalAmount);
+   const platformFee = Number(booking.platformFee);
+   
+   // Note: Platform fee is hidden from customers in the frontend modal
+   // but we keep it in the response for admin/provider view
+   return {
+      invoiceNumber: `INV-${booking.id.slice(0, 8).toUpperCase()}`,
+      date: booking.createdAt,
+      booking,
+      subtotal: subtotal,
+      platformFee: platformFee,
+      tax: taxAmount,
+      total: total,
+      providerEarnings: Number(booking.providerEarnings),
+   };
   },
 
   /**
    * Initiate Service Completion (Provider Only)
    */
-  async initiateCompletion(bookingId: string, userId: string) {
+  async initiateCompletion(bookingId: string, userId: string, userRole: string) {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: { provider: true, service: true, user: true },
@@ -386,42 +514,27 @@ export const bookingService = {
     if (!booking) throw new AppError('Booking not found', 404);
     
     const isProvider = booking.provider.userId === userId;
-    const isAdmin = userId === booking.provider.userId; // Wait, admin initiates? Usually provider does task completion
-    // The prompt says "as admin, I should also view details and initialize confirmation". 
-    // Initialization usually means "I have done the job, here is the OTP" (Provider Side) OR "I confirm job is done" (Customer side?)
-    // In our flow: Provider initiates (generates OTP), Customer verifies (provides OTP).
-    // If Admin is the Provider (unlikely scenarios but possible)? Or Admin forcing completion?
-    // Let's assume Admin is just "Super User" and can initiate completion on behalf of provider if needed?
-    // OR if Admin is the Customer, they verify.
-    // Prompt: "initialize confirmation" -> sounds like starting the completion flow.
-    // Let's allow Admin to initiate completion too.
-    const isSuperAdmin = false; // Actually checking role passed in future, for now stick to provider.
+    const isAdmin = userRole === 'ADMIN';
     
-    // User requested "As admin... initialize confirmation". If Admin is the Service Provider?
-    // Or maybe Admin *completes* it directly?
-    // existing logic covers provider only.
-    
-    if (booking.provider.userId !== userId) {
-        // Check if user is admin (hacky here without role passed, but assume auth middleware handled it? No, userId is passed)
-        // Ideally we pass role to this function. For now, strict provider check.
-        // We will stick to strict provider check unless role passed. 
-        // userRole isn't passed here. I won't break signature yet.
+    if (!isProvider && !isAdmin) {
         throw new AppError('Unauthorized', 403);
     }
     
-    if (booking.status !== 'CONFIRMED') {
-        throw new AppError('Can only initiate completion for CONFIRMED bookings', 400);
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'IN_PROGRESS') {
+        throw new AppError('Can only initiate completion for confirmed or in-progress bookings', 400);
     }
 
-    // Generate 6 digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate 6 digit OTP securely
+    const otp = crypto.randomInt(100000, 999999).toString();
 
-    // Update booking
-    const updated = await prisma.booking.update({
-        where: { id: bookingId },
-        data: { completionOtp: otp }
-    });
-
+    // Update booking and reset attempts (Issue 1)
+  const updated = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { 
+          completionOtp: otp,
+          otpAttempts: 0 
+      }
+  });
     // Notify Customer with OTP
     try {
         await prisma.notification.create({
@@ -434,7 +547,6 @@ export const bookingService = {
             }
         });
         
-        // Notify Provider
         await prisma.notification.create({
             data: {
                 userId: booking.provider.userId,
@@ -444,6 +556,18 @@ export const bookingService = {
                 payload: { bookingId }
             }
         });
+        
+        // Send OTP via email to customer
+        if (booking.user.email) {
+          await sendCompletionOTPToCustomer(
+            booking.user.email,
+            booking.user.name,
+            booking.service.name,
+            booking.provider.businessName,
+            otp
+          );
+          logger.info(`Completion OTP email sent to ${booking.user.email}`);
+        }
     } catch(e) { logger.error('Completion notif failed', e); }
 
     const providerBooking = { ...updated, completionOtp: undefined };
@@ -473,15 +597,28 @@ export const bookingService = {
 
     if (!booking) throw new AppError('Booking not found', 404);
     
-    // Check if Provider matches OR if user is Admin
     const isAuthorized = (booking.provider.userId === userId) || (role === 'ADMIN');
     if (!isAuthorized) throw new AppError('Unauthorized', 403);
     
-    if (!booking.completionOtp) throw new AppError('Completion not initiated', 400);
-    
-    if (booking.completionOtp !== otp) {
-        throw new AppError('Invalid OTP', 400);
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'IN_PROGRESS') {
+        throw new AppError('Can only verify completion for confirmed or in-progress bookings', 400);
     }
+    
+    if (!booking.completionOtp) throw new AppError('Completion not initiated', 400);
+
+  // Issue 1: Brute-force protection
+  if (booking.otpAttempts >= 5) {
+    throw new AppError('Too many failed attempts. Verification blocked for security.', 429);
+  }
+  
+  if (booking.completionOtp !== otp) {
+      // Increment attempts
+      await prisma.booking.update({
+          where: { id: bookingId },
+          data: { otpAttempts: { increment: 1 } }
+      });
+      throw new AppError('Invalid OTP', 400);
+  }
 
     // OTP Match -> Complete
     // TRANSACTION: Update Status + Update Financials
@@ -491,7 +628,8 @@ export const bookingService = {
             where: { id: bookingId },
             data: { 
                 status: 'COMPLETED',
-                completionOtp: null // Clear OTP
+                completionOtp: null, // Clear OTP
+                otpAttempts: 0 // Reset attempts
             },
             include: {
                 user: { select: { id: true, name: true } },

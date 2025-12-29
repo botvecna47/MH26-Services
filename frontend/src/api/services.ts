@@ -11,6 +11,7 @@ export interface Service {
   description?: string;
   price: number;
   durationMin: number;
+  category: string;
   imageUrl?: string;
   status?: 'PENDING' | 'APPROVED' | 'REJECTED'; // Admin verification status
   createdAt: string;
@@ -75,12 +76,21 @@ export const servicesApi = {
   },
 
   updateService: async (id: string, data: Partial<Service>): Promise<Service> => {
-    const response = await axiosClient.put<Service>(`/services/${id}`, data);
+    const response = await axiosClient.patch<Service>(`/services/${id}`, data);
     return response.data;
   },
 
   deleteService: async (id: string): Promise<void> => {
     await axiosClient.delete(`/services/${id}`);
+  },
+
+  uploadServiceImage: async (id: string, file: File): Promise<{ url: string; service: Service }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosClient.post<{ url: string; service: Service }>(`/services/${id}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
   },
 };
 
@@ -121,6 +131,17 @@ export function useDeleteService() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: servicesApi.deleteService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+}
+
+export function useUploadServiceImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      servicesApi.uploadServiceImage(id, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] });
     },

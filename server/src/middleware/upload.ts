@@ -14,6 +14,30 @@ const ALLOWED_MIME_TYPES = [
   'image/jpg',
 ];
 
+// Issue 6 Fix: Magic byte signatures for file validation
+const FILE_SIGNATURES: Record<string, number[][]> = {
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/jpg': [[0xFF, 0xD8, 0xFF]],
+  'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]], // RIFF header
+  'application/pdf': [[0x25, 0x50, 0x44, 0x46]], // %PDF
+};
+
+/**
+ * Validate file content against magic bytes (Issue 6 Fix)
+ */
+export function validateFileContent(buffer: Buffer, declaredMimeType: string): boolean {
+  const signatures = FILE_SIGNATURES[declaredMimeType];
+  if (!signatures) return false;
+
+  return signatures.some(sig => {
+    for (let i = 0; i < sig.length; i++) {
+      if (buffer[i] !== sig[i]) return false;
+    }
+    return true;
+  });
+}
+
 const fileFilter = (
   req: Request,
   file: Express.Multer.File,

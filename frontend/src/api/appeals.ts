@@ -112,7 +112,9 @@ export function useReviewAppeal() {
       appealsApi.reviewAppeal(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appeals'] });
-      queryClient.invalidateQueries({ queryKey: ['providers'] });
+      queryClient.invalidateQueries({ queryKey: ['all-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
     },
   });
 }

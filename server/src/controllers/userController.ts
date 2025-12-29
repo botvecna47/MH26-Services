@@ -47,7 +47,13 @@ export const userController = {
         return;
       }
 
-      res.json(user);
+      // Include providerStatus as top-level field for frontend
+      const response = {
+        ...user,
+        providerStatus: user.provider?.status || null,
+      };
+
+      res.json(response);
     } catch (error) {
       logger.error('Get me error:', error);
       res.status(500).json({ error: 'Failed to fetch user' });

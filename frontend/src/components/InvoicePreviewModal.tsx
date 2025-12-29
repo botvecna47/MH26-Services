@@ -68,7 +68,7 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0" aria-describedby="invoice-desc">
+      <DialogContent className="w-[50vw] max-w-none max-h-[90vh] overflow-y-auto p-0" aria-describedby="invoice-desc">
         <DialogTitle className="sr-only">Invoice Preview</DialogTitle>
         <div id="invoice-desc" className="sr-only">Preview of the invoice details including billing and line items.</div>
         {loading ? (
@@ -167,18 +167,10 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900 font-medium">₹{Number(invoiceData.subtotal).toFixed(2)}</span>
                   </div>
-                  {Number(invoiceData.platformFee) > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Platform Fee:</span>
-                      <span className="text-gray-900">₹{Number(invoiceData.platformFee).toFixed(2)}</span>
-                    </div>
-                  )}
-                  {Number(invoiceData.tax) > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tax (GST):</span>
-                      <span className="text-gray-900">₹{Number(invoiceData.tax).toFixed(2)}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">GST (8%):</span>
+                    <span className="text-gray-900 font-medium">₹{Number(invoiceData.tax).toFixed(2)}</span>
+                  </div>
                   <div className="flex justify-between pt-3 border-t border-gray-200">
                     <span className="font-bold text-gray-900 text-lg">Total:</span>
                     <span className="font-bold text-[#ff6b35] text-lg">₹{Number(invoiceData.total).toFixed(2)}</span>

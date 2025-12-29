@@ -448,8 +448,14 @@ async function main() {
   // Create Providers and Services
   console.log('🏢 Creating providers and services...');
   for (const providerData of providersData) {
-    // Create user
-    const password = await bcrypt.hash(`${providerData.category}@123`, 12);
+    // Issue 3 Fix: Generate secure random password
+    const crypto = await import('crypto');
+    const randomPassword = crypto.randomBytes(8).toString('base64').slice(0, 10);
+    const password = await bcrypt.hash(randomPassword, 12);
+    
+    // Log password only in development for testing
+    console.log(`  🔐 ${providerData.email}: ${randomPassword}`);
+    
     const user = await prisma.user.create({
       data: {
         name: providerData.name,

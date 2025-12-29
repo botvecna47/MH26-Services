@@ -89,6 +89,13 @@ export default function ProviderDetailPage() {
       return;
     }
     
+    // Check if provider is currently busy (has confirmed or in-progress bookings)
+    const providerBusy = (provider as any).bookings?.length > 0;
+    if (providerBusy) {
+      toast.error('This provider is currently busy with another booking. Please check again later.');
+      return;
+    }
+    
     // Check if user already has an active booking for this service
     const activeBookingStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS'];
     const existingActiveBooking = userBookings?.data?.find(
@@ -123,34 +130,48 @@ export default function ProviderDetailPage() {
         <div className="grid lg:grid-cols-3 gap-4">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Gallery */}
+            {/* Gallery - Prioritize service images, fallback to provider gallery */}
             <div className="bg-white rounded-lg overflow-hidden shadow-sm">
               <div className="aspect-video bg-gray-200 relative">
-                {provider.gallery && provider.gallery.length > 0 ? (
-                  <ImageWithFallback
-                    src={provider.gallery[0]}
-                    alt={provider.businessName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image Available
-                  </div>
-                )}
-              </div>
-              {provider.gallery && provider.gallery.length > 1 && (
-                <div className="grid grid-cols-4 gap-2 p-4">
-                  {provider.gallery.slice(1, 5).map((img, idx) => (
-                    <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
-                      <ImageWithFallback
-                        src={img}
-                        alt={`Gallery ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                {/* Priority: 1. Primary service imageUrl, 2. Provider gallery, 3. Placeholder */}
+                {(() => {
+                  const serviceImage = provider.services?.[0]?.imageUrl;
+                  const galleryImage = provider.gallery?.[0];
+                  const displayImage = serviceImage || galleryImage;
+                  
+                  return displayImage ? (
+                    <ImageWithFallback
+                      src={displayImage}
+                      alt={provider.businessName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      No Image Available
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })()}
+              </div>
+              {/* Thumbnails - show service images if available, otherwise gallery */}
+              {(() => {
+                const serviceImages = provider.services?.map(s => s.imageUrl).filter(Boolean) || [];
+                const galleryImages = provider.gallery || [];
+                const allImages = serviceImages.length > 0 ? serviceImages : galleryImages;
+                
+                return allImages.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2 p-4">
+                    {allImages.slice(1, 5).map((img: string, idx: number) => (
+                      <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
+                        <ImageWithFallback
+                          src={img}
+                          alt={`Gallery ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Provider Info */}

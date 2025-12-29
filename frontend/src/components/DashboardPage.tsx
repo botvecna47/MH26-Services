@@ -1,5 +1,5 @@
 import { useUser } from '../context/UserContext';
-import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Star } from 'lucide-react';
+import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Star, Flag } from 'lucide-react';
 import { Button } from './ui/button';
 import { Link, useSearchParams } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -8,7 +8,6 @@ import { useBookings, Booking } from '../api/bookings';
 import { useAnalytics } from '../api/admin';
 
 import CustomerProfilePage from './CustomerProfilePage';
-import ProviderSchedulePage from './ProviderSchedulePage';
 import MyServicesSection from './MyServicesSection';
 import BookingDetailModal from './BookingDetailModal';
 import ReviewModal from './ReviewModal';
@@ -16,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { useProviderStats } from '../api/providers';
 import { useServices } from '../api/services';
 import AddServiceModal from './AddServiceModal';
+import GalleryManager from './GalleryManager';
 
 
 import { useSocket } from '../context/SocketContext';
@@ -165,20 +165,20 @@ export default function DashboardPage() {
                   Overview
                 </button>
                 {isProvider && (
-                  <button
-                    onClick={() => setSearchParams({ tab: 'schedule' })}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'schedule' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    Schedule
-                  </button>
-                )}
-                {isProvider && (
-                  <button
-                    onClick={() => setSearchParams({ tab: 'services' })}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'services' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    My Services
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setSearchParams({ tab: 'services' })}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'services' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      My Services
+                    </button>
+                    <button
+                      onClick={() => setSearchParams({ tab: 'gallery' })}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentTab === 'gallery' ? 'bg-white text-[#ff6b35] shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      Gallery
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => setSearchParams({ tab: 'profile' })}
@@ -195,13 +195,13 @@ export default function DashboardPage() {
           <div className="max-w-4xl mx-auto">
             <CustomerProfilePage />
           </div>
-        ) : currentTab === 'schedule' && isProvider ? (
-            <div className="max-w-4xl mx-auto">
-               <ProviderSchedulePage />
-            </div>
         ) : currentTab === 'services' && isProvider ? (
             <div className="max-w-5xl mx-auto">
                <MyServicesSection />
+            </div>
+        ) : currentTab === 'gallery' && isProvider ? (
+            <div className="max-w-6xl mx-auto">
+               <GalleryManager />
             </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-4">
@@ -281,13 +281,13 @@ export default function DashboardPage() {
                     </div>
                     <div className="glass glass-hover rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-700">Pending</span>
+                        <span className="text-gray-700">Active</span>
                         <Clock className="h-5 w-5 text-yellow-600" />
                       </div>
                       <div className="text-gray-900">
-                        {userBookings.filter((b: Booking) => b.status === 'PENDING' || b.status === 'CONFIRMED').length}
+                        {userBookings.filter((b: Booking) => b.status === 'PENDING' || b.status === 'CONFIRMED' || b.status === 'IN_PROGRESS').length}
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">Awaiting service</p>
+                      <p className="text-xs text-gray-600 mt-1">Pending or in progress</p>
                     </div>
                     <div className="glass glass-hover rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
@@ -361,6 +361,24 @@ export default function DashboardPage() {
                                 Leave Review
                               </Button>
                             )}
+                            {/* Report Provider button for completed bookings without report (customers only) */}
+                            {isCustomer && booking.status === 'COMPLETED' && !booking.report && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => {
+                                  const reason = prompt('Please describe the issue with this provider:');
+                                  if (reason) {
+                                    // TODO: Call report API when implemented
+                                    alert('Report functionality coming soon. In the meantime, please contact support.');
+                                  }
+                                }}
+                                className="text-red-600 border-red-300 hover:bg-red-50"
+                              >
+                                <Flag className="h-4 w-4 mr-1" />
+                                Report
+                              </Button>
+                            )}
 
                             <Button variant="outline" size="sm" onClick={() => setSelectedBooking(booking)}>View Details</Button>
                           </div>
@@ -408,11 +426,9 @@ export default function DashboardPage() {
                           View My Profile
                         </Button>
                       </Link>
-                      <Link to="/services">
-                        <Button variant="outline" className="w-full justify-start">
-                          Manage Services
-                        </Button>
-                      </Link>
+                      <Button onClick={() => setSearchParams({ tab: 'services' })} variant="outline" className="w-full justify-start">
+                        Manage Services
+                      </Button>
                     </>
                   ) : (
                     <>

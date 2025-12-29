@@ -14,19 +14,20 @@ export function setupSocketIO(httpServer: HTTPServer): void {
   io = new SocketIOServer(httpServer, {
     cors: {
       origin: (origin, callback) => {
+        // In development, allow all origins
+        if (process.env.NODE_ENV === 'development') {
+          return callback(null, true);
+        }
+
         const envOrigins = process.env.CORS_ORIGIN
           ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
           : [];
         const allowedOrigins = [...envOrigins, 'http://localhost:5173', 'http://localhost:5000', 'http://127.0.0.1:5173', 'http://127.0.0.1:5000'];
 
-        // Allow requests with no origin (mobile apps, Postman, etc.) in development
-        if (!origin && process.env.NODE_ENV === 'development') {
-          return callback(null, true);
-        }
-
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
+          logger.warn(`Socket.io CORS Blocked: ${origin}`);
           callback(new Error('Not allowed by CORS'));
         }
       },
@@ -53,6 +54,7 @@ export function setupSocketIO(httpServer: HTTPServer): void {
           id: true,
           email: true,
           role: true,
+          isBanned: true, // Issue 9 Fix
           provider: {
             select: {
               status: true,
@@ -63,6 +65,11 @@ export function setupSocketIO(httpServer: HTTPServer): void {
 
       if (!user) {
         return next(new Error('Authentication error: User not found'));
+      }
+
+      // Issue 9 Fix: Block banned users from socket connections
+      if (user.isBanned) {
+        return next(new Error('Authentication error: Account banned'));
       }
 
       // Check if provider is suspended (for provider users)
@@ -92,6 +99,47 @@ export function setupSocketIO(httpServer: HTTPServer): void {
     // Handle message sending
     socket.on('message:send', async (data: { conversationId: string; receiverId: string; text: string }) => {
       try {
+        // Issue 1 Fix: Replicate REST API authorization in socket handler
+        // 1. Check if sender is banned
+        const sender = await prisma.user.findUnique({ 
+          where: { id: userId },
+          select: { isBanned: true, role: true }
+        });
+        
+        if (sender?.isBanned) {
+          socket.emit('error', { message: 'Your account is banned. Messaging is disabled.' });
+          return;
+        }
+
+        // 2. Check receiver exists and get their role
+        const receiver = await prisma.user.findUnique({
+          where: { id: data.receiverId },
+          select: { id: true, role: true }
+        });
+
+        if (!receiver) {
+          socket.emit('error', { message: 'Receiver not found' });
+          return;
+        }
+
+        // 3. Check booking relationship (unless Admin is involved)
+        if (sender?.role !== 'ADMIN' && receiver.role !== 'ADMIN') {
+          const hasBooking = await prisma.booking.findFirst({
+            where: {
+              OR: [
+                { userId: userId, provider: { userId: data.receiverId } },
+                { userId: data.receiverId, provider: { userId: userId } }
+              ],
+              status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] }
+            }
+          });
+
+          if (!hasBooking) {
+            socket.emit('error', { message: 'You can only message users you have a booking with.' });
+            return;
+          }
+        }
+
         // Save message to database
         const message = await prisma.message.create({
           data: {
@@ -103,12 +151,12 @@ export function setupSocketIO(httpServer: HTTPServer): void {
         });
 
         // Get sender info for notification
-        const sender = await prisma.user.findUnique({
+        const senderInfo = await prisma.user.findUnique({
           where: { id: userId },
           select: { name: true, avatarUrl: true, provider: { select: { businessName: true } } },
         });
 
-        const senderName = sender?.provider?.businessName || sender?.name || 'Someone';
+        const senderName = senderInfo?.provider?.businessName || senderInfo?.name || 'Someone';
 
         // Emit to receiver with full message data
         io?.to(`user:${data.receiverId}`).emit('message:new', {
@@ -116,7 +164,7 @@ export function setupSocketIO(httpServer: HTTPServer): void {
           sender: {
             id: userId,
             name: senderName,
-            avatarUrl: sender?.avatarUrl,
+            avatarUrl: senderInfo?.avatarUrl,
           },
         });
 

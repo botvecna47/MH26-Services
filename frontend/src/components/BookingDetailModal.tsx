@@ -1,5 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Booking, useCancelBooking, useAcceptBooking, useRejectBooking, useStartService } from '../api/bookings';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Booking, useCancelBooking, useAcceptBooking, useRejectBooking } from '../api/bookings';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Button } from './ui/button';
 import { MapPin, Phone, Mail, Calendar, Clock, DollarSign, CheckCircle, CheckCircle2, User, X, XCircle, FileText } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
   const cancelBookingMutation = useCancelBooking();
   const acceptBookingMutation = useAcceptBooking();
   const rejectBookingMutation = useRejectBooking();
-  const startServiceMutation = useStartService();
+
 
   if (!booking) return null;
 
@@ -39,32 +39,43 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
       await acceptBookingMutation.mutateAsync(booking.id);
       toast.success('Booking accepted successfully!');
       onClose();
-    } catch (error) {
-      toast.error('Failed to accept booking');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to accept booking';
+      toast.error(errorMessage);
     }
   };
 
   const handleRejectBooking = async () => {
     const reason = prompt('Please provide a reason for rejection (optional):');
+    if (!confirm('Are you sure you want to reject this booking? This action cannot be undone.')) {
+      return;
+    }
     try {
       await rejectBookingMutation.mutateAsync({ id: booking.id, reason: reason || undefined });
       toast.success('Booking rejected');
       onClose();
-    } catch (error) {
-      toast.error('Failed to reject booking');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to reject booking';
+      toast.error(errorMessage);
     }
   };
 
   const handleCancelBooking = async () => {
+    if (!confirm('Are you sure you want to cancel this booking?')) {
+      return;
+    }
     const reason = prompt('Please provide a reason for cancellation (optional):');
     try {
       await cancelBookingMutation.mutateAsync({ id: booking.id, reason: reason || undefined });
       toast.success('Booking cancelled successfully');
       onClose();
-    } catch (error) {
-      toast.error('Failed to cancel booking');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to cancel booking';
+      toast.error(errorMessage);
     }
   };
+
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,9 +88,10 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
   };
 
   const completionOtp = (booking as any).completionOtp;
-  // Customer can cancel PENDING or CONFIRMED; Provider can only cancel CONFIRMED
-  const customerCanCancel = isCustomer && (booking.status === 'PENDING' || booking.status === 'CONFIRMED');
-  const providerCanCancel = isBookingProvider && booking.status === 'CONFIRMED';
+  // Customer can cancel PENDING or IN_PROGRESS (if just started); Provider can only cancel IN_PROGRESS if confirmed?
+  // Actually, once IN_PROGRESS, it's usually too late to cancel without consequences, but for now let's allow it if it was just accepted.
+  const customerCanCancel = isCustomer && (booking.status === 'PENDING' || booking.status === 'IN_PROGRESS');
+  const providerCanCancel = isBookingProvider && booking.status === 'IN_PROGRESS';
 
   return (
     <>
@@ -88,7 +100,8 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
           <DialogHeader className="p-6 bg-gradient-to-r from-[#ff6b35] to-[#ff8f6b] text-white">
             <div className="flex justify-between items-start">
               <div className="flex-1 pr-8">
-                <DialogTitle className="text-xl font-bold text-white tracking-tight">Booking Details</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-white tracking-tight">Booking Details</DialogTitle>
+                <DialogDescription className="sr-only">View and manage booking details, status, and actions.</DialogDescription>
                 <p className="text-white/80 text-xs mt-1 font-mono">ID: {booking.id.slice(0, 8)}</p>
               </div>
               
@@ -134,40 +147,105 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
               </div>
             )}
 
-            {/* Provider Info Card */}
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center gap-4">
-              <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm shrink-0">
-                <User className="h-6 w-6 text-[#ff6b35]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 uppercase font-semibold">Provider</p>
-                <p className="font-bold text-gray-900 truncate">{booking.provider?.businessName}</p>
-                <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
-                    <MapPin className="h-3 w-3 text-[#ff6b35]" />
-                    <span className="truncate">{booking.provider?.city}</span>
+            {/* Provider Info Card - Visible to customers */}
+            {!isBookingProvider && (
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center gap-4">
+                <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center border border-gray-200 shadow-sm shrink-0">
+                  <User className="h-6 w-6 text-[#ff6b35]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Provider</p>
+                  <p className="font-bold text-gray-900 truncate">{booking.provider?.businessName}</p>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
+                      <MapPin className="h-3 w-3 text-[#ff6b35]" />
+                      <span className="truncate">{booking.provider?.city}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Customer Info Card - Visible to providers only */}
+            {isBookingProvider && (
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-3">
+                <p className="text-xs text-blue-700 uppercase font-semibold">Customer Details</p>
+                
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center border border-blue-200 shadow-sm shrink-0">
+                    <User className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900">{booking.user?.name || 'Customer'}</p>
+                  </div>
+                </div>
+
+                {/* Contact Info - Show only for IN_PROGRESS bookings */}
+                {(booking.status === 'IN_PROGRESS' || booking.status === 'CONFIRMED') && (
+                  <div className="space-y-2 pt-2 border-t border-blue-200">
+                    {booking.user?.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-blue-600" />
+                        <a href={`tel:${booking.user.phone}`} className="text-blue-700 hover:underline font-medium">
+                          {booking.user.phone}
+                        </a>
+                      </div>
+                    )}
+                    {booking.user?.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-blue-600" />
+                        <a href={`mailto:${booking.user.email}`} className="text-blue-700 hover:underline">
+                          {booking.user.email}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Service Address */}
+                {booking.address && (
+                  <div className="pt-2 border-t border-blue-200">
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Service Address</p>
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                      <span className="text-gray-700">
+                        {booking.address}
+                        {booking.city && `, ${booking.city}`}
+                        {booking.pincode && ` - ${booking.pincode}`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Note for pending bookings */}
+                {booking.status === 'PENDING' && (
+                  <p className="text-xs text-blue-600 bg-blue-100 px-3 py-2 rounded-lg">
+                    📞 Contact details will be visible after you accept this booking
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Schedule & Cost Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-orange-50/50 border border-orange-100 p-3 rounded-xl">
-                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Schedule</p>
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="h-3.5 w-3.5 text-[#ff6b35]" />
-                        <span className="text-sm font-semibold text-gray-900">
-                            {booking.scheduledAt ? format(new Date(booking.scheduledAt), 'MMM d, yyyy') : 'Pending'}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Clock className="h-3.5 w-3.5 text-[#ff6b35]" />
-                        <span className="text-sm text-gray-700">
-                            {booking.scheduledAt ? format(new Date(booking.scheduledAt), 'h:mm a') : '--:--'}
-                        </span>
-                    </div>
+            <div className={`grid ${!isBookingProvider ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+              {/* Schedule - Only visible to customers */}
+              {!isBookingProvider && (
+                <div className="bg-orange-50/50 border border-orange-100 p-3 rounded-xl">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Schedule</p>
+                  <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-[#ff6b35]" />
+                          <span className="text-sm font-semibold text-gray-900">
+                              {booking.scheduledAt ? format(new Date(booking.scheduledAt), 'MMM d, yyyy') : 'Pending'}
+                          </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5 text-[#ff6b35]" />
+                          <span className="text-sm text-gray-700">
+                              {booking.scheduledAt ? format(new Date(booking.scheduledAt), 'h:mm a') : '--:--'}
+                          </span>
+                      </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-xl flex flex-col justify-center">
                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Total Amount</p>
@@ -202,25 +280,14 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
                 </div>
               )}
 
-              {/* Start Service for Providers: CONFIRMED -> IN_PROGRESS */}
-              {canManageBooking && booking.status === 'CONFIRMED' && (
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 shadow-md text-md py-6 rounded-xl transition-all hover:scale-[1.02]"
-                  onClick={() => startServiceMutation.mutate(booking.id)}
-                  disabled={startServiceMutation.isPending}
-                >
-                  <Clock className="h-5 w-5 mr-2" />
-                  {startServiceMutation.isPending ? 'Starting...' : 'Start Service'}
-                </Button>
-              )}
-
-              {/* Mark Complete Button for Providers on IN_PROGRESS bookings */}
+              {/* Complete Service Button for Providers on IN_PROGRESS bookings */}
+              {/* When status is IN_PROGRESS, provider can initiate OTP flow directly */}
               {canManageBooking && booking.status === 'IN_PROGRESS' && (
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700 shadow-md text-md py-6 rounded-xl transition-all hover:scale-[1.02]"
                   onClick={() => setShowCompletionModal(true)}
                 >
-                  {completionOtp ? 'Verify Completion Code' : 'Mark Job Complete'}
+                  {completionOtp ? 'Verify Completion Code' : 'Complete Service'}
                 </Button>
               )}
 

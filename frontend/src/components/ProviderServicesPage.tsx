@@ -1,14 +1,11 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
-import { useServices, useCreateService, useUpdateService, useDeleteService, Service } from '../api/services';
+import { useServices, useDeleteService, Service } from '../api/services';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from './ui/dialog';
-import { Plus, Pencil, Trash2, Clock, DollarSign, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, DollarSign, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from './ui/skeleton';
+import AddServiceModal from './AddServiceModal';
 
 export default function ProviderServicesPage() {
   const { user } = useUser();
@@ -71,38 +68,15 @@ export default function ProviderServicesPage() {
   const { data: servicesData, isLoading } = useServices({ limit: 100 }); 
   const myServices = servicesData?.data.filter(s => s.provider.user.id === user?.id) || [];
   
-  // We need `providerId` to create a service.
-  const myProviderId = myServices[0]?.providerId; 
+  // Robust provider ID derivation
+  const myProviderId = user?.provider?.id || myServices[0]?.providerId; 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
 
-  const createMutation = useCreateService();
-  const updateMutation = useUpdateService();
   const deleteMutation = useDeleteService();
 
-  const handleSave = async (formData: any) => {
-    // If we don't know providerId (e.g. no services yet), we might be stuck. 
-    // Ideally we fetch provider profile.
-    if (!myProviderId && !editingService) {
-        toast.error("Could not determine your Provider Profile. Please complete specific onboarding or contact support.");
-        return;
-    }
-
-    try {
-      if (editingService) {
-        await updateMutation.mutateAsync({ id: editingService.id, data: formData });
-        toast.success('Service updated');
-      } else {
-        await createMutation.mutateAsync({ ...formData, providerId: myProviderId! });
-        toast.success('Service created');
-      }
-      setIsModalOpen(false);
-      setEditingService(null);
-    } catch (error) {
-      toast.error('Failed to save service');
-    }
-  };
+  // Removed handleSave as AddServiceModal handles its own save logic
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this service?')) {
@@ -154,7 +128,7 @@ export default function ProviderServicesPage() {
            <h1 className="text-2xl font-bold text-gray-900">My Services</h1>
            <p className="text-gray-600">Manage the services you offer to customers</p>
         </div>
-        <Button onClick={() => { setEditingService(null); setIsModalOpen(true); }} className="bg-[#ff6b35] hover:bg-[#ff5722]">
+        <Button onClick={() => { setEditingService(null); setIsModalOpen(true); }} className="bg-[#ff6b35] hover:bg-[#ff5722]" disabled={!myProviderId}>
           <Plus className="w-4 h-4 mr-2" /> Add Service
         </Button>
       </div>
@@ -164,15 +138,12 @@ export default function ProviderServicesPage() {
            <Package className="w-12 h-12 text-gray-400 mx-auto mb-3"/>
            <h3 className="text-lg font-medium text-gray-900">No Services Yet</h3>
            <p className="text-gray-500 mb-4">Start by adding your first service offering.</p>
-           {/* If we have no services, we might not have providerId from the list trick. 
-               This is a limitation of this quick implementation. 
-               We should handle this gracefully or fetch provider profile. */}
            {!myProviderId && (
                <p className="text-xs text-red-500">
                    Note: If you just joined, please contact admin or ensure your profile is approved to add services.
                </p>
            )}
-           <Button onClick={() => setIsModalOpen(true)} disabled={!myProviderId} variant="outline">
+           <Button onClick={() => { setEditingService(null); setIsModalOpen(true); }} disabled={!myProviderId} variant="outline">
              Add Service
            </Button>
         </div>
@@ -190,8 +161,12 @@ export default function ProviderServicesPage() {
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2 h-10">
                     {service.description || 'No description provided.'}
                   </p>
-                  <div className="flex items-center text-sm text-gray-500 mb-4">
-                     <Clock className="w-4 h-4 mr-1" /> {service.durationMin} mins
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm font-medium text-green-600">
+                       <DollarSign className="w-4 h-4 mr-1" /> 
+                       Est. Net: ₹{(service.price * 0.93).toFixed(2)} 
+                       <span className="text-[10px] text-gray-400 ml-1">(after 7% fee)</span>
+                    </div>
                   </div>
                   <div className="flex gap-2 pt-4 border-t border-gray-100">
                       <Button variant="outline" size="sm" className="flex-1" onClick={() => { setEditingService(service); setIsModalOpen(true); }}>
@@ -208,99 +183,17 @@ export default function ProviderServicesPage() {
       )}
 
       {/* Service Modal */}
-      <ServiceModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        service={editingService}
-        onSave={handleSave}
-      />
+      {isModalOpen && (
+        <AddServiceModal 
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingService(null);
+          }} 
+          service={editingService || undefined}
+        />
+      )}
     </div>
   );
 }
 
-function ServiceModal({ isOpen, onClose, service, onSave }: any) {
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        price: '',
-        durationMin: ''
-    });
-
-    // Reset or populate form
-    // Note: Better to use useEffect to sync with `service` prop change
-    if (!isOpen) return null;
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{service ? 'Edit Service' : 'Add New Service'}</DialogTitle>
-                    <DialogDescription>Fill in the details for your service offering.</DialogDescription>
-                </DialogHeader>
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        onSave({
-                            ...formData,
-                            price: Number(formData.price),
-                            durationMin: Number(formData.durationMin)
-                        });
-                    }}
-                    className="space-y-4"
-                >
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Service Title</label>
-                        <Input 
-                            defaultValue={service?.title}
-                            onChange={(e) => setFormData({...formData, title: e.target.value})}
-                            placeholder="e.g. AC Deep Cleaning"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
-                        <Textarea 
-                            defaultValue={service?.description}
-                             onChange={(e) => setFormData({...formData, description: e.target.value})}
-                            placeholder="Describe what's included..."
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Price (₹)</label>
-                            <div className="relative">
-                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input 
-                                    type="number"
-                                    defaultValue={service?.price}
-                                     onChange={(e) => setFormData({...formData, price: e.target.value})}
-                                    className="pl-9"
-                                    placeholder="0"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Duration (mins)</label>
-                            <div className="relative">
-                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input 
-                                    type="number"
-                                    defaultValue={service?.durationMin}
-                                     onChange={(e) => setFormData({...formData, durationMin: e.target.value})}
-                                    className="pl-9"
-                                    placeholder="60"
-                                    required
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                        <Button type="submit" className="bg-[#ff6b35] hover:bg-[#ff5722]">Save Service</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
+// Shared AddServiceModal is used for adding/editing services

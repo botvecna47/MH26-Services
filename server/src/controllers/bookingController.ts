@@ -83,19 +83,38 @@ export const bookingController = {
   async update(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const { status, paymentStatus } = req.body;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user!.id;
+    const userRole = authReq.user!.role;
     
     // If it's just payment status update, maybe handle separately?
     // For now, let's assume status update is the main action
     if (status) {
          const result = await bookingService.updateBookingStatus(
              id, 
-             (req as AuthRequest).user!.id, 
-             (req as AuthRequest).user!.role, 
+             userId, 
+             userRole, 
              status
          );
          res.json(result);
     } else if (paymentStatus) {
-        // Quick one-off for payment status if needed
+        // Issue 1 Fix: Verify ownership before payment status update
+        const booking = await prisma.booking.findUnique({
+            where: { id },
+            include: { provider: { select: { userId: true } } }
+        });
+
+        if (!booking) {
+            res.status(404).json({ error: 'Booking not found' });
+            return;
+        }
+
+        // Only Admin or the Provider can update payment status
+        if (userRole !== 'ADMIN' && booking.provider.userId !== userId) {
+            res.status(403).json({ error: 'Only the provider or admin can update payment status' });
+            return;
+        }
+
         const updated = await prisma.booking.update({
             where: { id },
             data: { paymentStatus }
@@ -164,7 +183,8 @@ export const bookingController = {
   },
 
   async initiateCompletion(req: Request, res: Response): Promise<void> {
-      const result = await bookingService.initiateCompletion(req.params.id, (req as AuthRequest).user!.id);
+      const authReq = req as AuthRequest;
+      const result = await bookingService.initiateCompletion(req.params.id, authReq.user!.id, authReq.user!.role);
       res.json(result);
   },
 

@@ -235,6 +235,36 @@ MH26 Services Team
 }
 
 /**
+ * Send provider application received email
+ */
+export async function sendProviderApplicationReceivedEmail(
+  email: string,
+  businessName: string
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: '📋 Provider Application Received - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ff6b35;">Application Received!</h2>
+        <p>Dear ${businessName},</p>
+        <p>Thank you for your interest in becoming a service provider on MH26 Services.</p>
+        <p>We have successfully received your application and business details. Our team is currently reviewing your documents to ensure high-quality standards on our platform.</p>
+        
+        <div style="background-color: #fef3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>What happens next?</strong><br>
+          Our admins will review your documents within 24-48 business hours. You will receive an email once your application is approved or if we need more information.</p>
+        </div>
+        
+        <p>Thank you for your patience.</p>
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `Your provider application for ${businessName} has been received and is under review. You will be notified once processed.`,
+  });
+}
+
+/**
  * Send provider approval/rejection email
  */
 export async function sendProviderApprovalEmail(
@@ -552,5 +582,88 @@ If you have questions, contact support@mh26services.com
 
 MH26 Services Team
     `,
+  });
+}
+
+/**
+ * Send completion OTP email to customer
+ */
+export async function sendCompletionOTPToCustomer(
+  email: string,
+  customerName: string,
+  serviceName: string,
+  providerName: string,
+  otp: string
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: '🔐 Service Completion Verification Code - MH26 Services',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ff6b35;">Service Completion Verification</h2>
+        <p>Dear ${customerName},</p>
+        <p>Your service provider <strong>${providerName}</strong> has completed the service <strong>${serviceName}</strong> and is requesting verification.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 30px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Your Verification Code</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #ff6b35; font-family: monospace;">
+            ${otp}
+          </div>
+        </div>
+        
+        <p><strong>Please share this code with your provider</strong> to confirm that the service has been completed to your satisfaction.</p>
+        
+        <div style="background-color: #fef3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong> Only share this code if you are satisfied with the service. Once verified, the booking will be marked as completed.</p>
+        </div>
+        
+        <p>Best regards,<br>MH26 Services Team</p>
+      </div>
+    `,
+    text: `Service Completion Verification Code: ${otp}. Please share this code with your provider (${providerName}) to confirm the completion of ${serviceName}.`,
+  });
+}
+
+/**
+ * Send admin notification email for new provider applications
+ */
+export async function sendAdminNewProviderNotification(
+  adminEmail: string,
+  businessName: string,
+  ownerName: string,
+  category: string,
+  city: string
+): Promise<void> {
+  const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`;
+  
+  await sendEmail({
+    to: adminEmail,
+    subject: `📋 New Provider Application: ${businessName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #ff6b35;">🔔 New Provider Application</h2>
+        <p>A new provider has applied to join MH26 Services and requires your review.</p>
+        
+        <div style="background-color: #fff8f5; border: 1px solid #ffcba4; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #333;">${businessName}</h3>
+          <table style="width: 100%; font-size: 14px;">
+            <tr><td style="padding: 5px 0; color: #666;"><strong>Owner:</strong></td><td>${ownerName}</td></tr>
+            <tr><td style="padding: 5px 0; color: #666;"><strong>Category:</strong></td><td>${category}</td></tr>
+            <tr><td style="padding: 5px 0; color: #666;"><strong>City:</strong></td><td>${city}</td></tr>
+          </table>
+        </div>
+        
+        <p>
+          <a href="${dashboardUrl}" style="display: inline-block; background-color: #ff6b35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+            Review Application →
+          </a>
+        </p>
+        
+        <p style="color: #666; font-size: 12px; margin-top: 30px;">
+          This is an automated notification from MH26 Services Admin Panel.
+        </p>
+      </div>
+    `,
+    text: `New Provider Application: ${businessName} by ${ownerName} (${category}, ${city}). Review at ${dashboardUrl}`,
   });
 }

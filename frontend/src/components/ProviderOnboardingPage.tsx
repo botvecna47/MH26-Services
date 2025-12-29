@@ -104,6 +104,21 @@ export default function ProviderOnboardingPage() {
     }
   }, [searchParams, user]);
 
+  // If user is already authenticated as a CUSTOMER, skip directly to step 3
+  // They don't need to register again - just submit business details
+  useEffect(() => {
+    if (user?.role === 'CUSTOMER') {
+      setStep(3);
+      // Pre-fill their existing info
+      setFormData(prev => ({ 
+        ...prev, 
+        name: user.name || '', 
+        email: user.email || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [user]);
+
   // If user is already logged in and is an APPROVED provider, redirect
   useEffect(() => {
     // Skip if we're on step 3 - user is completing their profile
@@ -285,7 +300,6 @@ export default function ProviderOnboardingPage() {
         businessName: formData.businessName,
         primaryCategory: formData.primaryCategory,
         description: formData.description,
-        experienceYears: parseInt(formData.experienceYears) || 0,
         address: formData.address,
         city: formData.city,
         pincode: formData.pincode,
@@ -302,16 +316,26 @@ export default function ProviderOnboardingPage() {
 
       toast.success('Application submitted! Please wait for admin approval. You will receive an email once verified.');
       
-      // Clear session - provider can't access until approved
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      setUser(null);
-      
-      // Navigate to pending page
-      setTimeout(() => {
-        navigate('/provider-pending');
-      }, 1500);
+      // For authenticated customers applying to become providers:
+      // Keep them logged in as customer so they can continue using the app
+      // and reapply if rejected
+      if (isAuthenticatedCustomer) {
+        toast.info('You can continue using the app as a customer while your provider application is being reviewed.');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else {
+        // For new registrations, clear session - they need to wait for approval
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        setUser(null);
+        
+        // Navigate to pending page
+        setTimeout(() => {
+          navigate('/provider-pending');
+        }, 1500);
+      }
 
     } catch (error: any) {
       console.error('Application error:', error);
@@ -330,27 +354,44 @@ export default function ProviderOnboardingPage() {
     { id: 'carpentry', name: 'Carpentry' },
   ];
 
+  // Check if user is an authenticated customer (skip steps 1-2)
+  const isAuthenticatedCustomer = user?.role === 'CUSTOMER';
+
   // Step Indicator Component
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      {[1, 2, 3].map((s) => (
-        <div key={s} className="flex items-center">
-          <div className={`
-            w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all
-            ${step >= s 
-              ? 'bg-orange-500 text-white' 
-              : 'bg-gray-200 text-gray-500'
-            }
-          `}>
-            {step > s ? <CheckCircle className="h-5 w-5" /> : s}
+  const StepIndicator = () => {
+    // For authenticated customers, show simpler single-step indicator
+    if (isAuthenticatedCustomer) {
+      return (
+        <div className="flex items-center justify-center mb-8">
+          <div className="bg-green-100 text-green-700 px-4 py-2 rounded-full flex items-center gap-2">
+            <CheckCircle className="h-5 w-5" />
+            <span className="font-medium">Already registered - Just fill business details!</span>
           </div>
-          {s < 3 && (
-            <div className={`w-16 h-1 mx-2 transition-all ${step > s ? 'bg-orange-500' : 'bg-gray-200'}`} />
-          )}
         </div>
-      ))}
-    </div>
-  );
+      );
+    }
+    
+    return (
+      <div className="flex items-center justify-center mb-8">
+        {[1, 2, 3].map((s) => (
+          <div key={s} className="flex items-center">
+            <div className={`
+              w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all
+              ${step >= s 
+                ? 'bg-orange-500 text-white' 
+                : 'bg-gray-200 text-gray-500'
+              }
+            `}>
+              {step > s ? <CheckCircle className="h-5 w-5" /> : s}
+            </div>
+            {s < 3 && (
+              <div className={`w-16 h-1 mx-2 transition-all ${step > s ? 'bg-orange-500' : 'bg-gray-200'}`} />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -633,31 +674,18 @@ export default function ProviderOnboardingPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="experienceYears">Years of Experience</Label>
-                    <Input 
-                      id="experienceYears" 
-                      name="experienceYears" 
-                      type="number" 
-                      min="0"
-                      placeholder="e.g. 5" 
-                      value={formData.experienceYears}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="serviceRadius">Service Radius (km)</Label>
-                    <Input 
-                      id="serviceRadius" 
-                      name="serviceRadius" 
-                      type="number" 
-                      min="1"
-                      placeholder="e.g. 10" 
-                      value={formData.serviceRadius}
-                      onChange={handleInputChange}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="serviceRadius">Service Radius (km)</Label>
+                  <Input 
+                    id="serviceRadius" 
+                    name="serviceRadius" 
+                    type="number" 
+                    min="1"
+                    placeholder="e.g. 10" 
+                    value={formData.serviceRadius}
+                    onChange={handleInputChange}
+                  />
+                  <p className="text-xs text-gray-500">How far you can travel to provide services</p>
                 </div>
 
                 {/* Address */}
@@ -696,12 +724,12 @@ export default function ProviderOnboardingPage() {
 
             {/* Document Links (Google Drive) */}
             <Card className="shadow-xl border border-orange-200 mb-6">
-              <CardHeader>
+              <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2">
                   <Link className="h-5 w-5" />
                   Document Links
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-orange-100">
                   Provide Google Drive links to your documents for verification
                 </CardDescription>
               </CardHeader>
@@ -796,12 +824,12 @@ export default function ProviderOnboardingPage() {
 
             {/* Optional Information */}
             <Card className="shadow-xl border border-orange-200 mb-6">
-              <CardHeader>
+              <CardHeader className="bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
                   Additional Information (Optional)
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-200">
                   Add more details to strengthen your profile
                 </CardDescription>
               </CardHeader>

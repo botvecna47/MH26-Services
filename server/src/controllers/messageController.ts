@@ -306,6 +306,28 @@ export const messageController = {
         return;
       }
 
+      // Re-verify authorization for every message (Issue 2)
+      const sender = await prisma.user.findUnique({ where: { id: userId } });
+      if (sender?.isBanned) {
+        res.status(403).json({ error: 'Your account is banned. Messaging is disabled.' });
+        return;
+      }
+
+      if (sender?.role !== 'ADMIN' && receiver.role !== 'ADMIN') {
+        const hasBooking = await prisma.booking.findFirst({
+           where: {
+             OR: [
+               { userId: userId, provider: { userId: receiverId } },
+               { userId: receiverId, provider: { userId: userId } }
+             ],
+             status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] }
+           }
+        });
+        if (!hasBooking) {
+          res.status(403).json({ error: 'Unauthorized messaging. Must have a booking context.' });
+          return;
+        }
+      }
       // Sanitize message text
       const sanitizedText = sanitizeInput(text.trim());
       if (!sanitizedText) {

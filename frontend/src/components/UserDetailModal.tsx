@@ -22,7 +22,7 @@ export default function UserDetailModal({ userId, isOpen, onClose }: UserDetailM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-white">
+      <DialogContent className="w-[50vw] max-w-none max-h-[85vh] overflow-y-auto bg-white">
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
         </DialogHeader>

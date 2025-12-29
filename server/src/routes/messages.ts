@@ -3,15 +3,15 @@
  */
 import { Router } from 'express';
 import { messageController } from '../controllers/messageController';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireNotBanned } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { asyncHandler } from '../middleware/errorHandler';
 import { sendMessageSchema } from '../models/schemas';
 
 const router = Router();
 
-// All routes require authentication
-router.use(authenticate);
+// All routes require authentication and user must not be banned
+router.use(authenticate, requireNotBanned);
 
 // List conversations
 router.get('/conversations', asyncHandler(messageController.listConversations));

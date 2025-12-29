@@ -17,6 +17,8 @@ export interface Booking {
   estimatedPrice: number;
   actualPrice?: number;
   address?: string;
+  city?: string;
+  pincode?: string;
   requirements?: string;
   completionOtp?: string;
   createdAt: string;
@@ -57,6 +59,12 @@ export interface Booking {
     id: string;
     rating: number;
     comment?: string;
+    createdAt: string;
+  };
+  report?: {
+    id: string;
+    reason: string;
+    status: string;
     createdAt: string;
   };
 }
@@ -124,6 +132,11 @@ export const bookingsApi = {
 
   verifyCompletion: async (id: string, otp: string) => {
     const response = await axiosClient.post(`/bookings/${id}/completion-verify`, { otp });
+    return response.data;
+  },
+
+  startService: async (id: string) => {
+    const response = await axiosClient.post(`/bookings/${id}/start`);
     return response.data;
   },
 };
@@ -250,7 +263,7 @@ export function useVerifyCompletion() {
 export function useStartService() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => bookingsApi.updateBooking(id, { status: 'IN_PROGRESS' }),
+    mutationFn: (id: string) => bookingsApi.startService(id),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking', data.id] });

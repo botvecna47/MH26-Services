@@ -12,6 +12,7 @@ import {
   Package,
   Clock,
   DollarSign,
+  TrendingUp,
   X,
   Loader2,
   AlertCircle,
@@ -25,6 +26,7 @@ import AddServiceModal from './AddServiceModal';
 export default function MyServicesSection() {
   const { user } = useUser();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   
   // Fetch provider's services
   const { data: servicesData, isLoading } = useServices({ providerId: user?.provider?.id });
@@ -42,6 +44,16 @@ export default function MyServicesSection() {
         toast.error('Failed to delete service');
       }
     }
+  };
+
+  const handleEditService = (service: Service) => {
+    setEditingService(service);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingService(null);
   };
 
   const getStatusBadge = (status?: string) => {
@@ -97,33 +109,46 @@ export default function MyServicesSection() {
             <Card key={service.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-base">{service.title}</CardTitle>
+                  <CardTitle className="text-base truncate pr-2" title={service.title}>{service.title}</CardTitle>
                   {getStatusBadge(service.status)}
                 </div>
-                <CardDescription className="line-clamp-2">{service.description}</CardDescription>
+                <CardDescription className="line-clamp-2 h-10">{service.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="font-medium">₹{service.price}</span>
+                <div className="space-y-2 mb-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-1 text-gray-900 font-bold">
+                      <DollarSign className="h-4 w-4 text-[#ff6b35]" />
+                      <span>₹{service.price}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Clock className="h-4 w-4" />
-                    <span>{service.durationMin} min</span>
+                  
+                  <div className="flex items-center text-xs font-medium text-green-600 bg-green-50 p-1.5 rounded-md">
+                     <DollarSign className="w-3.5 h-3.5 mr-1" /> 
+                     Est. Net: ₹{(service.price * 0.93).toFixed(2)} 
+                     <span className="text-[9px] text-gray-400 ml-1">(after 7% fee)</span>
                   </div>
                 </div>
+
                 {service.status !== 'APPROVED' && (
                   <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {service.status === 'PENDING' ? 'Awaiting admin approval' : 'Please update and resubmit'}
                   </p>
                 )}
-                <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                    className="flex-1 text-gray-600"
+                    onClick={() => handleEditService(service)}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={() => handleDeleteService(service.id, service.title)}
                     disabled={deleteServiceMutation.isPending}
                   >
@@ -137,9 +162,12 @@ export default function MyServicesSection() {
         </div>
       )}
 
-      {/* Add Service Modal */}
+      {/* Add/Edit Service Modal */}
       {showAddModal && (
-        <AddServiceModal onClose={() => setShowAddModal(false)} />
+        <AddServiceModal 
+          onClose={handleCloseModal} 
+          service={editingService || undefined}
+        />
       )}
     </div>
   );

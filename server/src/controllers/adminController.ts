@@ -7,6 +7,7 @@ import { prisma } from '../config/db';
 import { emitNotification, emitProviderApproval } from '../socket';
 import { sendProviderApprovalEmail, sendProviderCredentialsEmail } from '../utils/email';
 import { hashPassword } from '../utils/security';
+import crypto from 'crypto';
 import logger from '../config/logger';
 
 export const adminController = {
@@ -32,7 +33,7 @@ export const adminController = {
         prisma.booking.count({ where: { status: 'COMPLETED' } }),
         prisma.booking.aggregate({
           where: { status: 'COMPLETED' },
-          _sum: { platformFee: true },
+          _sum: { totalAmount: true, platformFee: true, taxAmount: true },
         }),
         prisma.booking.findMany({
           take: 10,
@@ -113,6 +114,8 @@ export const adminController = {
           totalBookings,
           completedBookings,
           totalRevenue: totalRevenue._sum.platformFee || 0,
+          grossVolume: totalRevenue._sum.totalAmount || 0,
+          totalTaxCollected: totalRevenue._sum.taxAmount || 0,
         },
         userGrowth: userGrowth.map(({ sortKey, ...rest }) => rest),
         revenueGrowth: revenueGrowth.map(({ sortKey, ...rest }) => rest),
@@ -230,8 +233,8 @@ export const adminController = {
         return;
       }
 
-      // 2. Generate Password (e.g., Plumbing@123)
-      const generatedPassword = `${primaryCategory.charAt(0).toUpperCase() + primaryCategory.slice(1)}@123`;
+      // 2. Generate Secure Random Password (Issue 2 Fix)
+      const generatedPassword = crypto.randomBytes(9).toString('base64').slice(0, 12);
       const passwordHash = await hashPassword(generatedPassword);
 
       // 3. Create User & Provider in Transaction
@@ -287,7 +290,7 @@ export const adminController = {
             address: address || '',
             city: city || 'Nanded',
             pincode: pincode || '',
-            status: 'APPROVED', // Auto-approve
+            status: 'PENDING', // Start as pending for admin verification
             serviceRadius: Number(serviceRadius) || 10,
             availability: {
                mon: ["09:00-18:00"],
@@ -312,15 +315,8 @@ export const adminController = {
       // Don't fail the request, just log it. The provider is created.
     }
 
-    // 5. Log credentials to console for admin reference (in case email fails)
-    logger.info('\n' + '='.repeat(60));
-    logger.info('🔑 NEW PROVIDER CREATED - CREDENTIALS');
-    logger.info('='.repeat(60));
-    logger.info(`📧 Email:    ${email}`);
-    logger.info(`🔐 Password: ${generatedPassword}`);
-    logger.info(`🏢 Business: ${businessName}`);
-    logger.info(`📂 Category: ${primaryCategory}`);
-    logger.info('='.repeat(60) + '\n');
+    // 5. Log creation success (Issue 3 Fix: No plaintext passwords in logs)
+    logger.info(`🔑 NEW PROVIDER CREATED: ${email} for ${businessName} (${primaryCategory})`);
       // 6. Audit Log
       await prisma.auditLog.create({
         data: {
@@ -357,7 +353,8 @@ export const adminController = {
       const provider = await prisma.provider.findUnique({
         where: { id },
         include: {
-          user: { select: { id: true } },
+          user: { select: { id: true, email: true } },
+          documents: true,
         },
       });
 
@@ -366,17 +363,40 @@ export const adminController = {
         return;
       }
 
+      // 1. Strict Verification Check: Ensure Identity Proof is present
+      const hasIdProof = !!(provider.aadharPanUrl || provider.documents.some(d => d.type === 'IDENTITY_PROOF' || d.type === 'AADHAR_PAN'));
+      if (!hasIdProof) {
+          res.status(400).json({ error: 'Cannot approve provider without Identity Proof (Aadhar/PAN)' });
+          return;
+      }
+
+      // 2. Category Sync/Creation
+      const finalCategory = category || provider.primaryCategory;
+      if (finalCategory) {
+          const slug = finalCategory.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+          // Ensure category exists in Category table
+          await prisma.category.upsert({
+              where: { slug },
+              create: {
+                  name: finalCategory,
+                  slug: slug,
+                  description: `Services for ${finalCategory}`,
+                  icon: '📦',
+                  isActive: true
+              },
+              update: {} // Already exists, just ensure it's there
+          });
+      }
+
       // Build update data
       const updateData: any = { 
         status: 'APPROVED',
-        verifiedById: (req as any).user?.userId,
+        verifiedById: (req as AuthRequest).user?.id,
         verifiedAt: new Date(),
       };
       
-      // If admin provided a category override, use it
-      if (category) {
-        updateData.primaryCategory = category;
-      }
+      // If admin provided a category override or we're using current
+      updateData.primaryCategory = finalCategory;
 
       const updated = await prisma.provider.update({
         where: { id },
@@ -387,6 +407,12 @@ export const adminController = {
           },
           documents: true,
         },
+      });
+
+      // Promote user role to PROVIDER
+      await prisma.user.update({
+        where: { id: updated.userId },
+        data: { role: 'PROVIDER' },
       });
 
       // Emit socket event
@@ -423,7 +449,7 @@ export const adminController = {
       const provider = await prisma.provider.findUnique({
         where: { id },
         include: {
-          user: { select: { id: true } },
+          user: { select: { id: true, email: true } }, // Include email for sending rejection email
         },
       });
 
@@ -650,7 +676,6 @@ export const adminController = {
           ...service,
           price: service.basePrice,
           title: service.name,
-          durationMin: service.estimatedDuration,
         })),
         history,
       };
@@ -1166,7 +1191,6 @@ export const adminController = {
         ...s,
         title: s.name,
         price: s.basePrice,
-        durationMin: s.estimatedDuration,
       }));
 
       res.json({ data: transformed });
@@ -1213,9 +1237,38 @@ export const adminController = {
       const service = await prisma.service.update({
         where: { id },
         data: { status: 'REJECTED' },
+        include: {
+            provider: {
+                include: {
+                    user: { select: { name: true, email: true } }
+                }
+            }
+        }
       });
 
-      // TODO: Send notification to provider with rejection reason
+      // Send notification to provider with rejection reason
+      try {
+          const { sendEmail } = await import('../utils/email');
+          await sendEmail({
+              to: service.provider.user.email,
+              subject: `Service Rejected: ${service.name}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px;">
+                    <h2 style="color: #ef4444;">Service Application Rejected</h2>
+                    <p>Dear ${service.provider.businessName},</p>
+                    <p>Your request to add the service <strong>${service.name}</strong> has been rejected by our moderation team.</p>
+                    <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 0;"><strong>Reason:</strong> ${reason || 'Does not meet platform guidelines'}</p>
+                    </div>
+                    <p>You can update your service details and try again from your dashboard.</p>
+                    <p>Best regards,<br>MH26 Services Team</p>
+                </div>
+              `
+          });
+      } catch (emailError) {
+          logger.warn('Failed to send service rejection email:', emailError);
+      }
+
       logger.info(`Service ${id} rejected. Reason: ${reason}`);
 
       res.json({ message: 'Service rejected', service });

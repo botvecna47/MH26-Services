@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../config/db';
 import logger from '../config/logger';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../middleware/errorHandler';
 
 export const serviceController = {
   /**
@@ -23,8 +24,15 @@ export const serviceController = {
         where.providerId = providerId;
         // Show all statuses for provider's own services list
       } else {
-        // Public listing - only show APPROVED services
+        // Public listing - only show APPROVED services from APPROVED providers (not suspended/banned)
         where.status = 'APPROVED';
+        where.imageUrl = { not: '' }; // Force image URL to be set
+        where.provider = {
+          status: 'APPROVED', // Only show services from approved providers
+          user: {
+            isBanned: false, // Exclude services from banned users
+          },
+        };
       }
 
       if (q) {
@@ -48,12 +56,12 @@ export const serviceController = {
 
       // Price Range Filter
       if (req.query.minPrice || req.query.maxPrice) {
-        where.price = {};
+        where.basePrice = {};
         if (req.query.minPrice) {
-          where.price.gte = Number(req.query.minPrice);
+          where.basePrice.gte = Number(req.query.minPrice);
         }
         if (req.query.maxPrice) {
-          where.price.lte = Number(req.query.maxPrice);
+          where.basePrice.lte = Number(req.query.maxPrice);
         }
       }
 
@@ -92,7 +100,7 @@ export const serviceController = {
                   },
                 },
                 bookings: {
-                  where: { status: 'IN_PROGRESS' },
+                  where: { status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
                   select: { id: true },
                   take: 1,
                 },
@@ -110,7 +118,6 @@ export const serviceController = {
           ...service,
           price: service.basePrice, // Map basePrice to price for frontend
           title: service.name, // Map name to title for frontend
-          durationMin: service.estimatedDuration, // Map estimatedDuration to durationMin
           provider: {
             ...providerRest,
             isAvailable: providerBookings.length === 0, // Available if no IN_PROGRESS bookings
@@ -155,13 +162,41 @@ export const serviceController = {
       try {
           const { name, slug, icon } = req.body;
           
+          // Validate required fields
+          if (!name || !slug) {
+              res.status(400).json({ error: 'Name and slug are required' });
+              return;
+          }
+          
+          // Check if category with same name or slug already exists
+          const existing = await prisma.category.findFirst({
+              where: {
+                  OR: [
+                      { name: { equals: name, mode: 'insensitive' } },
+                      { slug: { equals: slug, mode: 'insensitive' } }
+                  ]
+              }
+          });
+          
+          if (existing) {
+              res.status(400).json({ 
+                  error: `Category with name "${name}" or slug "${slug}" already exists` 
+              });
+              return;
+          }
+          
           const category = await prisma.category.create({
               data: { name, slug, icon }
           });
           
           res.status(201).json(category);
-      } catch (error) {
+      } catch (error: any) {
           logger.error('Create category error:', error);
+          // Handle Prisma unique constraint error
+          if (error.code === 'P2002') {
+              res.status(400).json({ error: 'Category with this name or slug already exists' });
+              return;
+          }
           res.status(500).json({ error: 'Failed to create category' });
       }
   },
@@ -210,7 +245,7 @@ export const serviceController = {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req as AuthRequest).user!.id;
-      const { title, description, price, durationMin, imageUrl } = req.body;
+      const { title, description, price, imageUrl, category } = req.body;
 
       // Verify provider belongs to user (1:1 relationship)
       const provider = await prisma.provider.findUnique({
@@ -224,6 +259,14 @@ export const serviceController = {
         return;
       }
       
+      // Security: Only APPROVED providers can create services
+      if (provider.status !== 'APPROVED') {
+        res.status(403).json({ 
+          error: `Your provider account is ${provider.status.toLowerCase()}. Only approved providers can add services.` 
+        });
+        return;
+      }
+      
       const providerId = provider.id;
 
       // Image Fallback Logic: Service Image -> Provider Gallery [0] -> Empty String
@@ -232,15 +275,19 @@ export const serviceController = {
         finalImageUrl = provider.gallery[0];
       }
 
+      if (!finalImageUrl) {
+        res.status(400).json({ error: 'Service Image URL is required' });
+        return;
+      }
+
       const service = await prisma.service.create({
         data: {
           providerId,
           name: title, // Mapped from title
           description,
-          category: provider.primaryCategory, // Set from provider's category
-          basePrice: price, // Mapped from price (checking if schema has basePrice or price)
+          category: category || provider.primaryCategory, // Use provided category or fallback to provider's primary
+          basePrice: price, 
           priceUnit: 'per service', // Default
-          estimatedDuration: durationMin, // Mapped from durationMin
           imageUrl: finalImageUrl,
           isActive: true,
           status: 'APPROVED', // Auto-approve - provider is already verified
@@ -270,7 +317,7 @@ export const serviceController = {
     try {
       const userId = (req as AuthRequest).user!.id;
       const { id } = req.params;
-      const { title, description, price, durationMin, imageUrl } = req.body;
+      const { title, description, price, imageUrl, category } = req.body;
 
       // Verify service belongs to user's provider
       const service = await prisma.service.findFirst({
@@ -280,10 +327,26 @@ export const serviceController = {
             userId,
           },
         },
+        include: {
+          provider: { select: { status: true } }
+        }
       });
 
       if (!service) {
         res.status(404).json({ error: 'Service not found or unauthorized' });
+        return;
+      }
+
+      // Security: Only APPROVED providers can update services
+      if (service.provider.status !== 'APPROVED') {
+        res.status(403).json({ 
+          error: `Your provider account is ${service.provider.status.toLowerCase()}. Only approved providers can manage services.` 
+        });
+        return;
+      }
+
+      if (!imageUrl) {
+        res.status(400).json({ error: 'Service Image URL is required' });
         return;
       }
 
@@ -293,7 +356,7 @@ export const serviceController = {
           name: title,
           description,
           basePrice: price,
-          estimatedDuration: durationMin,
+          category, // Allow updating category
           imageUrl, // Allow update if provided
         },
         include: {
@@ -330,10 +393,21 @@ export const serviceController = {
             userId,
           },
         },
+        include: {
+          provider: { select: { status: true } }
+        }
       });
 
       if (!service) {
         res.status(404).json({ error: 'Service not found or unauthorized' });
+        return;
+      }
+
+      // Security: Only APPROVED providers can delete services
+      if (service.provider.status !== 'APPROVED') {
+        res.status(403).json({ 
+          error: `Your provider account is ${service.provider.status.toLowerCase()}. Only approved providers can manage services.` 
+        });
         return;
       }
 
@@ -348,6 +422,58 @@ export const serviceController = {
     }
   },
 
+  /**
+   * Upload Service Image (local storage)
+   */
+  async uploadImage(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const file = req.file;
+    const authReq = req as AuthRequest;
 
+    if (!file) {
+      throw new AppError('No file uploaded', 400);
+    }
+
+    // Verify service belongs to user's provider
+    const service = await prisma.service.findFirst({
+      where: {
+        id,
+        provider: {
+          userId: authReq.user!.id,
+        },
+      },
+    });
+
+    if (!service) {
+      throw new AppError('Service not found or unauthorized', 403);
+    }
+
+    // Save file to local storage
+    const fs = await import('fs');
+    const path = await import('path');
+    const uploadsDir = path.join(process.cwd(), 'server', 'uploads', 'services', id);
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, file.buffer);
+    
+    const url = `/uploads/services/${id}/${fileName}`;
+
+    // Update service record
+    const updated = await prisma.service.update({
+      where: { id },
+      data: { imageUrl: url },
+    });
+
+    res.json({
+      message: 'Service image uploaded successfully',
+      url,
+      service: updated,
+    });
+  },
 };
 

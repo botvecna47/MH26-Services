@@ -128,8 +128,8 @@ export const createServiceSchema = z.object({
   body: z.object({
     title: z.string().min(3, 'Title must be at least 3 characters'),
     description: z.string().optional(),
+    category: z.string().optional(),
     price: z.number().positive('Price must be positive'),
-    durationMin: z.number().int().positive('Duration must be positive'),
     imageUrl: z.string().optional(),
   }),
 });
@@ -142,7 +142,7 @@ export const updateServiceSchema = z.object({
     title: z.string().min(3).optional(),
     description: z.string().optional(),
     price: z.number().positive().optional(),
-    durationMin: z.number().int().positive().optional(),
+    imageUrl: z.string().optional(),
   }),
 });
 

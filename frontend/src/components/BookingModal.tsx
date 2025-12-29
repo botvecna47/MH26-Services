@@ -87,6 +87,26 @@ export default function BookingModal({
       }
     }
 
+    // Validate time is within 9 AM - 9 PM window and not in the past
+    if (formData.time && formData.date) {
+      const [hours, minutes] = formData.time.split(':').map(Number);
+      const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+      const now = new Date();
+      
+      // Check time window (9:00 AM - 9:00 PM)
+      if (hours < 9) {
+        newErrors.time = 'Service available from 9:00 AM only';
+      } else if (hours >= 21) {
+        newErrors.time = 'Service available until 9:00 PM only';
+      }
+      
+      // Check if selected time is in the past (for today's date)
+      const isToday = formData.date === format(new Date(), 'yyyy-MM-dd');
+      if (isToday && selectedDateTime <= now) {
+        newErrors.time = 'Cannot book a time in the past';
+      }
+    }
+
     if (!formData.address.trim()) newErrors.address = 'Address is required';
     if (!formData.city.trim()) newErrors.city = 'City is required';
 
@@ -139,7 +159,28 @@ export default function BookingModal({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error on change
+    
+    // Real-time validation for time field
+    if (name === 'time' && value) {
+      const [hours] = value.split(':').map(Number);
+      const currentDate = formData.date || format(new Date(), 'yyyy-MM-dd');
+      const selectedDateTime = new Date(`${currentDate}T${value}`);
+      const now = new Date();
+      const isToday = currentDate === format(new Date(), 'yyyy-MM-dd');
+      
+      if (hours < 9) {
+        setErrors(prev => ({ ...prev, time: 'Service available from 9:00 AM only' }));
+        return;
+      } else if (hours >= 21) {
+        setErrors(prev => ({ ...prev, time: 'Service available until 9:00 PM only' }));
+        return;
+      } else if (isToday && selectedDateTime <= now) {
+        setErrors(prev => ({ ...prev, time: 'Cannot book a time in the past' }));
+        return;
+      }
+    }
+    
+    // Clear error on valid change
     if (errors[name as keyof BookingFormData]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -163,10 +204,20 @@ export default function BookingModal({
           </button>
         </div>
 
-        {/* Service Summary */}
-        <div className="bg-orange-50 px-6 py-3 border-b border-orange-100 flex justify-between items-center text-sm">
-          <span className="font-medium text-gray-700">{serviceName}</span>
-          <span className="font-bold text-[#ff6b35]">₹{price}</span>
+        {/* Price Breakdown */}
+        <div className="bg-orange-50 px-6 py-4 border-b border-orange-100 flex flex-col gap-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">Service Base Price:</span>
+            <span className="font-medium text-gray-900">₹{price.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">GST (8%):</span>
+            <span className="font-medium text-gray-900">₹{(price * 0.08).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center pt-2 border-t border-orange-200">
+            <span className="font-bold text-gray-900">{serviceName} Total:</span>
+            <span className="font-bold text-[#ff6b35] text-lg">₹{(price * 1.08).toFixed(2)}</span>
+          </div>
         </div>
 
         {/* Form */}
@@ -201,14 +252,23 @@ export default function BookingModal({
                   value={formData.time}
                   onChange={handleChange}
                   min={formData.date === format(new Date(), 'yyyy-MM-dd') 
-                    ? format(new Date(Date.now() + 30 * 60 * 1000), 'HH:mm') 
-                    : '08:00'}
+                    ? (() => {
+                        const now = new Date();
+                        // For today: minimum is current time (rounded up) or 9 AM, whichever is later
+                        const currentHour = now.getHours();
+                        const currentMin = now.getMinutes();
+                        const minHour = Math.max(9, currentMin > 0 ? currentHour + 1 : currentHour);
+                        // If current time is past 9 PM, still show 21:00 as min (validation will catch)
+                        if (minHour >= 21) return '21:00';
+                        return `${String(minHour).padStart(2, '0')}:00`;
+                      })()
+                    : '09:00'}
                   max="21:00"
                   className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#ff6b35] focus:border-transparent outline-none transition-all bg-white ${errors.time ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
                 />
               </div>
               {errors.time && <p className="text-xs text-red-500">{errors.time}</p>}
-              <p className="text-xs text-gray-500">Service hours: 8:00 AM - 9:00 PM</p>
+              <p className="text-xs text-gray-500">Service hours: 9:00 AM - 9:00 PM</p>
             </div>
           </div>
 
