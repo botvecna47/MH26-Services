@@ -13,7 +13,22 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 // But we need auth token, so we'll connect inside effect
 // Initialize socket outside component to prevent multiple connections during re-renders
 // But we need auth token, so we'll connect inside effect
-const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL as string) || 'http://localhost:5000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL as string;
+  
+  // In development, if we're accessing via IP, point socket to the same IP
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = '5000'; // Default backend port
+  
+  if (host !== 'localhost' && host !== '127.0.0.1') {
+    return `${protocol}//${host}:${port}`;
+  }
+  
+  return 'http://localhost:5000';
+};
+
+const SOCKET_URL = getSocketUrl();
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);

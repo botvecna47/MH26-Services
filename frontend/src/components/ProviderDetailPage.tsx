@@ -160,13 +160,15 @@ export default function ProviderDetailPage() {
                 
                 return allImages.length > 1 && (
                   <div className="grid grid-cols-4 gap-2 p-4">
-                    {allImages.slice(1, 5).map((img: string, idx: number) => (
+                    {allImages.slice(1, 5).map((img: string | undefined, idx: number) => (
                       <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
-                        <ImageWithFallback
-                          src={img}
-                          alt={`Gallery ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        {img && (
+                          <ImageWithFallback
+                            src={img}
+                            alt={`Gallery ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                     ))}
                   </div>

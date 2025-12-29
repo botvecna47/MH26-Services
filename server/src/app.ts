@@ -33,7 +33,17 @@ app.use(helmet({
         "https://images.unsplash.com",
         "https://api.dicebear.com",
       ], 
-      connectSrc: ["'self'", "https:", "ws:", "wss:", "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5000"], // Allow API and WebSocket calls
+      connectSrc: [
+        "'self'", 
+        "https:", 
+        "ws:", 
+        "wss:", 
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000", 
+        "http://localhost:5000",
+        "http://*.local:*", // Allow local mdns
+        ...(process.env.NODE_ENV === 'development' ? ["*"] : []) // Relax in dev
+      ], // Allow API and WebSocket calls
       fontSrc: ["'self'", "data:", "https:"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
@@ -79,7 +89,7 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || (process.env.NODE_ENV === 'development' && origin.match(/^http:\/\/(192\.168|10\.|172\.(1[6-9]|2[0-9]|3[0-1]))/))) {
       callback(null, true);
     } else {
       // Log rejected origin but don't throw error - just deny
@@ -109,7 +119,7 @@ app.use('/uploads', (req, res, next) => {
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
     : ['http://localhost:5173', 'http://localhost:5000'];
   
-  if (origin && allowedOrigins.includes(origin)) {
+  if (origin && (allowedOrigins.includes(origin) || (process.env.NODE_ENV === 'development' && origin.match(/^http:\/\/(192\.168|10\.|172\.(1[6-9]|2[0-9]|3[0-1]))/)))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else if (!origin && process.env.NODE_ENV === 'development') {
     res.setHeader('Access-Control-Allow-Origin', '*');

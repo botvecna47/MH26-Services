@@ -3,7 +3,22 @@
  * Normalizes image URLs to work with both local storage and external URLs
  */
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL as string;
+  
+  // In development, if we're accessing via IP, point API to the same IP
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = '5000';
+  
+  if (host !== 'localhost' && host !== '127.0.0.1') {
+    return `${protocol}//${host}:${port}/api`;
+  }
+  
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 const BACKEND_BASE_URL = API_BASE_URL.replace('/api', '');
 
 /**
