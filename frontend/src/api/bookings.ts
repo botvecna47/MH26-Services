@@ -115,6 +115,23 @@ export const bookingsApi = {
     return response.data;
   },
 
+  downloadInvoicePDF: async (id: string, invoiceNumber: string) => {
+    const response = await axiosClient.get(`/bookings/${id}/invoice/pdf`, {
+      responseType: 'blob',
+    });
+    
+    // Create a blob URL and trigger download
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `invoice-${invoiceNumber}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
   acceptBooking: async (id: string) => {
     const response = await axiosClient.post(`/bookings/${id}/accept`);
     return response.data;

@@ -7,6 +7,7 @@ import { prisma } from '../config/db';
 import { emitBookingUpdate } from '../socket';
 import logger from '../config/logger';
 import { bookingService } from '../services/bookingService';
+import { generateInvoicePDF } from '../services/pdfService';
 
 
 
@@ -180,6 +181,33 @@ export const bookingController = {
         (req as AuthRequest).user!.role
     );
     res.json(result);
+  },
+
+  /**
+   * Download invoice as PDF
+   */
+  async downloadInvoicePDF(req: Request, res: Response): Promise<void> {
+    try {
+      const invoiceData = await bookingService.getInvoice(
+        req.params.id,
+        (req as AuthRequest).user!.id,
+        (req as AuthRequest).user!.role
+      );
+
+      // Generate PDF buffer
+      const pdfBuffer = await generateInvoicePDF(invoiceData as any);
+
+      // Set response headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoiceData.invoiceNumber}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+
+      // Send PDF
+      res.send(pdfBuffer);
+    } catch (error: any) {
+      logger.error('PDF generation failed:', error);
+      res.status(500).json({ error: 'Failed to generate PDF invoice' });
+    }
   },
 
   async initiateCompletion(req: Request, res: Response): Promise<void> {

@@ -37,6 +37,9 @@ router.post('/:id/cancel', asyncHandler(bookingController.cancel));
 // Get invoice
 router.get('/:id/invoice', asyncHandler(bookingController.getInvoice));
 
+// Download invoice as PDF
+router.get('/:id/invoice/pdf', asyncHandler(bookingController.downloadInvoicePDF));
+
 // Completion OTP
 router.post('/:id/completion-initiate', requireRole('PROVIDER', 'ADMIN'), asyncHandler(bookingController.initiateCompletion));
 router.post('/:id/completion-verify', requireRole('PROVIDER', 'ADMIN'), asyncHandler(bookingController.verifyCompletion));

@@ -47,20 +47,15 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
     }
   };
 
-  const handleDownloadPDF = () => {
-    if (!invoiceData) return;
+  const handleDownloadPDF = async () => {
+    if (!invoiceData || !bookingId) return;
     try {
-      // Create a blob and download as JSON for now (matching InvoicesPage behavior)
-      const blob = new Blob([JSON.stringify(invoiceData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice-${invoiceData.invoiceNumber || bookingId}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('Invoice downloaded');
+      // Download actual PDF from backend
+      await bookingsApi.downloadInvoicePDF(bookingId, invoiceData.invoiceNumber);
+      toast.success('Invoice PDF downloaded');
     } catch (error) {
-      toast.error('Failed to download invoice');
+      console.error('PDF download failed:', error);
+      toast.error('Failed to download invoice PDF');
     }
   };
 

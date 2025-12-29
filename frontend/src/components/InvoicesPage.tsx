@@ -3,7 +3,7 @@ import { Download, Eye, Search, FileText, Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { useUser } from '../context/UserContext';
 import { toast } from 'sonner';
-import { useBookings, useInvoice } from '../api/bookings';
+import { useBookings, useInvoice, bookingsApi } from '../api/bookings';
 import { Skeleton } from './ui/skeleton';
 
 export default function InvoicesPage() {
@@ -35,11 +35,15 @@ export default function InvoicesPage() {
     );
   }
 
-  const handleDownloadPDF = (invoiceId: string) => {
-    // In real app: GET /api/invoices/:id (download PDF)
-    toast.info('Downloading PDF...');
-    // Real implementation would trigger a file download from backend
-    setTimeout(() => toast.success('Invoice PDF downloaded'), 1000);
+  const handleDownloadPDF = async (bookingId: string, invoiceNumber: string) => {
+    try {
+      toast.info('Generating PDF...');
+      await bookingsApi.downloadInvoicePDF(bookingId, invoiceNumber);
+      toast.success('Invoice PDF downloaded');
+    } catch (error) {
+      console.error('PDF download failed:', error);
+      toast.error('Failed to download invoice PDF');
+    }
   };
 
   const handleEmailInvoice = (invoiceId: string) => {
@@ -153,7 +157,7 @@ export default function InvoicesPage() {
                     <Button
                       size="sm"
                       className="bg-[#ff6b35] hover:bg-[#ff5722] gap-2"
-                      onClick={() => handleDownloadPDF(invoice.booking.id)}
+                      onClick={() => handleDownloadPDF(invoice.booking.id, invoice.invoiceNumber)}
                     >
                       <Download className="h-4 w-4" />
                       Download PDF
