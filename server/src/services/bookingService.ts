@@ -19,6 +19,16 @@ export const bookingService = {
   async createBooking(userId: string, data: any) {
     const { providerId, serviceId, scheduledAt, address, city, pincode, requirements } = data;
 
+    // SECURITY: Check if the requesting user is banned
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, isBanned: true }
+    });
+
+    if (requestingUser?.isBanned) {
+      throw new AppError('Your account is suspended. You cannot make bookings while suspended.', 403);
+    }
+
     // 1. Validation & Usage of Central Config
     const provider = await prisma.provider.findUnique({
       where: { id: providerId },
@@ -27,6 +37,11 @@ export const bookingService = {
 
     if (!provider || provider.status !== 'APPROVED') {
       throw new AppError('Provider not found or not approved', 404);
+    }
+
+    // SECURITY: Check if the provider's user account is banned
+    if (provider.user.isBanned) {
+      throw new AppError('This provider is currently unavailable. Please choose another provider.', 400);
     }
 
     const service = provider.services.find((s) => s.id === serviceId);

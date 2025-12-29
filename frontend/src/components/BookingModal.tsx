@@ -65,6 +65,44 @@ export default function BookingModal({
 
   if (!isOpen) return null;
 
+  // Show suspended message for banned users
+  if (user?.isBanned) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-bold">Account Suspended</h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-white/20 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="flex items-start gap-3 text-red-600">
+              <AlertCircle className="h-6 w-6 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Your account has been suspended</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  You cannot make bookings while your account is suspended. If you believe this is a mistake, please submit an appeal from your banned account page.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={onClose}
+              className="w-full bg-red-500 hover:bg-red-600"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const validate = (): boolean => {
     const newErrors: Partial<BookingFormData> = {};
 
