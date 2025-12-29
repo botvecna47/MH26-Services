@@ -221,26 +221,28 @@ export const appealController = {
         }
       }
 
-      // Create notification for the user
-      try {
-        const notificationTitle = status === 'APPROVED' 
-          ? 'Appeal Approved' 
-          : 'Appeal Rejected';
-        const notificationBody = status === 'APPROVED'
-          ? `Your ${appeal.type === 'UNBAN_REQUEST' ? 'unban' : 'suspension'} appeal has been approved.`
-          : `Your appeal has been reviewed and was not approved. ${adminNotes ? `Reason: ${adminNotes}` : ''}`;
-        
-        await prisma.notification.create({
-          data: {
-            userId: appeal.userId ?? undefined,
-            type: 'APPEAL_RESOLVED',
-            title: notificationTitle,
-            body: notificationBody,
-            payload: { appealId: id, status, adminNotes },
-          },
-        });
-      } catch (notifError) {
-        logger.error('Failed to create appeal resolution notification:', notifError);
+      // Create notification for the user (only if userId exists)
+      if (appeal.userId) {
+        try {
+          const notificationTitle = status === 'APPROVED' 
+            ? 'Appeal Approved' 
+            : 'Appeal Rejected';
+          const notificationBody = status === 'APPROVED'
+            ? `Your ${appeal.type === 'UNBAN_REQUEST' ? 'unban' : 'suspension'} appeal has been approved.`
+            : `Your appeal has been reviewed and was not approved. ${adminNotes ? `Reason: ${adminNotes}` : ''}`;
+          
+          await prisma.notification.create({
+            data: {
+              userId: appeal.userId,
+              type: 'APPEAL_RESOLVED',
+              title: notificationTitle,
+              body: notificationBody,
+              payload: { appealId: id, status, adminNotes },
+            },
+          });
+        } catch (notifError) {
+          logger.error('Failed to create appeal resolution notification:', notifError);
+        }
       }
 
       // Audit log
