@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
-import { Loader2, Download, Eye } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { bookingsApi } from '../api/bookings';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -47,19 +47,6 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (!invoiceData || !bookingId) return;
-    try {
-      // Download actual PDF from backend
-      await bookingsApi.downloadInvoicePDF(bookingId, invoiceData.invoiceNumber);
-      toast.success('Invoice PDF downloaded');
-    } catch (error: any) {
-      console.error('PDF download failed:', error);
-      const errorMessage = error?.message || error?.response?.data?.error || 'Failed to download invoice PDF';
-      toast.error(errorMessage);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -77,19 +64,9 @@ export default function InvoicePreviewModal({ isOpen, onClose, bookingId }: Invo
             {/* Actions Header */}
             <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
               <h2 className="text-gray-900 font-semibold">Invoice Details</h2>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="bg-[#ff6b35] hover:bg-[#ff5722] gap-2"
-                  onClick={handleDownloadPDF}
-                >
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                </Button>
-                <Button variant="ghost" size="sm" onClick={onClose}>
-                  Close
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Close
+              </Button>
             </div>
 
             {/* Invoice Content - Reusing InvoicesPage design */}

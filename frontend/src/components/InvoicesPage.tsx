@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Download, Eye, Search, FileText, Mail } from 'lucide-react';
+import { Eye, Search, FileText, Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { useUser } from '../context/UserContext';
 import { toast } from 'sonner';
-import { useBookings, useInvoice, bookingsApi } from '../api/bookings';
+import { useBookings, useInvoice } from '../api/bookings';
 import { Skeleton } from './ui/skeleton';
 
 export default function InvoicesPage() {
@@ -34,17 +34,6 @@ export default function InvoicesPage() {
       </div>
     );
   }
-
-  const handleDownloadPDF = async (bookingId: string, invoiceNumber: string) => {
-    try {
-      toast.info('Generating PDF...');
-      await bookingsApi.downloadInvoicePDF(bookingId, invoiceNumber);
-      toast.success('Invoice PDF downloaded');
-    } catch (error) {
-      console.error('PDF download failed:', error);
-      toast.error('Failed to download invoice PDF');
-    }
-  };
 
   const handleEmailInvoice = (invoiceId: string) => {
     toast.success('Invoice sent to ' + user.email);
@@ -145,24 +134,14 @@ export default function InvoicesPage() {
                 {/* Actions */}
                 <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                   <h2 className="text-gray-900">Invoice Details</h2>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEmailInvoice(invoice.booking.id)}
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email Invoice
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-[#ff6b35] hover:bg-[#ff5722] gap-2"
-                      onClick={() => handleDownloadPDF(invoice.booking.id, invoice.invoiceNumber)}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download PDF
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEmailInvoice(invoice.booking.id)}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email Invoice
+                  </Button>
                 </div>
 
                 {/* Invoice Content */}
