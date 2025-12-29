@@ -251,6 +251,13 @@ export function useAppeals(params?: { status?: string; type?: string; page?: num
   });
 }
 
+export function useAdminReports(params?: { status?: string; page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['admin-reports', params],
+    queryFn: () => adminApi.getReports(params),
+  });
+}
+
 // Get Provider Details
 export const useProviderDetails = (providerId: string | null) => {
   return useQuery({

@@ -50,6 +50,7 @@ import {
   useCreateCategory,
   useUpdateCategory,
   useDeleteCategory,
+  useAdminReports,
   PlatformStats,
 } from '../api/admin';
 import { useCategories } from '../api/categories'; // Added
@@ -98,6 +99,7 @@ export default function AdminPanel() {
   const { data: allProvidersData } = useAllProviders({ limit: 50 });
   const { data: usersData } = useAdminUsers({ limit: 100 });
   const { data: bookingsData } = useAdminBookings({ status: bookingFilter === 'all' ? undefined : bookingFilter.toUpperCase() });
+  const { data: reportsData } = useAdminReports();
   const { data: categoriesData } = useCategories();
   const categories = categoriesData || [];
 
@@ -1093,21 +1095,56 @@ export default function AdminPanel() {
           {/* Reports Tab */}
           <TabsContent value="reports" className="space-y-4">
             <Card className="border-0 shadow-sm">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-500" />
                   Provider Reports
                 </CardTitle>
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                  {reportsData?.data?.length || 0} Total Reports
+                </Badge>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="font-medium">Reports Management</p>
-                  <p className="text-sm mt-2">Provider reports from customers will appear here.</p>
-                  <p className="text-xs mt-4 text-gray-400">
-                    Reports are tied to completed bookings and require admin review.
-                  </p>
-                </div>
+                {(!reportsData?.data || reportsData.data.length === 0) ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="font-medium">No Reports Yet</p>
+                    <p className="text-sm mt-2">Provider reports from customers will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {reportsData.data.map((report: any) => (
+                      <div key={report.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-md transition-all group">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                              <AlertCircle className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900">{report.provider?.businessName}</h4>
+                              <p className="text-xs text-red-600 font-bold uppercase tracking-tight mb-1">{report.reason}</p>
+                              <p className="text-xs text-gray-500">Reported by User #{report.reporterId.slice(-4)} • {new Date(report.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <Badge variant={report.status === 'RESOLVED' ? 'default' : 'destructive'} className="uppercase text-[10px]">
+                            {report.status}
+                          </Badge>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-100 mb-3 shadow-sm">
+                           <p className="text-sm text-gray-700 italic">"{report.description || report.details || 'No additional details provided'}"</p>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                           <Button variant="outline" size="sm" className="h-8 text-xs">
+                             View Provider
+                           </Button>
+                           <Button variant="outline" size="sm" className="h-8 text-xs text-red-600 hover:bg-red-50 border-red-100">
+                             Take Action
+                           </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
