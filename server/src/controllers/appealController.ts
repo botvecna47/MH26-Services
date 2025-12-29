@@ -232,7 +232,7 @@ export const appealController = {
         
         await prisma.notification.create({
           data: {
-            userId: appeal.userId,
+            userId: appeal.userId ?? undefined,
             type: 'APPEAL_RESOLVED',
             title: notificationTitle,
             body: notificationBody,
